@@ -4,6 +4,8 @@ import (
 	"github.com/miebyte/goutils/cores"
 	"github.com/miebyte/goutils/flags"
 	"github.com/miebyte/goutils/logging"
+	"github.com/superwhys/billiard-helper/api"
+	"github.com/superwhys/billiard-helper/service"
 )
 
 var (
@@ -13,7 +15,14 @@ var (
 func main() {
 	flags.Parse()
 
-	srv := cores.NewCores()
+	services := service.NewService()
+	router := api.SetupRouter(services)
+
+	srv := cores.NewCores(
+		cores.WithHttpCORS(),
+		cores.WithRegisterService(),
+		cores.WithHttpHandler("/api", router),
+	)
 
 	logging.PanicError(cores.Start(srv, port()))
 }
