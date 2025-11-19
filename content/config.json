@@ -1,6 +1,17 @@
 {
 	"config": {
-
+		"jwtConfig": {
+			"jwtSecret": "123456abcdefg",
+			"jwtTimeout": "1m"
+		},
+		"emailConfig": {
+			"host": "smtp.163.com",
+			"port": 465,
+			"username": "superyong4869@163.com",
+			"password": "MXk5wMZyxa9Uwt2w",
+			"from": "superyong4869@163.com",
+			"fromName": "Billiard Helper"
+		}
 	},
 	"redis": {
 		"server": "localhost:6379"

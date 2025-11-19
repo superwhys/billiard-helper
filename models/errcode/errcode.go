@@ -7,6 +7,17 @@ type ErrCode uint
 const (
 	ErrCodeNormal ErrCode = iota + 10000
 	ErrCodeInvalidRequest
+	// Auth error codes
+	ErrCodeNoToken
+	ErrCodeSendEmailCodeFailed
+	ErrCodeEmailCodeInvalid
+	ErrCodeEmailCodeCooldown
+	ErrCodeUserAlreadyExists
+	ErrCodeUserRegisterFailed
+	ErrCodeUserLoginFailed
+	ErrCodeUserNotFound
+	ErrCodeUserPasswordInvalid
+	// Room error codes
 	ErrCodeRoomNotFound
 	ErrCodeCreateRoomFailed
 	ErrCodeGetRoomFailed
@@ -62,6 +73,24 @@ func (c ErrCode) String() string {
 		return "重置分数失败"
 	case ErrCodeGetRoomScoresFailed:
 		return "获取房间分数失败"
+	case ErrCodeSendEmailCodeFailed:
+		return "发送邮箱验证码失败"
+	case ErrCodeEmailCodeInvalid:
+		return "邮箱验证码无效"
+	case ErrCodeEmailCodeCooldown:
+		return "邮箱验证码冷却中"
+	case ErrCodeUserAlreadyExists:
+		return "用户已存在"
+	case ErrCodeUserRegisterFailed:
+		return "用户注册失败"
+	case ErrCodeUserNotFound:
+		return "用户不存在"
+	case ErrCodeUserPasswordInvalid:
+		return "用户密码不正确"
+	case ErrCodeUserLoginFailed:
+		return "用户登录失败"
+	case ErrCodeNoToken:
+		return "未提供 token"
 	default:
 		return "未知错误"
 	}

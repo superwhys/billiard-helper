@@ -1,0 +1,54 @@
+package jwt
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/superwhys/billiard-helper/models/types"
+)
+
+type UserTokenClaims struct {
+	jwt.RegisteredClaims
+	User *types.User `json:"user"`
+}
+
+func GenerateToken(signingKey []byte, timeout time.Duration, user *types.User) (string, error) {
+	if len(signingKey) == 0 {
+		return "", fmt.Errorf("signing key is required")
+	}
+
+	expiresAt := time.Now().Add(timeout)
+	claims := &UserTokenClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+		},
+		User: user,
+	}
+
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(signingKey)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func ParseToken(tokenStr string, signingKey []byte) (*UserTokenClaims, error) {
+	tc := &UserTokenClaims{}
+	token, err := jwt.ParseWithClaims(tokenStr, tc, func(token *jwt.Token) (any, error) {
+		if token.Method != jwt.SigningMethodHS256 {
+			return nil, jwt.ErrSignatureInvalid
+		}
+		return signingKey, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, fmt.Errorf("token is not valid")
+	}
+
+	return tc, nil
+}

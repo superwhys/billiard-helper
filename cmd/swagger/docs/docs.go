@@ -15,6 +15,108 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/login": {
+            "post": {
+                "description": "登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "登录",
+                "parameters": [
+                    {
+                        "description": "登录请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.LoginReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_TokenResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "description": "注册",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "注册",
+                "parameters": [
+                    {
+                        "description": "注册请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.RegisterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/send-email-code": {
+            "post": {
+                "description": "发送邮箱验证码",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "发送邮箱验证码",
+                "parameters": [
+                    {
+                        "description": "发送邮箱验证码请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SendEmailCodeReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
         "/rooms/:room_id": {
             "get": {
                 "security": [
@@ -469,6 +571,18 @@ const docTemplate = `{
                 "message": {}
             }
         },
+        "ginutils.Ret-response_TokenResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.TokenResponse"
+                },
+                "message": {}
+            }
+        },
         "request.AddScoreRequest": {
             "type": "object",
             "required": [
@@ -586,6 +700,26 @@ const docTemplate = `{
                 }
             }
         },
+        "request.LoginReq": {
+            "type": "object",
+            "required": [
+                "email",
+                "login_type",
+                "secret"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "login_type": {
+                    "$ref": "#/definitions/types.LoginType"
+                },
+                "secret": {
+                    "description": "if login type is code, secret is the code\nif login type is password, secret is the password",
+                    "type": "string"
+                }
+            }
+        },
         "request.MinusScoreRequest": {
             "type": "object",
             "required": [
@@ -609,6 +743,29 @@ const docTemplate = `{
                 }
             }
         },
+        "request.RegisterReq": {
+            "type": "object",
+            "required": [
+                "code",
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "request.ResetScoreRequest": {
             "type": "object",
             "required": [
@@ -625,6 +782,21 @@ const docTemplate = `{
                 },
                 "room_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "request.SendEmailCodeReq": {
+            "type": "object",
+            "required": [
+                "email",
+                "scene"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "scene": {
+                    "$ref": "#/definitions/types.EmailCodeScene"
                 }
             }
         },
@@ -705,6 +877,36 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
+        },
+        "response.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.EmailCodeScene": {
+            "type": "integer",
+            "enum": [
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "EmailCodeSceneRegister",
+                "EmailCodeSceneLogin"
+            ]
+        },
+        "types.LoginType": {
+            "type": "integer",
+            "enum": [
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "LoginTypePassword",
+                "LoginTypeCode"
+            ]
         },
         "types.Player": {
             "type": "object",

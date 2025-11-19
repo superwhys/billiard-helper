@@ -5,7 +5,20 @@ import (
 
 	"github.com/superwhys/billiard-helper/models/request"
 	"github.com/superwhys/billiard-helper/models/response"
+	"github.com/superwhys/billiard-helper/pkg/jwt"
 )
+
+// TokenAuthLogic Token 认证用例接口
+type TokenAuthLogic interface {
+	GetUserTokenClaims(context.Context, string) (*jwt.UserTokenClaims, error)
+}
+
+type AuthService interface {
+	TokenAuthLogic
+	SendEmailCode(context.Context, *request.SendEmailCodeReq) error
+	Register(context.Context, *request.RegisterReq) error
+	Login(context.Context, *request.LoginReq) (string, error)
+}
 
 type RoomService interface {
 	CreateRoom(ctx context.Context, req *request.CreateRoomRequest) error

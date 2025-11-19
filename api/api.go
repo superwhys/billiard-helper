@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/miebyte/goutils/ginutils"
+	middleware "github.com/superwhys/billiard-helper/api/middlewares"
 	"github.com/superwhys/billiard-helper/api/router"
 	"github.com/superwhys/billiard-helper/service"
 
@@ -22,9 +23,15 @@ import (
 func SetupRouter(services *service.Service) http.Handler {
 	engine := ginutils.NewServerHandler(
 		ginutils.WithMiddleware(ginutils.WithLoggingRequest(true)),
-		ginutils.WithHandler(http.MethodGet, "/ws", router.SocketHandler(services)),
-		router.RoomGroupRouter(services.RoomService),
-		router.ScoresGroupRouter(services.ScoresService),
+		router.AuthGroupRouter(services.AuthService),
+		ginutils.WithGroupHandlers(
+			ginutils.WithMiddleware(middleware.TokenVerifyMiddleware(services.AuthService)),
+			ginutils.WithGroupHandlers(
+				router.SocketGroupRouter(services),
+				router.RoomGroupRouter(services.RoomService),
+				router.ScoresGroupRouter(services.ScoresService),
+			),
+		),
 	)
 
 	return engine

@@ -6,6 +6,7 @@ import (
 	"github.com/miebyte/goutils/logging"
 	"github.com/miebyte/goutils/mysqlutils"
 	"github.com/superwhys/billiard-helper/api"
+	"github.com/superwhys/billiard-helper/models/config"
 	"github.com/superwhys/billiard-helper/models/dbmodels"
 	"github.com/superwhys/billiard-helper/service"
 )
@@ -13,11 +14,15 @@ import (
 var (
 	port            = flags.Int("port", 8080, "server run port")
 	isDev           = flags.Bool("dev", true, "is dev")
+	configFlag      = flags.Struct("config", (*config.Config)(nil), "server config")
 	mysqlConfigFlag = flags.Struct("mysql", (*mysqlutils.MysqlConfig)(nil), "mysql config")
 )
 
 func main() {
 	flags.Parse()
+
+	config := new(config.Config)
+	logging.PanicError(configFlag(config))
 
 	mysqlConf := new(mysqlutils.MysqlConfig)
 	logging.PanicError(mysqlConfigFlag(mysqlConf))
@@ -28,7 +33,7 @@ func main() {
 	err = mysqlDB.AutoMigrate(dbmodels.Tables()...)
 	logging.PanicError(err)
 
-	services := service.NewService(mysqlDB)
+	services := service.NewService(config, mysqlDB)
 	router := api.SetupRouter(services)
 
 	srv := cores.NewCores(

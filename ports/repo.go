@@ -7,6 +7,14 @@ import (
 	"github.com/superwhys/billiard-helper/models/request"
 )
 
+type UserRepo interface {
+	CreateUser(ctx context.Context, user *dbmodels.User) error
+	GetUserByEmail(ctx context.Context, email string) (*dbmodels.User, error)
+	GetUserByID(ctx context.Context, id uint) (*dbmodels.User, error)
+	UpdateUser(ctx context.Context, user *dbmodels.User) error
+	DeleteUser(ctx context.Context, id uint) error
+}
+
 type RoomRepo interface {
 	CreateRoom(ctx context.Context, req *request.CreateRoomRequest) error
 	GetRoom(ctx context.Context, roomID uint) (*dbmodels.Room, error)
