@@ -32,16 +32,16 @@ func RoomGroupRouter(roomSvc ports.RoomService) ginutils.Option {
 // @Produce json
 // @Security BearerAuth
 // @Param request body request.CreateRoomRequest true "创建房间请求体"
-// @Success 200 {object} ginutils.Ret[any]
+// @Success 200 {object} ginutils.Ret[response.Room]
 // @Router /rooms/create [post]
 func RoomCreateHandler(roomSvc ports.RoomService) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *request.CreateRoomRequest) {
-		err := roomSvc.CreateRoom(c.Request.Context(), req)
+		room, err := roomSvc.CreateRoom(c.Request.Context(), req)
 		if handleRouterError(c, err, "room create handler error", errcode.ErrCodeCreateRoomFailed) {
 			return
 		}
 
-		c.JSON(http.StatusOK, response.ResponseSuccess())
+		c.JSON(http.StatusOK, response.ResponseWithData(room))
 	})
 }
 

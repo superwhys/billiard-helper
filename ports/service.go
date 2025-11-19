@@ -21,10 +21,10 @@ type AuthService interface {
 }
 
 type RoomService interface {
-	CreateRoom(ctx context.Context, req *request.CreateRoomRequest) error
+	CreateRoom(ctx context.Context, req *request.CreateRoomRequest) (*response.Room, error)
 	GetRoom(ctx context.Context, req *request.GetRoomRequest) (*response.Room, error)
 	GetUserRooms(ctx context.Context, req *request.GetUserRoomsRequest) ([]*response.Room, error)
-	JoinRoom(ctx context.Context, req *request.JoinRoomRequest) (*response.Player, error)
+	JoinRoom(ctx context.Context, req *request.JoinRoomRequest) (*response.Room, error)
 	LeaveRoom(ctx context.Context, req *request.LeaveRoomRequest) error
 	DeleteRoom(ctx context.Context, req *request.DeleteRoomRequest) error
 }

@@ -9,8 +9,6 @@ import (
 	"github.com/superwhys/billiard-helper/dal/db/query"
 	"github.com/superwhys/billiard-helper/models/dbmodels"
 	"github.com/superwhys/billiard-helper/models/errcode"
-	"github.com/superwhys/billiard-helper/models/request"
-	"github.com/superwhys/billiard-helper/models/types"
 	"github.com/superwhys/billiard-helper/ports"
 )
 
@@ -25,17 +23,18 @@ func NewRoomManager(db *gorm.DB) ports.RoomRepo {
 	}
 }
 
-func (m *roomManager) CreateRoom(ctx context.Context, room *request.CreateRoomRequest) error {
-	if room == nil {
-		return errcode.ErrCodeInvalidRequest
-	}
+func (m *roomManager) CreateRoom(ctx context.Context, room *dbmodels.Room) error {
+	return m.query.Room.WithContext(ctx).Create(room)
+}
 
-	roomModel := &dbmodels.Room{
-		RoomCode: room.RoomCode,
-		UserID:   room.UserID,
-		Status:   types.RoomStatusPending,
+func (m *roomManager) IsRoomExist(ctx context.Context, roomID uint) (bool, error) {
+	r := m.query.Room
+	cnt, err := r.WithContext(ctx).
+		Where(r.ID.Eq(roomID)).Count()
+	if err != nil {
+		return false, err
 	}
-	return m.query.Room.WithContext(ctx).Create(roomModel)
+	return cnt > 0, nil
 }
 
 func (m *roomManager) GetRoom(ctx context.Context, roomID uint) (*dbmodels.Room, error) {

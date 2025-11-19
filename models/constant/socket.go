@@ -2,10 +2,34 @@ package constant
 
 const (
 	BilliardNamespace = "billiard"
-	EventJoinRoom     = "join_room"
-	EventLeaveRoom    = "leave_room"
-	EventScoreAdd     = "score_add"
-	EventScoreMinus   = "score_minus"
-	EventScoreReset   = "score_reset"
-	EventKickPlayer   = "kick_player"
+)
+
+// Server receive event
+const (
+	EventClientJoinRoom   = "join_room"
+	EventClientLeaveRoom  = "leave_room"
+	EventClientScoreAdd   = "score_add"
+	EventClientScoreMinus = "score_minus"
+	EventClientScoreReset = "score_reset"
+	EventClientKickPlayer = "kick_player"
+)
+
+// Server callback event
+const (
+	EventCallbackJoinRoomSuccess   = "join_room_success"
+	EventCallbackJoinRoomFailed    = "join_room_failed"
+	EventCallbackScoreAddSuccess   = "score_add_success"
+	EventCallbackScoreMinusSuccess = "score_minus_success"
+	EventCallbackScoreResetSuccess = "score_reset_success"
+	EventCallbackKickPlayerSuccess = "kick_player_success"
+)
+
+// Server broadcast event
+const (
+	EventBroadcastRoomJoin       = "broadcast_room_joined"
+	EventBroadcastRoomLeave      = "broadcast_room_left"
+	EventBroadcastRoomScoreAdd   = "broadcast_score_add"
+	EventBroadcastRoomScoreMinus = "broadcast_score_minus"
+	EventBroadcastRoomScoreReset = "broadcast_score_reset"
+	EventBroadcastRoomKickPlayer = "broadcast_kick_player"
 )

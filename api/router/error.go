@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/miebyte/goutils/ginutils"
 	"github.com/miebyte/goutils/logging"
 	"github.com/superwhys/billiard-helper/models/errcode"
 	"github.com/superwhys/billiard-helper/models/response"
@@ -14,11 +15,14 @@ func handleRouterError(ctx *gin.Context, err error, logMsg string, fallback errc
 	if err == nil {
 		return false
 	}
-	if ec, ok := errcode.AsErrcode(err); ok {
-		ctx.JSON(http.StatusOK, response.ErrorResponseWithCode(ec))
-		return true
-	}
 	logging.Errorc(ctx, "%s: %v", logMsg, err)
-	ctx.JSON(http.StatusOK, response.ErrorResponseWithCode(fallback))
+	ctx.JSON(http.StatusOK, errorResponseWithCode(err, fallback))
 	return true
+}
+
+func errorResponseWithCode(err error, fallback errcode.ErrCode) *ginutils.Ret[any] {
+	if ec, ok := errcode.AsErrcode(err); ok {
+		return response.ErrorResponseWithCode(ec)
+	}
+	return response.ErrorResponseWithCode(fallback)
 }

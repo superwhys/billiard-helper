@@ -23,6 +23,7 @@ func (r *Room) TableName() string {
 
 func (r *Room) ToType() *types.Room {
 	roomT := &types.Room{
+		ID:       r.ID,
 		RoomCode: r.RoomCode,
 		UserID:   r.UserID,
 		Status:   r.Status,

@@ -6,11 +6,11 @@ import (
 	"fmt"
 
 	"github.com/miebyte/goutils/utils/ptrx"
-	"github.com/superwhys/billiard-helper/models/constant"
 	"github.com/superwhys/billiard-helper/models/dbmodels"
 	"github.com/superwhys/billiard-helper/models/errcode"
 	"github.com/superwhys/billiard-helper/models/request"
 	"github.com/superwhys/billiard-helper/models/response"
+	"github.com/superwhys/billiard-helper/models/types"
 	"github.com/superwhys/billiard-helper/pkg/hash"
 	"github.com/superwhys/billiard-helper/ports"
 )
@@ -26,12 +26,21 @@ func NewRoomService(srvCtx *ServiceContext) ports.RoomService {
 	}
 }
 
-func (s *roomService) CreateRoom(ctx context.Context, req *request.CreateRoomRequest) error {
+func (s *roomService) CreateRoom(ctx context.Context, req *request.CreateRoomRequest) (*response.Room, error) {
 	if req == nil {
-		return errcode.ErrCodeInvalidRequest
+		return nil, errcode.ErrCodeInvalidRequest
 	}
 
-	return s.srvCtx.RoomRepo.CreateRoom(ctx, req)
+	roomModel := &dbmodels.Room{
+		RoomCode: req.RoomCode,
+		UserID:   req.UserID,
+		Status:   types.RoomStatusPending,
+	}
+	err := s.srvCtx.RoomRepo.CreateRoom(ctx, roomModel)
+	if err != nil {
+		return nil, err
+	}
+	return &response.Room{Room: roomModel.ToType()}, nil
 }
 
 func (s *roomService) GetRoom(ctx context.Context, req *request.GetRoomRequest) (*response.Room, error) {
@@ -64,15 +73,18 @@ func (s *roomService) GetUserRooms(ctx context.Context, req *request.GetUserRoom
 	return resp, nil
 }
 
-func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest) (*response.Player, error) {
+func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest) (*response.Room, error) {
 	if req == nil {
 		return nil, errcode.ErrCodeInvalidRequest
 	}
 
 	// 检查房间是否存在
-	_, err := s.srvCtx.RoomRepo.GetRoom(ctx, req.RoomID)
+	exist, err := s.srvCtx.RoomRepo.IsRoomExist(ctx, req.RoomID)
 	if err != nil {
 		return nil, err
+	}
+	if !exist {
+		return nil, errcode.ErrCodeRoomNotFound
 	}
 
 	// 生成玩家幂等 code
@@ -105,12 +117,12 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 		return nil, err
 	}
 
-	err = s.srvCtx.Socket.Of(constant.BilliardNamespace).To(s.socketRoomID(req.RoomID)).Emit(constant.EventJoinRoom, playerModel.ToType())
+	room, err := s.srvCtx.RoomRepo.GetRoom(ctx, req.RoomID)
 	if err != nil {
-		return nil, fmt.Errorf("emit join room event failed: %w", err)
+		return nil, err
 	}
 
-	return &response.Player{Player: playerModel.ToType()}, nil
+	return &response.Room{Room: room.ToType()}, nil
 }
 
 func (s *roomService) LeaveRoom(ctx context.Context, req *request.LeaveRoomRequest) error {
@@ -123,10 +135,6 @@ func (s *roomService) LeaveRoom(ctx context.Context, req *request.LeaveRoomReque
 		return fmt.Errorf("delete player failed: %w", err)
 	}
 
-	err = s.srvCtx.Socket.Of(constant.BilliardNamespace).To(s.socketRoomID(req.RoomID)).Emit(constant.EventLeaveRoom, req.PlayerCode)
-	if err != nil {
-		return fmt.Errorf("emit leave room event failed: %w", err)
-	}
 	return nil
 }
 
