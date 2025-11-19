@@ -1,0 +1,16 @@
+{
+	"config": {
+
+	},
+	"redis": {
+		"server": "localhost:6379"
+	},
+	"mysql": {
+		"instance": "localhost:3306",
+		"database": "billiard_helper",
+		"username": "root",
+		"password": "CFPW%a2%DYwD",
+		"charset": "utf8mb4",
+		"poolSize": 10
+	}
+}
