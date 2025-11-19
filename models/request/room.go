@@ -20,6 +20,7 @@ type JoinRoomRequest struct {
 	UserID         uint             `json:"user_id"`
 	PlayerType     types.PlayerType `json:"player_type"`
 	PlayerNickName string           `json:"player_nick_name"`
+	PlayerAvatar   string           `json:"player_avatar"`
 }
 
 type LeaveRoomRequest struct {

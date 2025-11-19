@@ -16,12 +16,16 @@ const (
 
 // Server callback event
 const (
+	EventCallbackFailed            = "event_callback_failed"
 	EventCallbackJoinRoomSuccess   = "join_room_success"
 	EventCallbackJoinRoomFailed    = "join_room_failed"
+	EventCallbackLeaveRoomSuccess  = "leave_room_success"
+	EventCallbackLeaveRoomFailed   = "leave_room_failed"
 	EventCallbackScoreAddSuccess   = "score_add_success"
 	EventCallbackScoreMinusSuccess = "score_minus_success"
 	EventCallbackScoreResetSuccess = "score_reset_success"
 	EventCallbackKickPlayerSuccess = "kick_player_success"
+	EventCallbackKickPlayerFailed  = "kick_player_failed"
 )
 
 // Server broadcast event

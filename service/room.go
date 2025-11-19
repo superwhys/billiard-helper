@@ -106,12 +106,17 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 
 	// 创建玩家记录
 	playerModel := &dbmodels.Player{
+		Code:     code,
 		RoomID:   req.RoomID,
-		UserID:   ptrx.Uint(req.UserID),
 		NickName: req.PlayerNickName,
-		Avatar:   "",
+		Avatar:   req.PlayerAvatar,
 		Type:     req.PlayerType,
 	}
+
+	if req.PlayerType == types.PlayerTypeReal {
+		playerModel.UserID = ptrx.Uint(req.UserID)
+	}
+
 	err = s.srvCtx.PlayerRepo.CreatePlayer(ctx, playerModel)
 	if err != nil {
 		return nil, err
@@ -122,7 +127,12 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 		return nil, err
 	}
 
-	return &response.Room{Room: room.ToType()}, nil
+	roomType := room.ToType()
+	for _, player := range roomType.Players {
+		player.IsYou = player.Code == code
+	}
+
+	return &response.Room{Room: roomType}, nil
 }
 
 func (s *roomService) LeaveRoom(ctx context.Context, req *request.LeaveRoomRequest) error {
