@@ -1,21 +1,35 @@
 package dbmodels
 
 import (
+	"github.com/miebyte/goutils/utils/ptrx"
 	"github.com/superwhys/billiard-helper/models/types"
 	"gorm.io/gorm"
 )
 
 type Player struct {
 	gorm.Model
-	RoomID    uint             `gorm:"column:room_id;index;not null;comment:房间ID" json:"room_id"`
-	UserID    uint             `gorm:"column:user_id;index;comment:用户ID" json:"user_id"`
-	NickName  string           `gorm:"column:nick_name;type:varchar(255);not null;comment:昵称" json:"nick_name"`
-	AvatarURL string           `gorm:"column:avatar_url;type:varchar(255);comment:头像URL" json:"avatar_url"`
-	Type      types.PlayerType `gorm:"column:type;type:tinyint(1);default:1;not null;comment:玩家类型" json:"type"`
+	Code     string           `gorm:"column:code;type:varchar(255);unique;not null;comment:玩家代码" json:"code"`
+	RoomID   uint             `gorm:"column:room_id;index;not null;uniqueIndex:idx_room_id_user_id;comment:房间ID" json:"room_id"`
+	UserID   *uint            `gorm:"column:user_id;index;uniqueIndex:idx_room_id_user_id;comment:用户ID" json:"user_id"`
+	NickName string           `gorm:"column:nick_name;type:varchar(255);not null;comment:昵称" json:"nick_name"`
+	Avatar   string           `gorm:"column:Avatar;type:varchar(255);comment:头像URL" json:"avatar_url"`
+	Type     types.PlayerType `gorm:"column:type;type:tinyint(1);default:1;not null;comment:玩家类型" json:"type"`
 
 	Scores []*Scores `json:"scores"`
 }
 
 func (p *Player) TableName() string {
 	return "players"
+}
+
+func (p *Player) ToType() *types.Player {
+	playerT := &types.Player{
+		Code:      p.Code,
+		RoomID:    p.RoomID,
+		UserID:    ptrx.UintValue(p.UserID),
+		NickName:  p.NickName,
+		AvatarURL: p.Avatar,
+		Type:      p.Type,
+	}
+	return playerT
 }

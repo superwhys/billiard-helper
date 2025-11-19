@@ -1,0 +1,240 @@
+---
+alwaysApply: true
+---
+
+# 项目说明
+
+该项目是 `台球记分助手` 项目的后端服务，支持用户登录、创建房间、添加真实/虚拟球员、实时记分、撤回、历史查询等。
+
+目标：为移动端/小程序/网页前端提供稳定的 RESTful API，保证在多人并发下的记录一致性与便捷的撤回能力。
+
+二、角色与模块
+- 模块划分
+  - User 用户模块：账号、登录状态、基本资料
+  - Room 房间模块：创建/加入/离开、房间生命周期管理
+  - Player 球员模块：房间内玩家实体（真实玩家/虚拟玩家）
+  - Scores 记分模块：回合记录、撤回/重做、统计聚合
+- 角色
+  - Real Player：通过认证访问 API，可创建房间、邀请同伴、加入房间
+  - Virtual Player：不绑定用户，由房主或有权限者创建
+
+三、使用场景与用户旅程
+1. 用户登录
+   - 用户使用邮箱登录（后端提供 Token）
+2. 创建房间
+   - 创建者成为房主（owner），可设置房间名
+   - 可以复制房间码分享给同伴加入
+3. 添加球员
+   - 房主可邀请同伴（真实玩家）加入
+   - 可以复制房间码分享给同伴加入
+   - 房主可创建虚拟玩家以快速开始
+4. 开始记分
+   - 确认玩家顺序与局配置，房间状态切换为 IN_PROGRESS
+   - 任何有权限的用户提交得分事件（例如犯规，加分，撤回等）
+5. 撤回
+   - 对最近一次或指定记录进行撤回（默认栈式撤回），数据回滚并重新计算统计结果
+6. 结束与归档
+   - 房主结束房间，状态切为 FINISHED，支持导出复盘、历史查询
+
+四、核心设计原则
+- 以房间为界限的隔离：所有操作在 room_id 范围内一致性保障
+- 可回放事件流：Scores 记录是权威事实来源（Event Sourcing 思路），统计通过重放/增量计算得到
+- 乐观并发控制：避免重复写入与竞争条件（ETag/版本号/事务）
+- 安全与权限：房主与成员的操作边界清晰，未授权禁止写操作
+
+五、数据模型（建议的初始数据结构）
+- User
+  - id (自增 id)
+  - created_at, updated_at
+  - email
+  - name
+  - avatar
+  - password (hash 存储的密码密文)
+- Room
+  - id (自增 id)
+  - created_at, updated_at
+  - user_id (FK -> User)
+  - room_code
+- Player
+  - id (自增 id)
+  - created_at, updated_at
+  - room_id (FK -> Room)
+  - user_id (nullable; 真实玩家绑定用户，虚拟玩家为 null)
+  - type (球员类型)
+  - nick_name
+  - avatar
+- Scores
+  - id (自增 id)
+  - created_at, updated_at
+  - room_id (FK -> Room)
+  - player_id (FK -> Player)
+  - operator_id
+  - change (分值变化)
+  - total (总分)
+
+
+六、状态机与约束
+- Room 状态
+  - pending -> in_progress -> finished
+  - 约束：
+    - 仅 owner 能 start/finish
+    - in_progress 才允许写 Scores
+    - finished 后禁止新增/撤回（可由 owner 重新打开：finished -> in_progress）
+- Player 约束
+  - 加入房间后创建 Player 记录
+  - 虚拟玩家 type=virtual 且 user_id=null
+  - 玩家状态 left 时可以保留历史分数
+- Scores 约束
+  - 只有加入该房间的用户（或房主/授权成员）能提交事件
+  - change 可为负（犯规）
+  - 撤回默认只能撤回最新未撤回事件（栈式 LIFO），以避免复杂的回滚依赖
+  - 若需要选择性撤回，采用补偿事件或 DAG 依赖，初版建议仅支持 LIFO
+
+七、权限与安全
+- 认证：JWT
+- 授权
+  - 房主：房间状态变更、玩家管理
+  - 成员：提交分数、撤回（可配置仅房主可撤回）
+  - 非成员：仅可读（如果房间公开），默认私有
+- 数据隔离：所有 API 以 room_id 校验资源归属
+
+八、错误码与响应规范
+- 4xx
+  - 400 BadRequest：参数无效
+  - 401 Unauthorized：未登录
+  - 403 Forbidden：无权限
+  - 404 NotFound：房间/玩家/事件不存在或不属于该 room
+  - 409 Conflict：状态不允许操作（例如房间已结束、顺序冲突、并发版本冲突）
+  - 422 Unprocessable：业务规则不满足（玩家满员、重复加入）
+- 5xx
+  - 500 ServerError
+- 响应格式
+  - { code, message, data?, request_id }
+
+
+九、业务规则细化（基本需求清单）
+- 账号与身份
+  - 用户可注册/登录/退出
+  - 可设置昵称与头像
+- 房间
+  - 创建/更新/删除（逻辑归档）
+  - 房间状态机如上
+- 玩家
+  - 允许添加虚拟玩家
+  - 踢出玩家，不影响历史成绩
+- 记分
+  - 支持正分与犯规负分
+  - 事件包含创建者、时间戳、顺序号
+  - 支持备注与球详情（结构化 JSON）
+  - 提供房间统计：总分、每回合折线、犯规次数
+- 撤回
+  - 默认栈式撤回最近一条事件
+  - 撤回记录保留审计字段
+  - 撤回后统计更新
+- 历史与复盘
+  - 支持按房间查询全部事件与统计
+  - 支持导出 JSON（后续）
+- 实时性
+  - WebSocket 广播房间事件
+  - 增量拉取：from_sequence + long polling
+
+# Golang 项目编码风格指南
+
+## 项目原则
+- 该项目使用依赖倒置原则
+- 该项目使用分包原则
+
+## 统一脚手架工具
+- 当前项目统一使用团队内部开发的脚手架工具`github.com/miebyte/goutils`,其中包括日志，gin,等各种工具：
+    - `github.com/miebyte/goutils/logging`
+    - `github.com/miebyte/goutils/ginutils`   
+
+## 项目目录架构
+```
+.
+├── api              // api 相关
+│   ├── api.go       // 主 api 路由定义
+│   ├── middleware   // api 中间件定义
+│   └── router       // api 子路由 handler 实现
+├── cmd
+│   ├── gen          // gorm/gen 生成
+│   └── swagger      // swagger 生成
+├── content
+│   └── config.json
+├── dal
+│   ├── cache        // redis 缓存相关内容
+│   └── db           // mysql db相关实现
+├── go.mod
+├── go.sum
+├── main.go
+├── models
+│   ├── config
+│   ├── dbmodels     // mysql 数据库模型
+│   ├── errcode      // 自定义错误吗
+│   ├── request      // api 请求
+│   ├── response     // api 响应
+│   └── types        // 内部的类型定义（dto, constant 等）
+├── ports
+│   ├── repo.go      // 仓储层接口定义
+│   └── service.go   // 服务层接口定义
+├── README.md
+└── service          // 服务层接口实现
+    ├── room.go
+    ├── player.go
+    └── service.go
+```
+这只是当前初始化的目录架构。还没有完全将各个模块写完，你需要遵循当前架构
+
+
+## 格式化 (Formatting)
+- 提交代码前，务必运行 `go fmt` 或等效的格式化工具。
+- 单行最大长度建议不超过 120 个字符。
+
+## 命名规范 (Naming Conventions)
+- 包名 (Package names): 简短、小写，例如 `httputil`, `userdao`。
+- 变量名 (Variable names): 使用驼峰式 (camelCase)。对于常见的缩写词，如 `ID`, `URL`, `HTTP`，在命名中保持全大写或全小写的一致性，团队推荐全大写，例如 `userID`, `httpAddr`, `requestURL`。
+- 接口名 (Interface names): 通常以 `er` 结尾 (如 `Reader`, `Writer`)，或者使用描述性的名称。
+- 函数/方法名 (Function/Method names): 驼峰式。导出函数首字母大写，非导出函数首字母小写。
+
+## 导入 (Imports)
+- 导入包需要分组，顺序为：标准库、第三方库、项目内部库。组间空一行。
+- 示例:
+  ```go
+  import (
+      "context"
+      "fmt"
+      "log"
+
+      "[github.com/gin-gonic/gin](https://github.com/gin-gonic/gin)"
+      "go.uber.org/zap"
+
+      "your-project/internal/models"
+      "your-project/internal/service"
+  )
+
+
+## 日志使用
+日志使用团队内部开发的脚手架工具 `github.com/miebyte/goutils/logging`
+所有日志输出统一使用带 Context 的日志输出如： logging.Infoc, logging.Warnc, logging.Debugc, logging.Errorc
+
+说明: 此规则将作为整个项目的基础编码准则，AI 在生成或修改任何 Go 代码时都应遵循。
+```go
+import "github.com/company/mold/pkg/common/log"
+
+// 在Service层使用日志
+func (s *CompanyServiceImpl) CreateCompany(ctx context.Context, company *model.CompanyBO) (int64, error) {
+    logging.Infoc(ctx, "CompanyServiceImpl.CreateCompany start, company: %+v", company)
+    
+    id, err := s.companyDAO.Create(ctx, company.Convert2CompanyDO())
+    if err != nil {
+        logging.Errorc(ctx, "CompanyServiceImpl.CreateCompany failed, company: %+v, err: %v", company, err)
+        return 0, err
+    }
+    
+    logging.Infoc(ctx, "CompanyServiceImpl.CreateCompany success, id: %d", id)
+    return id, nil
+}
+```
+## 其他通用规则
+* 禁止使用相对路径导入项目内部包。
+* 避免在库代码或可被复用的模块中使用 panic，除非是不可恢复的程序错误。

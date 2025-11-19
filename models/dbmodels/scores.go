@@ -1,6 +1,9 @@
 package dbmodels
 
-import "gorm.io/gorm"
+import (
+	"github.com/superwhys/billiard-helper/models/types"
+	"gorm.io/gorm"
+)
 
 type Scores struct {
 	gorm.Model
@@ -15,4 +18,20 @@ type Scores struct {
 
 func (s *Scores) TableName() string {
 	return "scores"
+}
+
+func (s *Scores) ToType() *types.Scores {
+	scoresT := &types.Scores{
+		PlayerID:   s.PlayerID,
+		RoomID:     s.RoomID,
+		OperatorID: s.OperatorID,
+		Change:     s.Change,
+		Total:      s.Total,
+	}
+
+	if s.Operator != nil {
+		scoresT.Operator = s.Operator.ToType()
+	}
+
+	return scoresT
 }

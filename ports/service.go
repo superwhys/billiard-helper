@@ -1,7 +1,29 @@
 package ports
 
-type RoomService interface{}
+import (
+	"context"
+
+	"github.com/superwhys/billiard-helper/models/request"
+	"github.com/superwhys/billiard-helper/models/response"
+)
+
+type RoomService interface {
+	CreateRoom(ctx context.Context, req *request.CreateRoomRequest) error
+	GetRoom(ctx context.Context, req *request.GetRoomRequest) (*response.Room, error)
+	GetUserRooms(ctx context.Context, req *request.GetUserRoomsRequest) ([]*response.Room, error)
+	JoinRoom(ctx context.Context, req *request.JoinRoomRequest) (*response.Player, error)
+	LeaveRoom(ctx context.Context, req *request.LeaveRoomRequest) error
+	DeleteRoom(ctx context.Context, req *request.DeleteRoomRequest) error
+}
+
+type ScoresService interface {
+	AddScore(ctx context.Context, req *request.AddScoreRequest) error
+	MinusScore(ctx context.Context, req *request.MinusScoreRequest) error
+	ResetScore(ctx context.Context, req *request.ResetScoreRequest) error
+	GetRoomScores(ctx context.Context, req *request.GetRoomScoresRequest) ([]*response.Scores, error)
+}
 
 type App interface {
 	RoomService
+	ScoresService
 }

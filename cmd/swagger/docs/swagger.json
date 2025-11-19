@@ -1,0 +1,796 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "BilliardHelper",
+        "title": "Billiard Helper API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/api",
+    "paths": {
+        "/rooms/:room_id": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取房间详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "获取房间详情",
+                "parameters": [
+                    {
+                        "description": "获取房间详情请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GetRoomRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_Room"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除房间",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "删除房间",
+                "parameters": [
+                    {
+                        "description": "删除房间请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.DeleteRoomRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/create": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "创建房间",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "创建房间",
+                "parameters": [
+                    {
+                        "description": "创建房间请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateRoomRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/join": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "加入房间",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "加入房间",
+                "parameters": [
+                    {
+                        "description": "加入房间请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.JoinRoomRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_Player"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/leave": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "离开房间",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "离开房间",
+                "parameters": [
+                    {
+                        "description": "离开房间请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.LeaveRoomRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/list": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取用户房间列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "获取用户房间列表",
+                "parameters": [
+                    {
+                        "description": "获取用户房间列表请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GetUserRoomsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_Room"
+                        }
+                    }
+                }
+            }
+        },
+        "/scores/add": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "添加分数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scores"
+                ],
+                "summary": "添加分数",
+                "parameters": [
+                    {
+                        "description": "添加分数请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AddScoreRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/scores/list": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取房间分数列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scores"
+                ],
+                "summary": "获取房间分数列表",
+                "parameters": [
+                    {
+                        "description": "获取房间分数列表请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GetRoomScoresRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_response_Scores"
+                        }
+                    }
+                }
+            }
+        },
+        "/scores/minus": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "减少分数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scores"
+                ],
+                "summary": "减少分数",
+                "parameters": [
+                    {
+                        "description": "减少分数请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.MinusScoreRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/scores/reset": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "重置分数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scores"
+                ],
+                "summary": "重置分数",
+                "parameters": [
+                    {
+                        "description": "重置分数请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ResetScoreRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "ginutils.Ret-any": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {}
+            }
+        },
+        "ginutils.Ret-array_response_Room": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.Room"
+                    }
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-array_response_Scores": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.Scores"
+                    }
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-response_Player": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.Player"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-response_Room": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/response.Room"
+                },
+                "message": {}
+            }
+        },
+        "request.AddScoreRequest": {
+            "type": "object",
+            "required": [
+                "change",
+                "operator_id",
+                "player_id",
+                "room_id"
+            ],
+            "properties": {
+                "change": {
+                    "type": "integer"
+                },
+                "operator_id": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "integer"
+                },
+                "room_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.CreateRoomRequest": {
+            "type": "object",
+            "required": [
+                "room_code",
+                "user_id"
+            ],
+            "properties": {
+                "room_code": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.DeleteRoomRequest": {
+            "type": "object",
+            "required": [
+                "room_id"
+            ],
+            "properties": {
+                "room_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.GetRoomRequest": {
+            "type": "object",
+            "required": [
+                "room_id"
+            ],
+            "properties": {
+                "room_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.GetRoomScoresRequest": {
+            "type": "object",
+            "required": [
+                "room_id"
+            ],
+            "properties": {
+                "room_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.GetUserRoomsRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.JoinRoomRequest": {
+            "type": "object",
+            "required": [
+                "room_id"
+            ],
+            "properties": {
+                "player_nick_name": {
+                    "type": "string"
+                },
+                "player_type": {
+                    "$ref": "#/definitions/types.PlayerType"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.LeaveRoomRequest": {
+            "type": "object",
+            "required": [
+                "player_code",
+                "room_id"
+            ],
+            "properties": {
+                "player_code": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.MinusScoreRequest": {
+            "type": "object",
+            "required": [
+                "change",
+                "operator_id",
+                "player_id",
+                "room_id"
+            ],
+            "properties": {
+                "change": {
+                    "type": "integer"
+                },
+                "operator_id": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "integer"
+                },
+                "room_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.ResetScoreRequest": {
+            "type": "object",
+            "required": [
+                "operator_id",
+                "player_id",
+                "room_id"
+            ],
+            "properties": {
+                "operator_id": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "integer"
+                },
+                "room_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.Player": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "nick_name": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "scores": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.Scores"
+                    }
+                },
+                "type": {
+                    "$ref": "#/definitions/types.PlayerType"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.Room": {
+            "type": "object",
+            "properties": {
+                "players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.Player"
+                    }
+                },
+                "room_code": {
+                    "type": "string"
+                },
+                "scores": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.Scores"
+                    }
+                },
+                "status": {
+                    "$ref": "#/definitions/types.RoomStatus"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.Scores": {
+            "type": "object",
+            "properties": {
+                "change": {
+                    "type": "integer"
+                },
+                "operator": {
+                    "$ref": "#/definitions/types.Player"
+                },
+                "operator_id": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "integer"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "types.Player": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "nick_name": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "scores": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.Scores"
+                    }
+                },
+                "type": {
+                    "$ref": "#/definitions/types.PlayerType"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "types.PlayerType": {
+            "type": "integer",
+            "enum": [
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "PlayerTypeVirtual",
+                "PlayerTypeReal"
+            ]
+        },
+        "types.RoomStatus": {
+            "type": "integer",
+            "enum": [
+                1,
+                2,
+                3
+            ],
+            "x-enum-comments": {
+                "RoomStatusFinished": "已完成",
+                "RoomStatusInProgress": "进行中",
+                "RoomStatusPending": "未开始"
+            },
+            "x-enum-descriptions": [
+                "未开始",
+                "进行中",
+                "已完成"
+            ],
+            "x-enum-varnames": [
+                "RoomStatusPending",
+                "RoomStatusInProgress",
+                "RoomStatusFinished"
+            ]
+        },
+        "types.Scores": {
+            "type": "object",
+            "properties": {
+                "change": {
+                    "type": "integer"
+                },
+                "operator": {
+                    "$ref": "#/definitions/types.Player"
+                },
+                "operator_id": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "integer"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

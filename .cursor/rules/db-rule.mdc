@@ -1,0 +1,57 @@
+---
+description: "在 dal/db 层使用 GORM, GORM/GEN 进行常见查询操作的指南。"
+globs: dal/db/query/*.go,dal/db/manager/*.go,ports/repo.go
+alwaysApply: false
+---
+# GORM, GORM/GEN 规则
+
+## 目录文件说明
+- `ports/repo.go` 为仓储层接口定义
+- `dal/db/query` 为 GORM/GEN 自动生成的 CRUD 代码
+- `dal/db/manager` 为实现 `ports/repo.go` 接口的实例实现
+
+## 1. 仓储层接口定义
+
+由于该项目使用 `依赖倒置原则` 因此所有的数据库查询都需要在 `ports/repo.go`中定义，并最终在 `dal/db/manager`中实现
+你可以参考 `ports/repo.go#RoomRepo`和 `dal/db/manager/room.go`
+
+## 2. 仓储层接口实现规则
+
+每个仓储层实现都需要这样子定义实例结构体
+
+```Go
+type XxxxManager struct {
+	query *query.Query
+}
+
+func NewXxxxManager(db *gorm.DB) *XxxxManager {
+	return &XxxxManager{query: query.Use(db)}
+}
+```
+
+仓储层接口之间不应该互相引用，比如说 `UserManager` 不应该引用 `RoomManager`
+
+如果确实需要操作其他领域的一些模型。你可以直接使用 query 中的对应模型进行操作
+
+例如：
+```Go
+
+func (m *XxxxManager) XxxxQuery(ctx context.Context) error {
+    aaa := m.query.AAA
+    bbb := m.query.BBB
+}
+
+```
+
+所有的数据库操作代码都需要使用 WithContext 模式
+
+```Go
+
+func (m *XxxxManager) DeleteXxxx(ctx context.Context, ID uint) error {
+	s, sd := m.query.AAA, m.query.AAA.WithContext(ctx)
+
+	_, err := sd.Where(s.ID.Eq(ID)).Delete()
+	return err
+}
+
+```

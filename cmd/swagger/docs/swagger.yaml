@@ -1,0 +1,513 @@
+basePath: /api
+definitions:
+  ginutils.Ret-any:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message: {}
+    type: object
+  ginutils.Ret-array_response_Room:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.Room'
+        type: array
+      message: {}
+    type: object
+  ginutils.Ret-array_response_Scores:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.Scores'
+        type: array
+      message: {}
+    type: object
+  ginutils.Ret-response_Player:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/response.Player'
+      message: {}
+    type: object
+  ginutils.Ret-response_Room:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/response.Room'
+      message: {}
+    type: object
+  request.AddScoreRequest:
+    properties:
+      change:
+        type: integer
+      operator_id:
+        type: integer
+      player_id:
+        type: integer
+      room_id:
+        type: integer
+    required:
+    - change
+    - operator_id
+    - player_id
+    - room_id
+    type: object
+  request.CreateRoomRequest:
+    properties:
+      room_code:
+        type: string
+      user_id:
+        type: integer
+    required:
+    - room_code
+    - user_id
+    type: object
+  request.DeleteRoomRequest:
+    properties:
+      room_id:
+        type: integer
+    required:
+    - room_id
+    type: object
+  request.GetRoomRequest:
+    properties:
+      room_id:
+        type: integer
+    required:
+    - room_id
+    type: object
+  request.GetRoomScoresRequest:
+    properties:
+      room_id:
+        type: integer
+    required:
+    - room_id
+    type: object
+  request.GetUserRoomsRequest:
+    properties:
+      user_id:
+        type: integer
+    required:
+    - user_id
+    type: object
+  request.JoinRoomRequest:
+    properties:
+      player_nick_name:
+        type: string
+      player_type:
+        $ref: '#/definitions/types.PlayerType'
+      room_id:
+        type: integer
+      user_id:
+        type: integer
+    required:
+    - room_id
+    type: object
+  request.LeaveRoomRequest:
+    properties:
+      player_code:
+        type: string
+      room_id:
+        type: integer
+    required:
+    - player_code
+    - room_id
+    type: object
+  request.MinusScoreRequest:
+    properties:
+      change:
+        type: integer
+      operator_id:
+        type: integer
+      player_id:
+        type: integer
+      room_id:
+        type: integer
+    required:
+    - change
+    - operator_id
+    - player_id
+    - room_id
+    type: object
+  request.ResetScoreRequest:
+    properties:
+      operator_id:
+        type: integer
+      player_id:
+        type: integer
+      room_id:
+        type: integer
+    required:
+    - operator_id
+    - player_id
+    - room_id
+    type: object
+  response.Player:
+    properties:
+      avatar_url:
+        type: string
+      code:
+        type: string
+      nick_name:
+        type: string
+      room_id:
+        type: integer
+      scores:
+        items:
+          $ref: '#/definitions/types.Scores'
+        type: array
+      type:
+        $ref: '#/definitions/types.PlayerType'
+      user_id:
+        type: integer
+    type: object
+  response.Room:
+    properties:
+      players:
+        items:
+          $ref: '#/definitions/types.Player'
+        type: array
+      room_code:
+        type: string
+      scores:
+        items:
+          $ref: '#/definitions/types.Scores'
+        type: array
+      status:
+        $ref: '#/definitions/types.RoomStatus'
+      user_id:
+        type: integer
+    type: object
+  response.Scores:
+    properties:
+      change:
+        type: integer
+      operator:
+        $ref: '#/definitions/types.Player'
+      operator_id:
+        type: integer
+      player_id:
+        type: integer
+      room_id:
+        type: integer
+      total:
+        type: integer
+    type: object
+  types.Player:
+    properties:
+      avatar_url:
+        type: string
+      code:
+        type: string
+      nick_name:
+        type: string
+      room_id:
+        type: integer
+      scores:
+        items:
+          $ref: '#/definitions/types.Scores'
+        type: array
+      type:
+        $ref: '#/definitions/types.PlayerType'
+      user_id:
+        type: integer
+    type: object
+  types.PlayerType:
+    enum:
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - PlayerTypeVirtual
+    - PlayerTypeReal
+  types.RoomStatus:
+    enum:
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-comments:
+      RoomStatusFinished: 已完成
+      RoomStatusInProgress: 进行中
+      RoomStatusPending: 未开始
+    x-enum-descriptions:
+    - 未开始
+    - 进行中
+    - 已完成
+    x-enum-varnames:
+    - RoomStatusPending
+    - RoomStatusInProgress
+    - RoomStatusFinished
+  types.Scores:
+    properties:
+      change:
+        type: integer
+      operator:
+        $ref: '#/definitions/types.Player'
+      operator_id:
+        type: integer
+      player_id:
+        type: integer
+      room_id:
+        type: integer
+      total:
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: BilliardHelper
+  title: Billiard Helper API
+  version: "1.0"
+paths:
+  /rooms/:room_id:
+    delete:
+      consumes:
+      - application/json
+      description: 删除房间
+      parameters:
+      - description: 删除房间请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.DeleteRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 删除房间
+      tags:
+      - Room
+    get:
+      consumes:
+      - application/json
+      description: 获取房间详情
+      parameters:
+      - description: 获取房间详情请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.GetRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_Room'
+      security:
+      - BearerAuth: []
+      summary: 获取房间详情
+      tags:
+      - Room
+  /rooms/create:
+    post:
+      consumes:
+      - application/json
+      description: 创建房间
+      parameters:
+      - description: 创建房间请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 创建房间
+      tags:
+      - Room
+  /rooms/join:
+    post:
+      consumes:
+      - application/json
+      description: 加入房间
+      parameters:
+      - description: 加入房间请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.JoinRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_Player'
+      security:
+      - BearerAuth: []
+      summary: 加入房间
+      tags:
+      - Room
+  /rooms/leave:
+    post:
+      consumes:
+      - application/json
+      description: 离开房间
+      parameters:
+      - description: 离开房间请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.LeaveRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 离开房间
+      tags:
+      - Room
+  /rooms/list:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户房间列表
+      parameters:
+      - description: 获取用户房间列表请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.GetUserRoomsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_Room'
+      security:
+      - BearerAuth: []
+      summary: 获取用户房间列表
+      tags:
+      - Room
+  /scores/add:
+    post:
+      consumes:
+      - application/json
+      description: 添加分数
+      parameters:
+      - description: 添加分数请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.AddScoreRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 添加分数
+      tags:
+      - Scores
+  /scores/list:
+    get:
+      consumes:
+      - application/json
+      description: 获取房间分数列表
+      parameters:
+      - description: 获取房间分数列表请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.GetRoomScoresRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_response_Scores'
+      security:
+      - BearerAuth: []
+      summary: 获取房间分数列表
+      tags:
+      - Scores
+  /scores/minus:
+    post:
+      consumes:
+      - application/json
+      description: 减少分数
+      parameters:
+      - description: 减少分数请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.MinusScoreRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 减少分数
+      tags:
+      - Scores
+  /scores/reset:
+    post:
+      consumes:
+      - application/json
+      description: 重置分数
+      parameters:
+      - description: 重置分数请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.ResetScoreRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 重置分数
+      tags:
+      - Scores
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

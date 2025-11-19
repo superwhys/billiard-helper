@@ -1,0 +1,27 @@
+---
+globs: ports/service.go,service/*.go,api/**/*.go,models/request/*.go,models/response/*.go
+alwaysApply: false
+---
+# 服务层规则说明
+
+## 依赖倒置
+
+由于该项目使用了依赖倒置原则，因此所有的 api 层接口与服务层的交互都应该依赖接口。并且将接口定义在 `ports/serivce.go`
+
+## Context
+
+所有的服务层接口方法第一个参数都应该是 context.Context
+
+## request
+
+所有服务层接口接收的 api 请求都应该定义在 `models/request` 中
+
+## response
+
+所有服务层接口返回的 api 响应都应该定义在 `models/ response` 中
+
+## websocket
+
+在记分房间内的所有操作都适用 websocket 进行广播实时同步
+
+

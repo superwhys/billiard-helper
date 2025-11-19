@@ -1,0 +1,15 @@
+package hash
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+)
+
+// GenerateHash 根据输入内容生成唯一且幂等的值
+func GenerateHash(contents ...string) string {
+	hasher := sha256.New()
+	for _, content := range contents {
+		hasher.Write([]byte(content))
+	}
+	return hex.EncodeToString(hasher.Sum(nil))
+}
