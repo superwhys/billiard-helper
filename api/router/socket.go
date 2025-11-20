@@ -99,11 +99,11 @@ func joinRoomEventHandler(services *service.Service, billiardNamespace *websocke
 			return
 		}
 
-		logging.Infoc(ctx, "join room success: %v", room)
+		logging.Infoc(ctx, "join room success: %v", logging.JsonifyNoIndent(room))
 		callbackData := generateEventCallbackData(req.RequestID, time.Now().Unix(), room)
 		s.Emit(constant.EventCallbackJoinRoomSuccess, response.ResponseWithData(callbackData))
 		s.Join(room.SocketRoomID())
-		billiardNamespace.To(room.SocketRoomID()).Emit(constant.EventBroadcastRoomJoin, response.ResponseWithData(room))
+		billiardNamespace.To(room.SocketRoomID()).EmitExcept(constant.EventBroadcastRoomJoin, response.ResponseWithData(room), s)
 	}
 }
 

@@ -27,7 +27,7 @@ const (
 
 func TokenVerifyFromSocket(logic ports.TokenAuthLogic) websocketutils.HandshakeFunc {
 	return func(r *http.Request) (context.Context, error) {
-		ctx := r.Context()
+		ctx := logging.CloneContext(r.Context())
 		tokenStr := r.Header.Get("Authorization")
 		if tokenStr == "" {
 			return nil, errcode.ErrCodeNoToken

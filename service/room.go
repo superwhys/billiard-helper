@@ -14,6 +14,7 @@ import (
 	"github.com/superwhys/billiard-helper/models/types"
 	"github.com/superwhys/billiard-helper/pkg/hash"
 	"github.com/superwhys/billiard-helper/ports"
+	"gorm.io/gorm"
 )
 
 type roomService struct {
@@ -116,7 +117,7 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 
 	// 检查玩家是否已经加入房间
 	player, err := s.srvCtx.PlayerRepo.GetPlayerByCode(ctx, code)
-	if err != nil && !errors.Is(err, errcode.ErrCodePlayerNotFound) {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 	if player != nil {
