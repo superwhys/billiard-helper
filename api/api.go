@@ -24,10 +24,10 @@ func SetupRouter(services *service.Service) http.Handler {
 	engine := ginutils.NewServerHandler(
 		ginutils.WithMiddleware(ginutils.WithLoggingRequest(true)),
 		router.AuthGroupRouter(services.AuthService),
+		router.SocketGroupRouter(services),
 		ginutils.WithGroupHandlers(
 			ginutils.WithMiddleware(middleware.TokenVerifyMiddleware(services.AuthService)),
 			ginutils.WithGroupHandlers(
-				router.SocketGroupRouter(services),
 				router.RoomGroupRouter(services.RoomService),
 				router.ScoresGroupRouter(services.ScoresService),
 			),

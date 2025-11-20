@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/miebyte/goutils/utils/ptrx"
+	middleware "github.com/superwhys/billiard-helper/api/middlewares"
 	"github.com/superwhys/billiard-helper/models/dbmodels"
 	"github.com/superwhys/billiard-helper/models/errcode"
 	"github.com/superwhys/billiard-helper/models/request"
@@ -31,12 +32,18 @@ func (s *roomService) CreateRoom(ctx context.Context, req *request.CreateRoomReq
 		return nil, errcode.ErrCodeInvalidRequest
 	}
 
+	userClaims, err := middleware.TokenClaimsFromContext(ctx)
+	if err != nil {
+		return nil, errcode.ErrCodeNoToken
+	}
+	userID := userClaims.User.ID
+
 	roomModel := &dbmodels.Room{
 		RoomCode: req.RoomCode,
-		UserID:   req.UserID,
+		UserID:   userID,
 		Status:   types.RoomStatusPending,
 	}
-	err := s.srvCtx.RoomRepo.CreateRoom(ctx, roomModel)
+	err = s.srvCtx.RoomRepo.CreateRoom(ctx, roomModel)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +68,13 @@ func (s *roomService) GetUserRooms(ctx context.Context, req *request.GetUserRoom
 		return nil, errcode.ErrCodeInvalidRequest
 	}
 
-	rooms, err := s.srvCtx.RoomRepo.GetUserRooms(ctx, req.UserID)
+	userClaims, err := middleware.TokenClaimsFromContext(ctx)
+	if err != nil {
+		return nil, errcode.ErrCodeNoToken
+	}
+	userID := userClaims.User.ID
+
+	rooms, err := s.srvCtx.RoomRepo.GetUserRooms(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +91,12 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 		return nil, errcode.ErrCodeInvalidRequest
 	}
 
+	userClaims, err := middleware.TokenClaimsFromContext(ctx)
+	if err != nil {
+		return nil, errcode.ErrCodeNoToken
+	}
+	userID := userClaims.User.ID
+
 	// 检查房间是否存在
 	exist, err := s.srvCtx.RoomRepo.IsRoomExist(ctx, req.RoomID)
 	if err != nil {
@@ -90,7 +109,7 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 	// 生成玩家幂等 code
 	code := hash.GenerateHash(
 		fmt.Sprintf("%d", req.RoomID),
-		fmt.Sprintf("%d", req.UserID),
+		fmt.Sprintf("%d", userID),
 		fmt.Sprintf("%d", req.PlayerType),
 		fmt.Sprintf("%s", req.PlayerNickName),
 	)
@@ -114,7 +133,7 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 	}
 
 	if req.PlayerType == types.PlayerTypeReal {
-		playerModel.UserID = ptrx.Uint(req.UserID)
+		playerModel.UserID = ptrx.Uint(userID)
 	}
 
 	err = s.srvCtx.PlayerRepo.CreatePlayer(ctx, playerModel)

@@ -4,6 +4,11 @@ const (
 	BilliardNamespace = "billiard"
 )
 
+const (
+	EventClientAuthFailed  = "auth_error"
+	EventClientAuthSuccess = "auth_success"
+)
+
 // Server receive event
 const (
 	EventClientJoinRoom   = "join_room"

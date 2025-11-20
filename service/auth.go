@@ -104,7 +104,7 @@ func (s *AuthService) Register(ctx context.Context, req *request.RegisterReq) er
 	}
 
 	user, err := s.srvCtx.UserRepo.GetUserByEmail(ctx, email)
-	if err != nil {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	if user != nil {

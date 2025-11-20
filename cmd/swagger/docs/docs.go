@@ -379,15 +379,11 @@ const docTemplate = `{
         "request.CreateRoomRequest": {
             "type": "object",
             "required": [
-                "room_code",
-                "user_id"
+                "room_code"
             ],
             "properties": {
                 "room_code": {
                     "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
                 }
             }
         },
@@ -425,15 +421,7 @@ const docTemplate = `{
             }
         },
         "request.GetUserRoomsRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "integer"
-                }
-            }
+            "type": "object"
         },
         "request.LoginReq": {
             "type": "object",
@@ -634,6 +622,11 @@ const docTemplate = `{
                 "RoomStatusInProgress": "进行中",
                 "RoomStatusPending": "未开始"
             },
+            "x-enum-descriptions": [
+                "未开始",
+                "进行中",
+                "已完成"
+            ],
             "x-enum-varnames": [
                 "RoomStatusPending",
                 "RoomStatusInProgress",

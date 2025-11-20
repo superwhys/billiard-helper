@@ -21,11 +21,10 @@ func (u *User) TableName() string {
 
 func (u *User) ToType() *types.User {
 	userT := &types.User{
-		ID:       u.ID,
-		Email:    u.Email,
-		Name:     u.Name,
-		Password: u.Password,
-		Avatar:   u.Avatar,
+		ID:     u.ID,
+		Email:  u.Email,
+		Name:   u.Name,
+		Avatar: u.Avatar,
 	}
 	return userT
 }

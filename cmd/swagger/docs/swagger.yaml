@@ -47,11 +47,8 @@ definitions:
     properties:
       room_code:
         type: string
-      user_id:
-        type: integer
     required:
     - room_code
-    - user_id
     type: object
   request.DeleteRoomRequest:
     properties:
@@ -75,11 +72,6 @@ definitions:
     - room_id
     type: object
   request.GetUserRoomsRequest:
-    properties:
-      user_id:
-        type: integer
-    required:
-    - user_id
     type: object
   request.LoginReq:
     properties:
@@ -220,6 +212,10 @@ definitions:
       RoomStatusFinished: 已完成
       RoomStatusInProgress: 进行中
       RoomStatusPending: 未开始
+    x-enum-descriptions:
+    - 未开始
+    - 进行中
+    - 已完成
     x-enum-varnames:
     - RoomStatusPending
     - RoomStatusInProgress

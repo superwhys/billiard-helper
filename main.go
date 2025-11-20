@@ -5,6 +5,7 @@ import (
 	"github.com/miebyte/goutils/flags"
 	"github.com/miebyte/goutils/logging"
 	"github.com/miebyte/goutils/mysqlutils"
+	"github.com/miebyte/goutils/redisutils"
 	"github.com/superwhys/billiard-helper/api"
 	"github.com/superwhys/billiard-helper/models/config"
 	"github.com/superwhys/billiard-helper/models/dbmodels"
@@ -15,6 +16,7 @@ var (
 	port            = flags.Int("port", 8080, "server run port")
 	isDev           = flags.Bool("dev", true, "is dev")
 	configFlag      = flags.Struct("config", (*config.Config)(nil), "server config")
+	redisConfigFlag = flags.Struct("redis", (*redisutils.RedisConfig)(nil), "redis config")
 	mysqlConfigFlag = flags.Struct("mysql", (*mysqlutils.MysqlConfig)(nil), "mysql config")
 )
 
@@ -23,6 +25,12 @@ func main() {
 
 	config := new(config.Config)
 	logging.PanicError(configFlag(config))
+
+	redisConf := new(redisutils.RedisConfig)
+	logging.PanicError(redisConfigFlag(redisConf))
+
+	redisClient, err := redisConf.DialGORedisClient()
+	logging.PanicError(err)
 
 	mysqlConf := new(mysqlutils.MysqlConfig)
 	logging.PanicError(mysqlConfigFlag(mysqlConf))
@@ -33,7 +41,7 @@ func main() {
 	err = mysqlDB.AutoMigrate(dbmodels.Tables()...)
 	logging.PanicError(err)
 
-	services := service.NewService(config, mysqlDB)
+	services := service.NewService(config, mysqlDB, redisClient)
 	router := api.SetupRouter(services)
 
 	srv := cores.NewCores(
