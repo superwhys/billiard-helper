@@ -58,10 +58,10 @@ func socketEventHandler[R any](fn eventHandlerFunc[R]) websocketutils.MessageHan
 
 func SocketGroupRouter(services *service.Service) ginutils.Option {
 	socket := websocketutils.NewServer(
-		websocketutils.WithHeartbeat(time.Second*10, time.Second*20),
 		websocketutils.WithPrefix("/ws"),
+		websocketutils.WithHeartbeat(time.Second*10, time.Second*20),
+		websocketutils.WithHandshake(middleware.TokenVerifyFromSocket(services.AuthService)),
 	)
-	socket.Use(middleware.TokenVerifyFromSocket(services.AuthService))
 	setupBilliardSocket(services, socket)
 
 	return ginutils.WithGroupHandlers(

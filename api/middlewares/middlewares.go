@@ -15,7 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/logging"
 	"github.com/miebyte/goutils/websocketutils"
-	"github.com/superwhys/billiard-helper/models/constant"
 	"github.com/superwhys/billiard-helper/models/errcode"
 	"github.com/superwhys/billiard-helper/models/response"
 	"github.com/superwhys/billiard-helper/pkg/jwt"
@@ -26,30 +25,25 @@ const (
 	TokenContextKey = "token_claims"
 )
 
-func TokenVerifyFromSocket(logic ports.TokenAuthLogic) func(s websocketutils.Socket) error {
-	return func(s websocketutils.Socket) error {
-		ctx := s.Context()
-		tokenStr := s.Request().Header.Get("Authorization")
+func TokenVerifyFromSocket(logic ports.TokenAuthLogic) websocketutils.HandshakeFunc {
+	return func(r *http.Request) (context.Context, error) {
+		ctx := r.Context()
+		tokenStr := r.Header.Get("Authorization")
 		if tokenStr == "" {
-			s.Emit(constant.EventClientAuthFailed, response.ErrorResponseWithCode(errcode.ErrCodeNoToken))
-			return errcode.ErrCodeNoToken
+			return nil, errcode.ErrCodeNoToken
 		}
 
 		claims, err := logic.GetUserTokenClaims(ctx, tokenStr)
 		if err != nil {
 			logging.Errorc(ctx, "get secret from jwt token failed: %v", err)
 			if ec, ok := errcode.AsErrcode(err); ok {
-				s.Emit(constant.EventClientAuthFailed, response.ErrorResponseWithCode(ec))
-			} else {
-				s.Emit(constant.EventClientAuthFailed, response.ErrorResponseWithCode(errcode.ErrCodeNoToken))
+				return nil, ec
 			}
-			return err
+			return nil, errcode.ErrCodeNoToken
 		}
 
 		ctx = context.WithValue(ctx, TokenContextKey, claims)
-		s.SetContext(ctx)
-
-		return s.Emit(constant.EventClientAuthSuccess, response.ResponseWithData(claims.User))
+		return ctx, nil
 	}
 }
 
