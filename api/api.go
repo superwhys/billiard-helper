@@ -6,8 +6,8 @@ import (
 	"github.com/miebyte/goutils/ginutils"
 	"github.com/superwhys/billiard-helper/api/middlewares"
 	"github.com/superwhys/billiard-helper/api/router"
-	"github.com/superwhys/billiard-helper/pkg/longnet"
-	"github.com/superwhys/billiard-helper/service"
+	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
+	"github.com/superwhys/billiard-helper/internal/service"
 
 	_ "github.com/superwhys/billiard-helper/cmd/swagger/docs"
 	httpSwagger "github.com/swaggo/http-swagger/v2"

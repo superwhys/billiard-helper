@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
-	"github.com/superwhys/billiard-helper/models/errcode"
-	"github.com/superwhys/billiard-helper/models/request"
-	"github.com/superwhys/billiard-helper/models/response"
-	"github.com/superwhys/billiard-helper/ports"
+	"github.com/superwhys/billiard-helper/internal/models/errcode"
+	"github.com/superwhys/billiard-helper/internal/models/request"
+	"github.com/superwhys/billiard-helper/internal/models/response"
+	"github.com/superwhys/billiard-helper/internal/ports"
 )
 
 func AuthGroupRouter(authSvc ports.AuthService) ginutils.Option {

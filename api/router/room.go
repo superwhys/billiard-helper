@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 
-	"github.com/superwhys/billiard-helper/models/errcode"
-	"github.com/superwhys/billiard-helper/models/request"
-	"github.com/superwhys/billiard-helper/models/response"
-	"github.com/superwhys/billiard-helper/ports"
+	"github.com/superwhys/billiard-helper/internal/models/errcode"
+	"github.com/superwhys/billiard-helper/internal/models/request"
+	"github.com/superwhys/billiard-helper/internal/models/response"
+	"github.com/superwhys/billiard-helper/internal/ports"
 )
 
 func RoomGroupRouter(roomSvc ports.RoomService) ginutils.Option {
@@ -18,6 +18,8 @@ func RoomGroupRouter(roomSvc ports.RoomService) ginutils.Option {
 		ginutils.WithHandler(http.MethodPost, "/create", RoomCreateHandler(roomSvc)),
 		ginutils.WithHandler(http.MethodGet, "/:room_id", RoomDetailHandler(roomSvc)),
 		ginutils.WithHandler(http.MethodGet, "/list", RoomListHandler(roomSvc)),
+		ginutils.WithHandler(http.MethodPost, "/join", RoomJoinHandler(roomSvc)),
+		ginutils.WithHandler(http.MethodPost, "/leave", RoomLeaveHandler(roomSvc)),
 		ginutils.WithHandler(http.MethodDelete, "/:room_id", RoomDeleteHandler(roomSvc)),
 	)
 }
@@ -82,6 +84,46 @@ func RoomListHandler(roomSvc ports.RoomService) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, response.ResponseWithData(rooms))
+	})
+}
+
+// RoomJoinHandler 处理加入房间
+// @Summary 加入房间
+// @Description 加入房间
+// @Tags Room
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body request.JoinRoomRequest true "加入房间请求体"
+// @Success 200 {object} ginutils.Ret[response.Room]
+// @Router /rooms/join [post]
+func RoomJoinHandler(roomSvc ports.RoomService) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *request.JoinRoomRequest) {
+		room, err := roomSvc.JoinRoom(c.Request.Context(), req)
+		if handleRouterError(c, err, "room join handler error", errcode.ErrCodeJoinRoomFailed) {
+			return
+		}
+		c.JSON(http.StatusOK, response.ResponseWithData(room))
+	})
+}
+
+// RoomLeaveHandler 处理离开房间
+// @Summary 离开房间
+// @Description 离开房间
+// @Tags Room
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body request.LeaveRoomRequest true "离开房间请求体"
+// @Success 200 {object} ginutils.Ret[any]
+// @Router /rooms/leave [post]
+func RoomLeaveHandler(roomSvc ports.RoomService) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *request.LeaveRoomRequest) {
+		err := roomSvc.LeaveRoom(c.Request.Context(), req)
+		if handleRouterError(c, err, "room leave handler error", errcode.ErrCodeLeaveRoomFailed) {
+			return
+		}
+		c.JSON(http.StatusOK, response.ResponseSuccess())
 	})
 }
 

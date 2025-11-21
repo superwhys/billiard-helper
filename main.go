@@ -7,9 +7,9 @@ import (
 	"github.com/miebyte/goutils/mysqlutils"
 	"github.com/miebyte/goutils/redisutils"
 	"github.com/superwhys/billiard-helper/api"
-	"github.com/superwhys/billiard-helper/models/config"
-	"github.com/superwhys/billiard-helper/models/dbmodels"
-	"github.com/superwhys/billiard-helper/service"
+	"github.com/superwhys/billiard-helper/config"
+	"github.com/superwhys/billiard-helper/internal/models/dbmodels"
+	"github.com/superwhys/billiard-helper/internal/service"
 )
 
 var (

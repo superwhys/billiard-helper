@@ -5,7 +5,8 @@ go 1.25.4
 require (
 	github.com/gin-gonic/gin v1.10.1
 	github.com/golang-jwt/jwt/v5 v5.3.0
-	github.com/miebyte/goutils v1.0.37
+	github.com/miebyte/goutils v1.0.38
+	github.com/orcaman/concurrent-map/v2 v2.0.1
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.6

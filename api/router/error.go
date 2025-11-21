@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
 	"github.com/miebyte/goutils/logging"
-	"github.com/superwhys/billiard-helper/models/errcode"
-	"github.com/superwhys/billiard-helper/models/response"
+	"github.com/superwhys/billiard-helper/internal/models/errcode"
+	"github.com/superwhys/billiard-helper/internal/models/response"
 )
 
 // handleRouterError 处理业务逻辑错误响应。
