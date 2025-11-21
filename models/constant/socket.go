@@ -5,8 +5,9 @@ const (
 )
 
 const (
-	EventClientAuthFailed  = "auth_error"
-	EventClientAuthSuccess = "auth_success"
+	EventClientConnectSuccess = "connect"
+	EventClientAuthFailed     = "auth_error"
+	EventClientAuthSuccess    = "auth_success"
 )
 
 // Server receive event

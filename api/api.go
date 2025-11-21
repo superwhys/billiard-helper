@@ -4,13 +4,20 @@ import (
 	"net/http"
 
 	"github.com/miebyte/goutils/ginutils"
-	middleware "github.com/superwhys/billiard-helper/api/middlewares"
+	"github.com/superwhys/billiard-helper/api/middlewares"
 	"github.com/superwhys/billiard-helper/api/router"
+	"github.com/superwhys/billiard-helper/pkg/longnet"
 	"github.com/superwhys/billiard-helper/service"
 
 	_ "github.com/superwhys/billiard-helper/cmd/swagger/docs"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
+
+type apiApp struct {
+	isDev          bool
+	sessionManager longnet.ISessionManager
+	services       *service.Service
+}
 
 // SetupRouter godoc
 // @title Billiard Helper API
@@ -20,27 +27,35 @@ import (
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-func SetupRouter(services *service.Service) http.Handler {
-	engine := ginutils.NewServerHandler(
-		ginutils.WithMiddleware(ginutils.WithLoggingRequest(true)),
-		router.AuthGroupRouter(services.AuthService),
-		router.SocketGroupRouter(services),
-		ginutils.WithGroupHandlers(
-			ginutils.WithMiddleware(middleware.TokenVerifyMiddleware(services.AuthService)),
-			ginutils.WithGroupHandlers(
-				router.RoomGroupRouter(services.RoomService),
-				router.ScoresGroupRouter(services.ScoresService),
-			),
-		),
-	)
-
-	return engine
+func SetupAPI(isDev bool, sessionManager longnet.ISessionManager, services *service.Service) *apiApp {
+	return &apiApp{
+		isDev:          isDev,
+		sessionManager: sessionManager,
+		services:       services,
+	}
 }
 
-func SwaggerRouter(isProd bool) http.Handler {
-	if isProd {
+func (a *apiApp) SwaggerRouter() http.Handler {
+	if !a.isDev {
 		return http.NotFoundHandler()
 	}
 
 	return httpSwagger.Handler()
+}
+
+func (a *apiApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	engine := ginutils.NewServerHandler(
+		ginutils.WithMiddleware(ginutils.WithLoggingRequest(true)),
+		router.AuthGroupRouter(a.services.AuthService),
+		router.SocketGroupRouter(a.sessionManager, a.services),
+		ginutils.WithGroupHandlers(
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(a.services.AuthService)),
+			ginutils.WithGroupHandlers(
+				router.RoomGroupRouter(a.services.RoomService),
+				router.ScoresGroupRouter(a.services.ScoresService),
+			),
+		),
+	)
+
+	engine.ServeHTTP(w, r)
 }

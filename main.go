@@ -42,13 +42,13 @@ func main() {
 	logging.PanicError(err)
 
 	services := service.NewService(config, mysqlDB, redisClient)
-	router := api.SetupRouter(services)
+	apiApp := api.SetupAPI(isDev(), nil, services)
 
 	srv := cores.NewCores(
 		cores.WithHttpCORS(),
 		cores.WithRegisterService(),
-		cores.WithHttpHandler("/api", router),
-		cores.WithHttpHandler("/swagger", api.SwaggerRouter(!isDev())),
+		cores.WithHttpHandler("/api", apiApp),
+		cores.WithHttpHandler("/swagger", apiApp.SwaggerRouter()),
 	)
 
 	logging.PanicError(cores.Start(srv, port()))
