@@ -14,7 +14,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/logging"
-	"github.com/miebyte/goutils/websocketutils"
 	"github.com/superwhys/billiard-helper/internal/models/errcode"
 	"github.com/superwhys/billiard-helper/internal/models/response"
 	"github.com/superwhys/billiard-helper/internal/pkg/jwt"
@@ -25,25 +24,24 @@ const (
 	TokenContextKey = "token_claims"
 )
 
-func TokenVerifyFromSocket(logic ports.TokenAuthLogic) websocketutils.HandshakeFunc {
-	return func(r *http.Request) (context.Context, error) {
+func TokenVerifyFromSocket(logic ports.TokenAuthLogic) func(r *http.Request) error {
+	return func(r *http.Request) error {
 		ctx := logging.CloneContext(r.Context())
 		tokenStr := r.Header.Get("Authorization")
 		if tokenStr == "" {
-			return nil, errcode.ErrCodeNoToken
+			return errcode.ErrCodeNoToken
 		}
 
-		claims, err := logic.GetUserTokenClaims(ctx, tokenStr)
+		_, err := logic.GetUserTokenClaims(ctx, tokenStr)
 		if err != nil {
 			logging.Errorc(ctx, "get secret from jwt token failed: %v", err)
 			if ec, ok := errcode.AsErrcode(err); ok {
-				return nil, ec
+				return ec
 			}
-			return nil, errcode.ErrCodeNoToken
+			return errcode.ErrCodeNoToken
 		}
 
-		ctx = context.WithValue(ctx, TokenContextKey, claims)
-		return ctx, nil
+		return nil
 	}
 }
 

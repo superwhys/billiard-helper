@@ -6,6 +6,7 @@ import (
 	"github.com/miebyte/goutils/ginutils"
 	"github.com/superwhys/billiard-helper/api/middlewares"
 	"github.com/superwhys/billiard-helper/api/router"
+	"github.com/superwhys/billiard-helper/internal/comet"
 	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
 	"github.com/superwhys/billiard-helper/internal/service"
 
@@ -17,6 +18,7 @@ type apiApp struct {
 	isDev          bool
 	sessionManager longnet.ISessionManager
 	services       *service.Service
+	cometServer    *comet.Server
 }
 
 // SetupRouter godoc
@@ -27,11 +29,15 @@ type apiApp struct {
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-func SetupAPI(isDev bool, sessionManager longnet.ISessionManager, services *service.Service) *apiApp {
+func SetupAPI(
+	isDev bool,
+	services *service.Service,
+	cometServer *comet.Server,
+) *apiApp {
 	return &apiApp{
-		isDev:          isDev,
-		sessionManager: sessionManager,
-		services:       services,
+		isDev:       isDev,
+		services:    services,
+		cometServer: cometServer,
 	}
 }
 
@@ -46,8 +52,8 @@ func (a *apiApp) SwaggerRouter() http.Handler {
 func (a *apiApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	engine := ginutils.NewServerHandler(
 		ginutils.WithMiddleware(ginutils.WithLoggingRequest(true)),
+		a.cometServer.Handler(),
 		router.AuthGroupRouter(a.services.AuthService),
-		router.SocketGroupRouter(a.sessionManager, a.services),
 		ginutils.WithGroupHandlers(
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(a.services.AuthService)),
 			ginutils.WithGroupHandlers(

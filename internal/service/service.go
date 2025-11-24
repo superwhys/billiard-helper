@@ -4,6 +4,7 @@ import (
 	"github.com/miebyte/goutils/redisutils"
 	"github.com/superwhys/billiard-helper/config"
 	"github.com/superwhys/billiard-helper/internal/dal/db/manager"
+	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
 	"github.com/superwhys/billiard-helper/internal/ports"
 	"gorm.io/gorm"
 )
@@ -16,7 +17,7 @@ type Service struct {
 }
 
 // NewService 创建服务集合
-func NewService(config *config.Config, db *gorm.DB, redisClient *redisutils.RedisClient) *Service {
+func NewService(config *config.Config, db *gorm.DB, redisClient *redisutils.RedisClient, eventQueue longnet.EventQueue) *Service {
 	roomRepo := manager.NewRoomManager(db)
 	playerRepo := manager.NewPlayerManager(db)
 	scoreRepo := manager.NewScoresManager(db)
@@ -29,6 +30,7 @@ func NewService(config *config.Config, db *gorm.DB, redisClient *redisutils.Redi
 		PlayerRepo:  playerRepo,
 		ScoreRepo:   scoreRepo,
 		UserRepo:    userRepo,
+		EventQueue:  eventQueue,
 	}
 
 	return &Service{

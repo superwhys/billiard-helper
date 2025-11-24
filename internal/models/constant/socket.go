@@ -1,7 +1,10 @@
 package constant
 
+import "github.com/superwhys/billiard-helper/internal/models/types"
+
 const (
-	BilliardNamespace = "billiard"
+	BilliardNamespace      = "billiard"
+	BilliardMessageChannel = "billiard:message:all"
 )
 
 const (
@@ -13,3 +16,9 @@ const (
 	EventPlayerScoreReset     = "player_score_reset"
 	EventPlayerKickPlayer     = "player_kick_player"
 )
+
+type JoinRoomMessage struct {
+	UserID uint          `json:"user_id`
+	RoomID uint          `json:"room_id"`
+	Player *types.Player `json:"player"`
+}

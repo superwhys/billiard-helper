@@ -8,7 +8,9 @@ import (
 	"github.com/miebyte/goutils/redisutils"
 	"github.com/superwhys/billiard-helper/api"
 	"github.com/superwhys/billiard-helper/config"
+	"github.com/superwhys/billiard-helper/internal/comet"
 	"github.com/superwhys/billiard-helper/internal/models/dbmodels"
+	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
 	"github.com/superwhys/billiard-helper/internal/service"
 )
 
@@ -41,14 +43,20 @@ func main() {
 	err = mysqlDB.AutoMigrate(dbmodels.Tables()...)
 	logging.PanicError(err)
 
-	services := service.NewService(config, mysqlDB, redisClient)
-	apiApp := api.SetupAPI(isDev(), nil, services)
+	eventQueue := longnet.NewMemoryQueue()
+	sessionManager := longnet.NewSessionManager()
+
+	services := service.NewService(config, mysqlDB, redisClient, eventQueue)
+	cometServer := comet.NewCometServer(eventQueue, sessionManager, services)
+
+	apiApp := api.SetupAPI(isDev(), services, cometServer)
 
 	srv := cores.NewCores(
 		cores.WithHttpCORS(),
 		cores.WithRegisterService(),
 		cores.WithHttpHandler("/api", apiApp),
 		cores.WithHttpHandler("/swagger", apiApp.SwaggerRouter()),
+		cores.WithNameWorker("CometSubscriber", cometServer.Subscribe),
 	)
 
 	logging.PanicError(cores.Start(srv, port()))

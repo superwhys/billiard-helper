@@ -21,7 +21,7 @@ func NewSessionManager() *SessionManager {
 	return sm
 }
 
-func (sm *SessionManager) RegisterSession(uid uint, conn websocketutils.Socket) {
+func (sm *SessionManager) RegisterSession(uid uint, conn websocketutils.Conn) {
 	session := NewSession(uid, conn)
 	sm.sessions.Set(session.ConnID(), session)
 
@@ -35,7 +35,7 @@ func (sm *SessionManager) RegisterSession(uid uint, conn websocketutils.Socket) 
 	})
 }
 
-func (sm *SessionManager) UnregisterSession(conn websocketutils.Socket) {
+func (sm *SessionManager) UnregisterSession(conn websocketutils.Conn) {
 	connID := conn.ID()
 	session, ok := sm.sessions.Get(connID)
 	if !ok {
@@ -58,19 +58,11 @@ func (sm *SessionManager) UnregisterSession(conn websocketutils.Socket) {
 			}
 		}
 		if len(newConnIDs) == 0 {
-			// Return nil or empty slice? Upsert documentation says:
-			// "If the callback returns value, the element is updated."
-			// It doesn't explicitly say how to delete.
-			// Actually concurrent-map Upsert might not support deletion by returning nil.
-			// Let's check if we can use Remove if empty.
-			// But Upsert is atomic.
-			// If we return empty slice, it keeps the key.
 			return newConnIDs
 		}
 		return newConnIDs
 	})
 
-	// Clean up if empty (optimization, might not be strictly atomic with Upsert but acceptable)
 	if v, ok := sm.users.Get(uidStr); ok && len(v) == 0 {
 		sm.users.Remove(uidStr)
 	}
@@ -98,8 +90,6 @@ func (sm *SessionManager) GetSessionsByUserID(userID uint) []ISession {
 }
 
 func (sm *SessionManager) IterateSessions(callback func(ISession) bool) {
-	// concurrent-map v2 IterCb does not support stopping.
-	// IterBuffered returns a channel of items.
 	for item := range sm.sessions.IterBuffered() {
 		if !callback(item.Val) {
 			break

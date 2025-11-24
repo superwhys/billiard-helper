@@ -1,32 +1,50 @@
 package longnet
 
 import (
-	"sync"
+	"context"
+	"encoding/json"
+
+	"github.com/miebyte/goutils/logging"
+	cmap "github.com/orcaman/concurrent-map/v2"
 )
 
 type MemoryQueue struct {
-	mu       sync.RWMutex
-	handlers map[string][]func(data []byte)
+	queues cmap.ConcurrentMap[string, chan []byte]
 }
 
 func NewMemoryQueue() *MemoryQueue {
 	return &MemoryQueue{
-		handlers: make(map[string][]func(data []byte)),
+		queues: cmap.New[chan []byte](),
 	}
 }
 
-func (m *MemoryQueue) Subscribe(channel string, callback func(data []byte)) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.handlers[channel] = append(m.handlers[channel], callback)
+func (m *MemoryQueue) Subscribe(ctx context.Context, channel string) <-chan []byte {
+	ch, ok := m.queues.Get(channel)
+	if !ok {
+		ch = make(chan []byte, 100)
+		m.queues.Set(channel, ch)
+	}
+
+	return ch
 }
 
-func (m *MemoryQueue) Publish(channel string, data []byte) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	if handlers, ok := m.handlers[channel]; ok {
-		for _, handler := range handlers {
-			go handler(data)
-		}
+func (m *MemoryQueue) Publish(ctx context.Context, channel string, data []byte) {
+	msg := MemoryQueueMessage{
+		Event: channel,
+		Data:  data,
 	}
+
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		logging.Errorc(ctx, "marshal message failed: %v", err)
+		return
+	}
+
+	ch, ok := m.queues.Get(channel)
+	if !ok {
+		logging.Errorc(ctx, "channel %s not found", channel)
+		return
+	}
+
+	ch <- bytes
 }

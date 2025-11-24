@@ -5,13 +5,13 @@ import (
 )
 
 type Session struct {
-	websocketutils.Socket
+	websocketutils.Conn
 	userID uint
 }
 
-func NewSession(uid uint, conn websocketutils.Socket) *Session {
+func NewSession(uid uint, conn websocketutils.Conn) *Session {
 	return &Session{
-		Socket: conn,
+		Conn:   conn,
 		userID: uid,
 	}
 }
