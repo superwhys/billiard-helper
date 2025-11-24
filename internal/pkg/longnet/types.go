@@ -11,6 +11,7 @@ type ISession interface {
 	websocketutils.Conn
 	UserID() uint
 	ConnID() string
+	UUID() string
 }
 
 type EventQueue interface {
@@ -22,6 +23,7 @@ type ISessionManager interface {
 	RegisterSession(claims *jwt.UserTokenClaims, conn websocketutils.Conn)
 	UnregisterSession(conn websocketutils.Conn)
 	GetSession(connID string) ISession
+	GetSessionByUUID(uuid string) ISession
 	GetSessionsByUserID(userID uint) []ISession
 	IterateSessions(callback func(ISession) bool)
 }

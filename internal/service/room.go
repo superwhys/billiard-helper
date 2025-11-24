@@ -155,9 +155,22 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 		player.IsYou = player.Code == code
 	}
 
-	sessions := s.srvCtx.SessionManager.GetSessionsByUserID(userID)
-	err = s.publishRoomEvent(ctx, constant.EventPlayerJoinRoom, roomType)
-	if err != nil {
+	session := s.srvCtx.SessionManager.GetSessionByUUID(userClaims.UUID)
+	if session == nil {
+		return nil, errcode.ErrCodeJoinRoomFailed
+	}
+
+	if err := session.Join(types.SocketRoomID(req.RoomID)); err != nil {
+		return nil, fmt.Errorf("join socket room failed: %w", err)
+	}
+
+	joinMsg := &constant.JoinRoomMessage{
+		UserID: userID,
+		RoomID: req.RoomID,
+		Player: playerModel.ToType(),
+	}
+
+	if err := s.publishRoomEvent(ctx, constant.EventPlayerJoinRoom, joinMsg); err != nil {
 		return nil, fmt.Errorf("publish room event failed: %w", err)
 	}
 

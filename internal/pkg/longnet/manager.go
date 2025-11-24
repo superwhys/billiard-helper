@@ -10,13 +10,14 @@ import (
 
 type SessionManager struct {
 	sessions cmap.ConcurrentMap[string, ISession]
-	uuids    cmap.ConcurrentMap[string, string]   // uuid -> userID
+	uuids    cmap.ConcurrentMap[string, string]   // uuid -> connID
 	users    cmap.ConcurrentMap[string, []string] // userID -> []connID
 }
 
 func NewSessionManager() *SessionManager {
 	sm := &SessionManager{
 		sessions: cmap.New[ISession](),
+		uuids:    cmap.New[string](),
 		users:    cmap.New[[]string](),
 	}
 
@@ -24,7 +25,7 @@ func NewSessionManager() *SessionManager {
 }
 
 func (sm *SessionManager) RegisterSession(claims *jwt.UserTokenClaims, conn websocketutils.Conn) {
-	session := NewSession(claims.User.ID, conn)
+	session := NewSession(claims.UUID, claims.User.ID, conn)
 	sm.sessions.Set(session.ConnID(), session)
 	sm.uuids.Set(claims.UUID, session.ConnID())
 
@@ -45,6 +46,8 @@ func (sm *SessionManager) UnregisterSession(conn websocketutils.Conn) {
 		return
 	}
 	sm.sessions.Remove(connID)
+
+	sm.uuids.Remove(session.UUID())
 
 	uid := session.UserID()
 	uidStr := strconv.FormatUint(uint64(uid), 10)
@@ -74,6 +77,13 @@ func (sm *SessionManager) UnregisterSession(conn websocketutils.Conn) {
 func (sm *SessionManager) GetSession(connID string) ISession {
 	if value, ok := sm.sessions.Get(connID); ok {
 		return value
+	}
+	return nil
+}
+
+func (sm *SessionManager) GetSessionByUUID(uuid string) ISession {
+	if connID, ok := sm.uuids.Get(uuid); ok {
+		return sm.GetSession(connID)
 	}
 	return nil
 }
