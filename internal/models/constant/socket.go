@@ -18,7 +18,7 @@ const (
 )
 
 type JoinRoomMessage struct {
-	UserID uint          `json:"user_id`
+	UserID uint          `json:"user_id"`
 	RoomID uint          `json:"room_id"`
 	Player *types.Player `json:"player"`
 }

@@ -73,6 +73,29 @@ definitions:
     type: object
   request.GetUserRoomsRequest:
     type: object
+  request.JoinRoomRequest:
+    properties:
+      player_avatar:
+        type: string
+      player_nick_name:
+        type: string
+      player_type:
+        $ref: '#/definitions/types.PlayerType'
+      room_id:
+        type: integer
+    required:
+    - room_id
+    type: object
+  request.LeaveRoomRequest:
+    properties:
+      player_code:
+        type: string
+      room_id:
+        type: integer
+    required:
+    - player_code
+    - room_id
+    type: object
   request.LoginReq:
     properties:
       email:
@@ -212,10 +235,6 @@ definitions:
       RoomStatusFinished: 已完成
       RoomStatusInProgress: 进行中
       RoomStatusPending: 未开始
-    x-enum-descriptions:
-    - 未开始
-    - 进行中
-    - 已完成
     x-enum-varnames:
     - RoomStatusPending
     - RoomStatusInProgress
@@ -376,6 +395,54 @@ paths:
       security:
       - BearerAuth: []
       summary: 创建房间
+      tags:
+      - Room
+  /rooms/join:
+    post:
+      consumes:
+      - application/json
+      description: 加入房间
+      parameters:
+      - description: 加入房间请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.JoinRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-response_Room'
+      security:
+      - BearerAuth: []
+      summary: 加入房间
+      tags:
+      - Room
+  /rooms/leave:
+    post:
+      consumes:
+      - application/json
+      description: 离开房间
+      parameters:
+      - description: 离开房间请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.LeaveRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 离开房间
       tags:
       - Room
   /rooms/list:

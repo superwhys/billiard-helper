@@ -2,17 +2,20 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/miebyte/goutils/utils/ptrx"
 	"github.com/superwhys/billiard-helper/api/middlewares"
+	"github.com/superwhys/billiard-helper/internal/models/constant"
 	"github.com/superwhys/billiard-helper/internal/models/dbmodels"
 	"github.com/superwhys/billiard-helper/internal/models/errcode"
 	"github.com/superwhys/billiard-helper/internal/models/request"
 	"github.com/superwhys/billiard-helper/internal/models/response"
 	"github.com/superwhys/billiard-helper/internal/models/types"
 	"github.com/superwhys/billiard-helper/internal/pkg/hash"
+	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
 	"github.com/superwhys/billiard-helper/internal/ports"
 	"gorm.io/gorm"
 )
@@ -152,6 +155,12 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 		player.IsYou = player.Code == code
 	}
 
+	sessions := s.srvCtx.SessionManager.GetSessionsByUserID(userID)
+	err = s.publishRoomEvent(ctx, constant.EventPlayerJoinRoom, roomType)
+	if err != nil {
+		return nil, fmt.Errorf("publish room event failed: %w", err)
+	}
+
 	return &response.Room{Room: roomType}, nil
 }
 
@@ -181,4 +190,18 @@ func (s *roomService) DeleteRoom(ctx context.Context, req *request.DeleteRoomReq
 
 func (s *roomService) socketRoomID(roomID uint) string {
 	return fmt.Sprintf("room_%d", roomID)
+}
+
+func (s *roomService) publishRoomEvent(ctx context.Context, event string, data any) error {
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("marshal data failed: %w", err)
+	}
+
+	msg := &longnet.MemoryQueueMessage{
+		Event: event,
+		Data:  bytes,
+	}
+
+	return s.srvCtx.EventQueue.Publish(ctx, constant.BilliardMessageChannel, msg)
 }

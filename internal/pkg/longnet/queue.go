@@ -3,8 +3,8 @@ package longnet
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
-	"github.com/miebyte/goutils/logging"
 	cmap "github.com/orcaman/concurrent-map/v2"
 )
 
@@ -28,23 +28,17 @@ func (m *MemoryQueue) Subscribe(ctx context.Context, channel string) <-chan []by
 	return ch
 }
 
-func (m *MemoryQueue) Publish(ctx context.Context, channel string, data []byte) {
-	msg := MemoryQueueMessage{
-		Event: channel,
-		Data:  data,
-	}
-
-	bytes, err := json.Marshal(msg)
+func (m *MemoryQueue) Publish(ctx context.Context, channel string, data *MemoryQueueMessage) error {
+	bytes, err := json.Marshal(data)
 	if err != nil {
-		logging.Errorc(ctx, "marshal message failed: %v", err)
-		return
+		return fmt.Errorf("marshal data failed: %w", err)
 	}
 
 	ch, ok := m.queues.Get(channel)
 	if !ok {
-		logging.Errorc(ctx, "channel %s not found", channel)
-		return
+		return fmt.Errorf("channel %s not found", channel)
 	}
 
 	ch <- bytes
+	return nil
 }

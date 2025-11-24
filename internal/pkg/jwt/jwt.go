@@ -5,11 +5,13 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/superwhys/billiard-helper/internal/models/types"
 )
 
 type UserTokenClaims struct {
 	jwt.RegisteredClaims
+	UUID string      `json:"uuid"`
 	User *types.User `json:"user"`
 }
 
@@ -23,6 +25,7 @@ func GenerateToken(signingKey []byte, timeout time.Duration, user *types.User) (
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 		},
+		UUID: uuid.NewString(),
 		User: user,
 	}
 

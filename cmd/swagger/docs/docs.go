@@ -232,6 +232,84 @@ const docTemplate = `{
                 }
             }
         },
+        "/rooms/join": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "加入房间",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "加入房间",
+                "parameters": [
+                    {
+                        "description": "加入房间请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.JoinRoomRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-response_Room"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/leave": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "离开房间",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Room"
+                ],
+                "summary": "离开房间",
+                "parameters": [
+                    {
+                        "description": "离开房间请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.LeaveRoomRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
         "/rooms/list": {
             "get": {
                 "security": [
@@ -422,6 +500,41 @@ const docTemplate = `{
         },
         "request.GetUserRoomsRequest": {
             "type": "object"
+        },
+        "request.JoinRoomRequest": {
+            "type": "object",
+            "required": [
+                "room_id"
+            ],
+            "properties": {
+                "player_avatar": {
+                    "type": "string"
+                },
+                "player_nick_name": {
+                    "type": "string"
+                },
+                "player_type": {
+                    "$ref": "#/definitions/types.PlayerType"
+                },
+                "room_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.LeaveRoomRequest": {
+            "type": "object",
+            "required": [
+                "player_code",
+                "room_id"
+            ],
+            "properties": {
+                "player_code": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                }
+            }
         },
         "request.LoginReq": {
             "type": "object",
@@ -622,11 +735,6 @@ const docTemplate = `{
                 "RoomStatusInProgress": "进行中",
                 "RoomStatusPending": "未开始"
             },
-            "x-enum-descriptions": [
-                "未开始",
-                "进行中",
-                "已完成"
-            ],
             "x-enum-varnames": [
                 "RoomStatusPending",
                 "RoomStatusInProgress",

@@ -9,12 +9,13 @@ import (
 )
 
 type ServiceContext struct {
-	Config      *config.Config
-	RedisClient *redisutils.RedisClient
-	Socket      *websocketutils.Server
-	EventQueue  longnet.EventQueue
-	RoomRepo    ports.RoomRepo
-	PlayerRepo  ports.PlayerRepo
-	ScoreRepo   ports.ScoreRepo
-	UserRepo    ports.UserRepo
+	Config         *config.Config
+	RedisClient    *redisutils.RedisClient
+	Socket         *websocketutils.Server
+	EventQueue     longnet.EventQueue
+	SessionManager longnet.ISessionManager
+	RoomRepo       ports.RoomRepo
+	PlayerRepo     ports.PlayerRepo
+	ScoreRepo      ports.ScoreRepo
+	UserRepo       ports.UserRepo
 }

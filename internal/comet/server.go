@@ -19,7 +19,7 @@ import (
 type Server struct {
 	srv            *service.Service
 	subscriber     *Subscriber
-	socket         *websocketutils.Server
+	socket         websocketutils.ServerAPI
 	sessionManager longnet.ISessionManager
 }
 
@@ -28,8 +28,8 @@ func NewCometServer(queue longnet.EventQueue, sessionManager longnet.ISessionMan
 
 	socket := websocketutils.NewServer(
 		websocketutils.WithNamespacePrefix("/ws"),
-		websocketutils.WithHeartbeat(time.Second*10, time.Second*20),
-		websocketutils.WithAllowRequest(middlewares.TokenVerifyFromSocket(srv.AuthService)),
+		websocketutils.WithHeartbeat(time.Second*10, time.Minute*20),
+		websocketutils.WithAllowRequestFunc(middlewares.TokenVerifyFromSocket(srv.AuthService)),
 	)
 
 	server := &Server{
@@ -70,7 +70,7 @@ func (s *Server) setupSocket() {
 			logging.Errorc(ctx.Context(), "get token claims from context failed: %v", err)
 			return
 		}
-		s.sessionManager.RegisterSession(claims.User.ID, ctx.Conn())
-		_ = ctx.Conn().Emit(constant.EventClientConnectSuccess, response.ResponseSuccess())
+		s.sessionManager.RegisterSession(claims, ctx.Conn())
+		_ = ctx.Conn().Emit(constant.EventClientConnectSuccess, response.ResponseWithData(claims))
 	})
 }

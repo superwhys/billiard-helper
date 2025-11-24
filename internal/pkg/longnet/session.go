@@ -6,18 +6,18 @@ import (
 
 type Session struct {
 	websocketutils.Conn
-	userID uint
+	uid uint
 }
 
 func NewSession(uid uint, conn websocketutils.Conn) *Session {
 	return &Session{
-		Conn:   conn,
-		userID: uid,
+		Conn: conn,
+		uid:  uid,
 	}
 }
 
 func (s *Session) UserID() uint {
-	return s.userID
+	return s.uid
 }
 
 func (s *Session) ConnID() string {

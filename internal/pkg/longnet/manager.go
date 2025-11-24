@@ -5,10 +5,12 @@ import (
 
 	"github.com/miebyte/goutils/websocketutils"
 	cmap "github.com/orcaman/concurrent-map/v2"
+	"github.com/superwhys/billiard-helper/internal/pkg/jwt"
 )
 
 type SessionManager struct {
 	sessions cmap.ConcurrentMap[string, ISession]
+	uuids    cmap.ConcurrentMap[string, string]   // uuid -> userID
 	users    cmap.ConcurrentMap[string, []string] // userID -> []connID
 }
 
@@ -21,12 +23,13 @@ func NewSessionManager() *SessionManager {
 	return sm
 }
 
-func (sm *SessionManager) RegisterSession(uid uint, conn websocketutils.Conn) {
-	session := NewSession(uid, conn)
+func (sm *SessionManager) RegisterSession(claims *jwt.UserTokenClaims, conn websocketutils.Conn) {
+	session := NewSession(claims.User.ID, conn)
 	sm.sessions.Set(session.ConnID(), session)
+	sm.uuids.Set(claims.UUID, session.ConnID())
 
 	// Update user sessions
-	uidStr := strconv.FormatUint(uint64(uid), 10)
+	uidStr := strconv.FormatUint(uint64(claims.User.ID), 10)
 	sm.users.Upsert(uidStr, []string{session.ConnID()}, func(exist bool, valueInMap []string, newValue []string) []string {
 		if !exist {
 			return newValue
