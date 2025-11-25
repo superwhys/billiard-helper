@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/miebyte/goutils/utils"
 	"github.com/miebyte/goutils/utils/ptrx"
 	"github.com/superwhys/billiard-helper/api/middlewares"
+	"github.com/superwhys/billiard-helper/internal/dal/cache"
 	"github.com/superwhys/billiard-helper/internal/models/constant"
 	"github.com/superwhys/billiard-helper/internal/models/dbmodels"
 	"github.com/superwhys/billiard-helper/internal/models/errcode"
@@ -31,17 +33,6 @@ func NewRoomService(srvCtx *ServiceContext) ports.RoomService {
 	}
 }
 
-func (s *roomService) genRoomCode(roomID uint, userID uint, playerType types.PlayerType, playerNickName string) string {
-	// 生成玩家幂等 code
-	code := hash.GenerateHash(
-		fmt.Sprintf("%d", roomID),
-		fmt.Sprintf("%d", userID),
-		fmt.Sprintf("%d", playerType),
-		fmt.Sprintf("%s", playerNickName),
-	)
-	return code
-}
-
 func (s *roomService) CreateRoom(ctx context.Context, req *request.CreateRoomRequest) (*response.Room, error) {
 	if req == nil {
 		return nil, errcode.ErrCodeInvalidRequest
@@ -53,8 +44,10 @@ func (s *roomService) CreateRoom(ctx context.Context, req *request.CreateRoomReq
 	}
 	userID := userClaims.User.ID
 
+	// TODO: 检查房间码是否重复
+	roomCode := utils.RandUpper(8)
 	roomModel := &dbmodels.Room{
-		RoomCode: req.RoomCode,
+		RoomCode: roomCode,
 		UserID:   userID,
 		Status:   types.RoomStatusPending,
 	}
@@ -106,13 +99,48 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 		return nil, errcode.ErrCodeInvalidRequest
 	}
 
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
 	userClaims, err := middlewares.TokenClaimsFromContext(ctx)
 	if err != nil {
 		return nil, errcode.ErrCodeNoToken
 	}
-	userID := userClaims.User.ID
+	user := userClaims.User
+
+	// 加锁，防止并发操作房间
+	rdb := s.srvCtx.RedisClient
+	roomLock := cache.RoomLockCache(fmt.Sprintf("room:%d", req.RoomID))
+	err = roomLock.Lock(ctx, rdb)
+	if err != nil {
+		return nil, err
+	}
+	defer roomLock.Unlock(ctx, rdb)
+
+	if req.PlayerNickName == "" {
+		req.PlayerNickName = user.Name
+	}
 
 	// 检查房间是否存在
+	isExist, err := s.srvCtx.RoomRepo.IsRoomExist(ctx, req.RoomID)
+	if err != nil {
+		return nil, err
+	}
+	if !isExist {
+		return nil, errcode.ErrCodeRoomNotFound
+	}
+
+	var playerObj *dbmodels.Player
+	if req.IsVirtualPlayer() {
+		playerObj, err = s.joinVirtualPlayer(ctx, req, user)
+	} else {
+		playerObj, err = s.joinRealPlayer(ctx, req, user)
+	}
+
+	playerType := playerObj.ToType()
+
+	// 获取房间信息以及房间内玩家信息
 	room, err := s.srvCtx.RoomRepo.GetRoom(ctx, req.RoomID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -120,33 +148,23 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 		}
 		return nil, err
 	}
-
 	roomType := room.ToType()
-
-	// 生成玩家幂等 code
-	code := s.genRoomCode(req.RoomID, userID, req.PlayerType, req.PlayerNickName)
-	s.markSelfPlayer(roomType, code)
-
-	// 确保玩家加入房间并返回玩家实例
-	playerObj, err := s.ensureJoinPlayer(ctx, req, userID, code)
-	if err != nil {
-		return nil, err
-	}
+	s.markSelfPlayer(roomType, playerType.Code)
 
 	// 获取用户 session 并加入房间
-	roomID := types.SocketRoomID(req.RoomID)
-	if err := s.srvCtx.SessionManager.JoinRoom(ctx, userClaims.UUID, roomID); err != nil {
+	roomID := types.SocketRoomID(roomType.RoomCode)
+	if err := s.srvCtx.SessionManager.JoinRoom(ctx, user.ID, userClaims.SessionID, roomID); err != nil {
 		return nil, err
 	}
 
 	// 发布玩家加入房间事件
 	joinMsg := &constant.JoinRoomMessage{
 		EventMsgBase: constant.EventMsgBase{
-			UserID: userID,
-			RoomID: roomID,
-			UUID:   userClaims.UUID,
+			UserID:    user.ID,
+			RoomID:    roomID,
+			SessionID: userClaims.SessionID,
 		},
-		Player: playerObj.ToType(),
+		Player: playerType,
 	}
 
 	if err := s.publishRoomEvent(ctx, constant.EventPlayerJoinRoom, joinMsg); err != nil {
@@ -154,6 +172,53 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 	}
 
 	return &response.Room{Room: roomType}, nil
+}
+
+func (s *roomService) joinVirtualPlayer(ctx context.Context, req *request.JoinRoomRequest, user *types.User) (*dbmodels.Player, error) {
+	code := hash.GenerateRoomCode(req.RoomID, req.PlayerType, req.PlayerNickName)
+
+	playerObj, err := s.srvCtx.PlayerRepo.GetPlayerByCode(ctx, code)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	if playerObj != nil {
+		return nil, errcode.ErrCodePlayerAlreadyJoined
+	}
+
+	playerObj = &dbmodels.Player{
+		Code:     code,
+		RoomID:   req.RoomID,
+		NickName: req.PlayerNickName,
+		Type:     req.PlayerType,
+		IsOnline: true,
+	}
+	return playerObj, s.srvCtx.PlayerRepo.CreatePlayer(ctx, playerObj)
+}
+
+func (s *roomService) joinRealPlayer(ctx context.Context, req *request.JoinRoomRequest, user *types.User) (*dbmodels.Player, error) {
+	code := hash.GenerateRoomCode(req.RoomID, req.PlayerType, req.PlayerNickName)
+
+	playerObj, err := s.srvCtx.PlayerRepo.GetPlayerByCode(ctx, code)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	// 如果是真实玩家，允许重复加入房间
+	if playerObj != nil {
+		playerObj.IsOnline = true
+		return playerObj, s.srvCtx.PlayerRepo.UpdatePlayer(ctx, code, playerObj)
+	}
+
+	playerObj = &dbmodels.Player{
+		Code:     code,
+		RoomID:   req.RoomID,
+		NickName: req.PlayerNickName,
+		Type:     req.PlayerType,
+		UserID:   ptrx.Uint(user.ID),
+		IsOnline: true,
+	}
+	return playerObj, s.srvCtx.PlayerRepo.CreatePlayer(ctx, playerObj)
 }
 
 // markSelfPlayer 标记自己
@@ -166,50 +231,18 @@ func (s *roomService) markSelfPlayer(room *types.Room, code string) {
 	}
 }
 
-// ensureJoinPlayer 确保玩家加入房间
-func (s *roomService) ensureJoinPlayer(ctx context.Context, req *request.JoinRoomRequest, userID uint, code string) (*dbmodels.Player, error) {
-	player, err := s.srvCtx.PlayerRepo.GetPlayerByCode(ctx, code)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
-	}
-
-	if req.IsVirtualPlayer() {
-		if player != nil {
-			return nil, errcode.ErrCodePlayerAlreadyJoined
-		}
-		player = &dbmodels.Player{
-			Code:     code,
-			RoomID:   req.RoomID,
-			NickName: req.PlayerNickName,
-			Avatar:   req.PlayerAvatar,
-			Type:     req.PlayerType,
-			IsOnline: true,
-		}
-		return player, s.srvCtx.PlayerRepo.CreatePlayer(ctx, player)
-	}
-
-	// 如果是真实玩家，允许重复加入房间
-	if player != nil {
-		player.IsOnline = true
-		return player, s.srvCtx.PlayerRepo.UpdatePlayer(ctx, player.Code, player)
-	}
-
-	player = &dbmodels.Player{
-		Code:     code,
-		RoomID:   req.RoomID,
-		NickName: req.PlayerNickName,
-		Avatar:   req.PlayerAvatar,
-		Type:     req.PlayerType,
-		UserID:   ptrx.Uint(userID),
-		IsOnline: true,
-	}
-	return player, s.srvCtx.PlayerRepo.CreatePlayer(ctx, player)
-}
-
 func (s *roomService) LeaveRoom(ctx context.Context, req *request.LeaveRoomRequest) (err error) {
 	if req == nil {
 		return errcode.ErrCodeInvalidRequest
 	}
+
+	rdb := s.srvCtx.RedisClient
+	roomLock := cache.RoomLockCache(fmt.Sprintf("room:%d", req.RoomID))
+	err = roomLock.Lock(ctx, rdb)
+	if err != nil {
+		return err
+	}
+	defer roomLock.Unlock(ctx, rdb)
 
 	userClaims, err := middlewares.TokenClaimsFromContext(ctx)
 	if err != nil {
@@ -262,9 +295,9 @@ func (s *roomService) LeaveRoom(ctx context.Context, req *request.LeaveRoomReque
 	// 发布玩家离开房间事件
 	leaveMsg := &constant.LeaveRoomMessage{
 		EventMsgBase: constant.EventMsgBase{
-			UserID: userClaims.User.ID,
-			RoomID: types.SocketRoomID(req.RoomID),
-			UUID:   userClaims.UUID,
+			UserID:    userClaims.User.ID,
+			RoomID:    types.SocketRoomID(roomObj.RoomCode),
+			SessionID: userClaims.SessionID,
 		},
 		PlayerCode:   req.PlayerCode,
 		PlayerUserID: playerObj.UserID,
@@ -281,6 +314,14 @@ func (s *roomService) DeleteRoom(ctx context.Context, req *request.DeleteRoomReq
 	if req == nil {
 		return errcode.ErrCodeInvalidRequest
 	}
+
+	rdb := s.srvCtx.RedisClient
+	roomLock := cache.RoomLockCache(fmt.Sprintf("room:%d", req.RoomID))
+	err := roomLock.Lock(ctx, rdb)
+	if err != nil {
+		return err
+	}
+	defer roomLock.Unlock(ctx, rdb)
 
 	if err := s.srvCtx.RoomRepo.DeleteRoom(ctx, req.RoomID); err != nil {
 		return err

@@ -11,7 +11,9 @@ import (
 	"github.com/miebyte/goutils/websocketutils"
 	"github.com/superwhys/billiard-helper/api/middlewares"
 	"github.com/superwhys/billiard-helper/internal/models/constant"
+	"github.com/superwhys/billiard-helper/internal/models/request"
 	"github.com/superwhys/billiard-helper/internal/models/response"
+	"github.com/superwhys/billiard-helper/internal/models/types"
 	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
 	"github.com/superwhys/billiard-helper/internal/service"
 )
@@ -39,7 +41,7 @@ func NewCometServer(queue longnet.EventQueue, sessionManager longnet.ISessionMan
 		sessionManager: sessionManager,
 	}
 
-	server.setupSocket()
+	server.setupSocket(srv)
 
 	return server
 }
@@ -61,7 +63,7 @@ func (s *Server) Handler() ginutils.Option {
 	)
 }
 
-func (s *Server) setupSocket() {
+func (s *Server) setupSocket(srv *service.Service) {
 	billiardNamespace := s.socket.Of(constant.BilliardNamespace)
 	billiardNamespace.On(websocketutils.EventConnection, func(ctx *websocketutils.Context) {
 		// 用户连接成功后，将用户连接信息注册到 session manager
@@ -70,7 +72,31 @@ func (s *Server) setupSocket() {
 			logging.Errorc(ctx.Context(), "get token claims from context failed: %v", err)
 			return
 		}
-		s.sessionManager.RegisterSession(claims, ctx.Conn())
+
+		s.sessionManager.RegisterSession(claims.User.ID, claims.SessionID, ctx.Conn())
 		_ = ctx.Conn().Emit(constant.EventClientConnectSuccess, response.ResponseWithData(claims))
+	})
+
+	billiardNamespace.On(websocketutils.EventDisconnect, func(ctx *websocketutils.Context) {
+		claims, err := middlewares.TokenClaimsFromContext(ctx.Context())
+		if err != nil {
+			logging.Errorc(ctx.Context(), "get token claims from context failed: %v", err)
+			return
+		}
+
+		logging.Infoc(ctx.Context(), "user(%d) disconnect", claims.User.ID)
+
+		// 通知所有加入的房间。
+		enterRooms := ctx.Conn().Rooms()
+		for _, room := range enterRooms {
+			logging.Infoc(ctx.Context(), "user(%d) leave room(%s)", claims.User.ID, room)
+			// TODO:
+			s.srv.RoomService.LeaveRoom(ctx.Context(), &request.LeaveRoomRequest{
+				RoomID:      types.SocketRoomID(room),
+				UserID:      claims.User.ID,
+				PlayerCode:  room,
+				ReallyLeave: true,
+			})
+		}
 	})
 }

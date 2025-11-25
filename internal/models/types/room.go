@@ -20,10 +20,6 @@ type Room struct {
 	Scores  []*Scores `json:"scores,omitempty"`
 }
 
-func (r *Room) SocketRoomID() string {
-	return fmt.Sprintf("room_%s", r.RoomCode)
-}
-
-func SocketRoomID(roomID uint) string {
-	return fmt.Sprintf("room_%d", roomID)
+func SocketRoomID(roomCode string) string {
+	return fmt.Sprintf("room_%s", roomCode)
 }

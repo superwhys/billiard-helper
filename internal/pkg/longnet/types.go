@@ -4,14 +4,13 @@ import (
 	"context"
 
 	"github.com/miebyte/goutils/websocketutils"
-	"github.com/superwhys/billiard-helper/internal/pkg/jwt"
 )
 
 type ISession interface {
 	websocketutils.Conn
 	UserID() uint
 	ConnID() string
-	UUID() string
+	SessionID() string
 }
 
 type EventQueue interface {
@@ -20,13 +19,12 @@ type EventQueue interface {
 }
 
 type ISessionManager interface {
-	RegisterSession(claims *jwt.UserTokenClaims, conn websocketutils.Conn)
+	RegisterSession(userID uint, sessionID string, conn websocketutils.Conn)
 	UnregisterSession(conn websocketutils.Conn)
-	GetSession(connID string) ISession
-	GetSessionByUUID(uuid string) ISession
+	GetUserSession(userID uint, sessionID string) ISession
 	GetSessionsByUserID(userID uint) []ISession
-	JoinRoom(ctx context.Context, uuid, roomID string) error
-	LeaveRoom(ctx context.Context, uuid, roomID string) error
+	JoinRoom(ctx context.Context, userID uint, sessionID, roomID string) error
+	LeaveRoom(ctx context.Context, userID uint, sessionID, roomID string) error
 }
 
 type MemoryQueueMessage struct {

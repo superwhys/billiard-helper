@@ -44,9 +44,7 @@ func (m *playerManager) UpdatePlayer(ctx context.Context, playerCode string, pla
 		Where(p.Code.Eq(playerCode)).
 		Select(
 			p.NickName,
-			p.Avatar,
 			p.IsOnline,
-			p.LastOnlineAt,
 		).
 		Updates(player)
 	if err != nil {

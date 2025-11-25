@@ -11,8 +11,8 @@ import (
 
 type UserTokenClaims struct {
 	jwt.RegisteredClaims
-	UUID string      `json:"uuid"`
-	User *types.User `json:"user"`
+	SessionID string      `json:"session_id"`
+	User      *types.User `json:"user"`
 }
 
 func GenerateToken(signingKey []byte, timeout time.Duration, user *types.User) (string, error) {
@@ -25,8 +25,8 @@ func GenerateToken(signingKey []byte, timeout time.Duration, user *types.User) (
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 		},
-		UUID: uuid.NewString(),
-		User: user,
+		SessionID: uuid.NewString(),
+		User:      user,
 	}
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(signingKey)

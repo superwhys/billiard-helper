@@ -3,6 +3,9 @@ package hash
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
+
+	"github.com/superwhys/billiard-helper/internal/models/types"
 )
 
 // GenerateHash 根据输入内容生成唯一且幂等的值
@@ -12,4 +15,13 @@ func GenerateHash(contents ...string) string {
 		hasher.Write([]byte(content))
 	}
 	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func GenerateRoomCode(roomID uint, playerType types.PlayerType, playerNickName string) string {
+	code := GenerateHash(
+		fmt.Sprintf("%d", roomID),
+		fmt.Sprintf("%d", playerType),
+		fmt.Sprintf("%s", playerNickName),
+	)
+	return code
 }

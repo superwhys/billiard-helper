@@ -35,10 +35,8 @@ func newPlayer(db *gorm.DB, opts ...gen.DOOption) player {
 	_player.RoomID = field.NewUint(tableName, "room_id")
 	_player.UserID = field.NewUint(tableName, "user_id")
 	_player.NickName = field.NewString(tableName, "nick_name")
-	_player.Avatar = field.NewString(tableName, "Avatar")
 	_player.Type = field.NewUint(tableName, "type")
 	_player.IsOnline = field.NewBool(tableName, "is_online")
-	_player.LastOnlineAt = field.NewTime(tableName, "last_online_at")
 	_player.Scores = playerHasManyScores{
 		db: db.Session(&gorm.Session{}),
 
@@ -66,20 +64,18 @@ func newPlayer(db *gorm.DB, opts ...gen.DOOption) player {
 type player struct {
 	playerDo playerDo
 
-	ALL          field.Asterisk
-	ID           field.Uint
-	CreatedAt    field.Time
-	UpdatedAt    field.Time
-	DeletedAt    field.Field
-	Code         field.String // 玩家代码
-	RoomID       field.Uint   // 房间ID
-	UserID       field.Uint   // 用户ID
-	NickName     field.String // 昵称
-	Avatar       field.String // 头像URL
-	Type         field.Uint   // 玩家类型
-	IsOnline     field.Bool   // 是否在线
-	LastOnlineAt field.Time   // 最后在线时间
-	Scores       playerHasManyScores
+	ALL       field.Asterisk
+	ID        field.Uint
+	CreatedAt field.Time
+	UpdatedAt field.Time
+	DeletedAt field.Field
+	Code      field.String // 玩家代码
+	RoomID    field.Uint   // 房间ID
+	UserID    field.Uint   // 用户ID
+	NickName  field.String // 昵称
+	Type      field.Uint   // 玩家类型
+	IsOnline  field.Bool   // 是否在线
+	Scores    playerHasManyScores
 
 	fieldMap map[string]field.Expr
 }
@@ -104,10 +100,8 @@ func (p *player) updateTableName(table string) *player {
 	p.RoomID = field.NewUint(table, "room_id")
 	p.UserID = field.NewUint(table, "user_id")
 	p.NickName = field.NewString(table, "nick_name")
-	p.Avatar = field.NewString(table, "Avatar")
 	p.Type = field.NewUint(table, "type")
 	p.IsOnline = field.NewBool(table, "is_online")
-	p.LastOnlineAt = field.NewTime(table, "last_online_at")
 
 	p.fillFieldMap()
 
@@ -132,7 +126,7 @@ func (p *player) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *player) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 13)
+	p.fieldMap = make(map[string]field.Expr, 11)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
@@ -141,10 +135,8 @@ func (p *player) fillFieldMap() {
 	p.fieldMap["room_id"] = p.RoomID
 	p.fieldMap["user_id"] = p.UserID
 	p.fieldMap["nick_name"] = p.NickName
-	p.fieldMap["Avatar"] = p.Avatar
 	p.fieldMap["type"] = p.Type
 	p.fieldMap["is_online"] = p.IsOnline
-	p.fieldMap["last_online_at"] = p.LastOnlineAt
 
 }
 
