@@ -14,6 +14,7 @@ type Player struct {
 	NickName string           `gorm:"column:nick_name;type:varchar(255);not null;comment:昵称" json:"nick_name"`
 	Avatar   string           `gorm:"column:Avatar;type:varchar(255);comment:头像URL" json:"avatar_url"`
 	Type     types.PlayerType `gorm:"column:type;type:tinyint(1);default:1;not null;comment:玩家类型" json:"type"`
+	IsOnline bool             `gorm:"column:is_online;type:tinyint(1);default:1;not null;comment:是否在线" json:"is_online"`
 
 	Scores []*Scores `json:"scores"`
 }
@@ -24,12 +25,14 @@ func (p *Player) TableName() string {
 
 func (p *Player) ToType() *types.Player {
 	playerT := &types.Player{
+		ID:        p.ID,
 		Code:      p.Code,
 		RoomID:    p.RoomID,
 		UserID:    ptrx.UintValue(p.UserID),
 		NickName:  p.NickName,
 		AvatarURL: p.Avatar,
 		Type:      p.Type,
+		IsOnline:  p.IsOnline,
 	}
 	return playerT
 }

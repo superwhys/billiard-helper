@@ -38,10 +38,40 @@ func (m *playerManager) GetPlayerByCode(ctx context.Context, code string) (*dbmo
 		First()
 }
 
+func (m *playerManager) UpdatePlayer(ctx context.Context, playerCode string, player *dbmodels.Player) error {
+	p := m.query.Player
+	resp, err := p.WithContext(ctx).
+		Where(p.Code.Eq(playerCode)).
+		Select(
+			p.NickName,
+			p.Avatar,
+			p.IsOnline,
+			p.LastOnlineAt,
+		).
+		Updates(player)
+	if err != nil {
+		return err
+	}
+
+	if resp.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
 func (m *playerManager) DeletePlayer(ctx context.Context, playerCode string) error {
 	p := m.query.Player
-	_, err := p.WithContext(ctx).
+	resp, err := p.WithContext(ctx).
 		Where(p.Code.Eq(playerCode)).
 		Delete()
-	return err
+	if err != nil {
+		return err
+	}
+
+	if resp.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }

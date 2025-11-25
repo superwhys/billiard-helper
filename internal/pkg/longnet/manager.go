@@ -1,10 +1,12 @@
 package longnet
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/miebyte/goutils/websocketutils"
 	cmap "github.com/orcaman/concurrent-map/v2"
+	"github.com/superwhys/billiard-helper/internal/models/errcode"
 	"github.com/superwhys/billiard-helper/internal/pkg/jwt"
 )
 
@@ -102,10 +104,20 @@ func (sm *SessionManager) GetSessionsByUserID(userID uint) []ISession {
 	return nil
 }
 
-func (sm *SessionManager) IterateSessions(callback func(ISession) bool) {
-	for item := range sm.sessions.IterBuffered() {
-		if !callback(item.Val) {
-			break
-		}
+func (sm *SessionManager) JoinRoom(ctx context.Context, uuid, roomID string) error {
+	session := sm.GetSessionByUUID(uuid)
+	if session == nil {
+		return errcode.ErrCodeSessionNotFound
 	}
+
+	return session.Join(roomID)
+}
+
+func (sm *SessionManager) LeaveRoom(ctx context.Context, uuid, roomID string) error {
+	session := sm.GetSessionByUUID(uuid)
+	if session == nil {
+		return errcode.ErrCodeSessionNotFound
+	}
+
+	return session.Leave(roomID)
 }

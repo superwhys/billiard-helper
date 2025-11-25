@@ -31,6 +31,17 @@ func NewRoomService(srvCtx *ServiceContext) ports.RoomService {
 	}
 }
 
+func (s *roomService) genRoomCode(roomID uint, userID uint, playerType types.PlayerType, playerNickName string) string {
+	// 生成玩家幂等 code
+	code := hash.GenerateHash(
+		fmt.Sprintf("%d", roomID),
+		fmt.Sprintf("%d", userID),
+		fmt.Sprintf("%d", playerType),
+		fmt.Sprintf("%s", playerNickName),
+	)
+	return code
+}
+
 func (s *roomService) CreateRoom(ctx context.Context, req *request.CreateRoomRequest) (*response.Room, error) {
 	if req == nil {
 		return nil, errcode.ErrCodeInvalidRequest
@@ -102,72 +113,37 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 	userID := userClaims.User.ID
 
 	// 检查房间是否存在
-	exist, err := s.srvCtx.RoomRepo.IsRoomExist(ctx, req.RoomID)
-	if err != nil {
-		return nil, err
-	}
-	if !exist {
-		return nil, errcode.ErrCodeRoomNotFound
-	}
-
-	// 生成玩家幂等 code
-	code := hash.GenerateHash(
-		fmt.Sprintf("%d", req.RoomID),
-		fmt.Sprintf("%d", userID),
-		fmt.Sprintf("%d", req.PlayerType),
-		fmt.Sprintf("%s", req.PlayerNickName),
-	)
-
-	// 检查玩家是否已经加入房间
-	player, err := s.srvCtx.PlayerRepo.GetPlayerByCode(ctx, code)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
-	}
-	if player != nil {
-		return nil, errcode.ErrCodePlayerAlreadyJoined
-	}
-
-	// 创建玩家记录
-	playerModel := &dbmodels.Player{
-		Code:     code,
-		RoomID:   req.RoomID,
-		NickName: req.PlayerNickName,
-		Avatar:   req.PlayerAvatar,
-		Type:     req.PlayerType,
-	}
-
-	if req.PlayerType == types.PlayerTypeReal {
-		playerModel.UserID = ptrx.Uint(userID)
-	}
-
-	err = s.srvCtx.PlayerRepo.CreatePlayer(ctx, playerModel)
-	if err != nil {
-		return nil, err
-	}
-
 	room, err := s.srvCtx.RoomRepo.GetRoom(ctx, req.RoomID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrCodeRoomNotFound
+		}
 		return nil, err
 	}
 
 	roomType := room.ToType()
-	for _, player := range roomType.Players {
-		player.IsYou = player.Code == code
+
+	// 生成玩家幂等 code
+	code := s.genRoomCode(req.RoomID, userID, req.PlayerType, req.PlayerNickName)
+	s.markSelfPlayer(roomType, code)
+
+	// 确保玩家加入房间并返回玩家实例
+	playerObj, err := s.ensureJoinPlayer(ctx, req, userID, code)
+	if err != nil {
+		return nil, err
 	}
 
-	session := s.srvCtx.SessionManager.GetSessionByUUID(userClaims.UUID)
-	if session == nil {
-		return nil, errcode.ErrCodeJoinRoomFailed
+	// 获取用户 session 并加入房间
+	roomID := types.SocketRoomID(req.RoomID)
+	if err := s.srvCtx.SessionManager.JoinRoom(ctx, userClaims.UUID, roomID); err != nil {
+		return nil, err
 	}
 
-	if err := session.Join(types.SocketRoomID(req.RoomID)); err != nil {
-		return nil, fmt.Errorf("join socket room failed: %w", err)
-	}
-
+	// 发布玩家加入房间事件
 	joinMsg := &constant.JoinRoomMessage{
 		UserID: userID,
 		RoomID: req.RoomID,
-		Player: playerModel.ToType(),
+		Player: playerObj.ToType(),
 	}
 
 	if err := s.publishRoomEvent(ctx, constant.EventPlayerJoinRoom, joinMsg); err != nil {
@@ -177,14 +153,109 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 	return &response.Room{Room: roomType}, nil
 }
 
-func (s *roomService) LeaveRoom(ctx context.Context, req *request.LeaveRoomRequest) error {
+// markSelfPlayer 标记自己
+func (s *roomService) markSelfPlayer(room *types.Room, code string) {
+	if room == nil {
+		return
+	}
+	for _, player := range room.Players {
+		player.IsYou = player.Code == code
+	}
+}
+
+// ensureJoinPlayer 确保玩家加入房间
+func (s *roomService) ensureJoinPlayer(ctx context.Context, req *request.JoinRoomRequest, userID uint, code string) (*dbmodels.Player, error) {
+	player, err := s.srvCtx.PlayerRepo.GetPlayerByCode(ctx, code)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	if req.IsVirtualPlayer() {
+		if player != nil {
+			return nil, errcode.ErrCodePlayerAlreadyJoined
+		}
+		player = &dbmodels.Player{
+			Code:     code,
+			RoomID:   req.RoomID,
+			NickName: req.PlayerNickName,
+			Avatar:   req.PlayerAvatar,
+			Type:     req.PlayerType,
+			IsOnline: true,
+		}
+		return player, s.srvCtx.PlayerRepo.CreatePlayer(ctx, player)
+	}
+
+	// 如果是真实玩家，允许重复加入房间
+	if player != nil {
+		player.IsOnline = true
+		return player, s.srvCtx.PlayerRepo.UpdatePlayer(ctx, player.Code, player)
+	}
+
+	player = &dbmodels.Player{
+		Code:     code,
+		RoomID:   req.RoomID,
+		NickName: req.PlayerNickName,
+		Avatar:   req.PlayerAvatar,
+		Type:     req.PlayerType,
+		UserID:   ptrx.Uint(userID),
+		IsOnline: true,
+	}
+	return player, s.srvCtx.PlayerRepo.CreatePlayer(ctx, player)
+}
+
+func (s *roomService) LeaveRoom(ctx context.Context, req *request.LeaveRoomRequest) (err error) {
 	if req == nil {
 		return errcode.ErrCodeInvalidRequest
 	}
 
-	err := s.srvCtx.PlayerRepo.DeletePlayer(ctx, req.PlayerCode)
+	userClaims, err := middlewares.TokenClaimsFromContext(ctx)
 	if err != nil {
-		return fmt.Errorf("delete player failed: %w", err)
+		return errcode.ErrCodeNoToken
+	}
+
+	defer func() {
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				err = errcode.ErrCodePlayerNotFound
+			}
+		}
+	}()
+
+	// reallyLeave 为 true 时，删除玩家
+	if req.ReallyLeave {
+		err = s.srvCtx.PlayerRepo.DeletePlayer(ctx, req.PlayerCode)
+		if err != nil {
+			return err
+		}
+	} else {
+		// 标记玩家离线
+		playerObj, err := s.srvCtx.PlayerRepo.GetPlayerByCode(ctx, req.PlayerCode)
+		if err != nil {
+			return err
+		}
+
+		playerObj.IsOnline = false
+		err = s.srvCtx.PlayerRepo.UpdatePlayer(ctx, req.PlayerCode, playerObj)
+		if err != nil {
+			return err
+		}
+	}
+
+	// session 退出房间
+	roomID := types.SocketRoomID(req.RoomID)
+	if err := s.srvCtx.SessionManager.LeaveRoom(ctx, userClaims.UUID, roomID); err != nil {
+		return err
+	}
+
+	// 发布玩家离开房间事件
+	leaveMsg := &constant.LeaveRoomMessage{
+		UserID:     userClaims.User.ID,
+		RoomID:     req.RoomID,
+		PlayerCode: req.PlayerCode,
+	}
+
+	if err := s.publishRoomEvent(ctx, constant.EventPlayerLeaveRoom, leaveMsg); err != nil {
+		return fmt.Errorf("publish room event failed: %w", err)
 	}
 
 	return nil
@@ -199,10 +270,6 @@ func (s *roomService) DeleteRoom(ctx context.Context, req *request.DeleteRoomReq
 		return err
 	}
 	return nil
-}
-
-func (s *roomService) socketRoomID(roomID uint) string {
-	return fmt.Sprintf("room_%d", roomID)
 }
 
 func (s *roomService) publishRoomEvent(ctx context.Context, event string, data any) error {

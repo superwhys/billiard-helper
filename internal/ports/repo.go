@@ -26,6 +26,7 @@ type PlayerRepo interface {
 	CreatePlayer(ctx context.Context, player *dbmodels.Player) error
 	GetPlayer(ctx context.Context, playerCode string) (*dbmodels.Player, error)
 	GetPlayerByCode(ctx context.Context, code string) (*dbmodels.Player, error)
+	UpdatePlayer(ctx context.Context, playerCode string, player *dbmodels.Player) error
 	DeletePlayer(ctx context.Context, playerCode string) error
 }
 

@@ -19,6 +19,7 @@ type apiApp struct {
 	sessionManager longnet.ISessionManager
 	services       *service.Service
 	cometServer    *comet.Server
+	httpHandler    http.Handler
 }
 
 // SetupRouter godoc
@@ -34,10 +35,24 @@ func SetupAPI(
 	services *service.Service,
 	cometServer *comet.Server,
 ) *apiApp {
+	engine := ginutils.NewServerHandler(
+		ginutils.WithMiddleware(ginutils.WithLoggingRequest(true)),
+		cometServer.Handler(),
+		router.AuthGroupRouter(services.AuthService),
+		ginutils.WithGroupHandlers(
+			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(services.AuthService)),
+			ginutils.WithGroupHandlers(
+				router.RoomGroupRouter(services.RoomService),
+				router.ScoresGroupRouter(services.ScoresService),
+			),
+		),
+	)
+
 	return &apiApp{
 		isDev:       isDev,
 		services:    services,
 		cometServer: cometServer,
+		httpHandler: engine,
 	}
 }
 
@@ -50,18 +65,5 @@ func (a *apiApp) SwaggerRouter() http.Handler {
 }
 
 func (a *apiApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	engine := ginutils.NewServerHandler(
-		ginutils.WithMiddleware(ginutils.WithLoggingRequest(true)),
-		a.cometServer.Handler(),
-		router.AuthGroupRouter(a.services.AuthService),
-		ginutils.WithGroupHandlers(
-			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(a.services.AuthService)),
-			ginutils.WithGroupHandlers(
-				router.RoomGroupRouter(a.services.RoomService),
-				router.ScoresGroupRouter(a.services.ScoresService),
-			),
-		),
-	)
-
-	engine.ServeHTTP(w, r)
+	a.httpHandler.ServeHTTP(w, r)
 }

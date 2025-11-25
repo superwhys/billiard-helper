@@ -184,5 +184,18 @@ func (s *AuthService) Login(ctx context.Context, req *request.LoginReq) (string,
 }
 
 func (s *AuthService) GetUserTokenClaims(ctx context.Context, tokenStr string) (*jwt.UserTokenClaims, error) {
-	return jwt.ParseToken(tokenStr, s.signingKey)
+	claims, err := jwt.ParseToken(tokenStr, s.signingKey)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.srvCtx.UserRepo.GetUserByID(ctx, claims.User.ID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrCodeUserNotFound
+		}
+		return nil, err
+	}
+
+	return claims, nil
 }

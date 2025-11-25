@@ -17,20 +17,27 @@ type Service struct {
 }
 
 // NewService 创建服务集合
-func NewService(config *config.Config, db *gorm.DB, redisClient *redisutils.RedisClient, eventQueue longnet.EventQueue) *Service {
+func NewService(
+	config *config.Config,
+	db *gorm.DB,
+	redisClient *redisutils.RedisClient,
+	eventQueue longnet.EventQueue,
+	sessionManager longnet.ISessionManager,
+) *Service {
 	roomRepo := manager.NewRoomManager(db)
 	playerRepo := manager.NewPlayerManager(db)
 	scoreRepo := manager.NewScoresManager(db)
 	userRepo := manager.NewUserRepo(db)
 
 	ctx := &ServiceContext{
-		Config:      config,
-		RedisClient: redisClient,
-		RoomRepo:    roomRepo,
-		PlayerRepo:  playerRepo,
-		ScoreRepo:   scoreRepo,
-		UserRepo:    userRepo,
-		EventQueue:  eventQueue,
+		Config:         config,
+		RedisClient:    redisClient,
+		RoomRepo:       roomRepo,
+		PlayerRepo:     playerRepo,
+		ScoreRepo:      scoreRepo,
+		UserRepo:       userRepo,
+		EventQueue:     eventQueue,
+		SessionManager: sessionManager,
 	}
 
 	return &Service{

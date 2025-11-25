@@ -25,7 +25,8 @@ type ISessionManager interface {
 	GetSession(connID string) ISession
 	GetSessionByUUID(uuid string) ISession
 	GetSessionsByUserID(userID uint) []ISession
-	IterateSessions(callback func(ISession) bool)
+	JoinRoom(ctx context.Context, uuid, roomID string) error
+	LeaveRoom(ctx context.Context, uuid, roomID string) error
 }
 
 type MemoryQueueMessage struct {

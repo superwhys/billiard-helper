@@ -33,6 +33,8 @@ const (
 	ErrCodeMinusScoreFailed
 	ErrCodeResetScoreFailed
 	ErrCodeGetRoomScoresFailed
+	// Session error codes
+	ErrCodeSessionNotFound
 )
 
 func (c ErrCode) Error() string {

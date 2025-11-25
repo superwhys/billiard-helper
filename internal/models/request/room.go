@@ -19,9 +19,15 @@ type JoinRoomRequest struct {
 	PlayerAvatar   string           `json:"player_avatar"`
 }
 
+func (r *JoinRoomRequest) IsVirtualPlayer() bool {
+	return r.PlayerType == types.PlayerTypeVirtual
+}
+
 type LeaveRoomRequest struct {
 	RoomID     uint   `json:"room_id" binding:"required"`
 	PlayerCode string `json:"player_code" binding:"required"`
+	// 是否真的离开房间，如果为 false，则只是标记玩家离线
+	ReallyLeave bool `json:"really_leave" binding:"required"`
 }
 
 type DeleteRoomRequest struct {

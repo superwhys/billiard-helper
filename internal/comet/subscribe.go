@@ -51,7 +51,7 @@ func (c *Subscriber) call(ctx context.Context, data []byte) {
 		return
 	}
 
-	logging.Debugc(ctx, "received data: %v", msg)
+	logging.Debugc(ctx, "received event(%s): %s", msg.Event, string(msg.Data))
 
 	c.handlers.Call(ctx, msg.Event, msg.Data)
 }

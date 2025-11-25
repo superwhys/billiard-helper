@@ -46,7 +46,7 @@ func main() {
 	eventQueue := longnet.NewMemoryQueue()
 	sessionManager := longnet.NewSessionManager()
 
-	services := service.NewService(config, mysqlDB, redisClient, eventQueue)
+	services := service.NewService(config, mysqlDB, redisClient, eventQueue, sessionManager)
 	cometServer := comet.NewCometServer(eventQueue, sessionManager, services)
 
 	apiApp := api.SetupAPI(isDev(), services, cometServer)

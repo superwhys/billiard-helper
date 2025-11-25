@@ -22,3 +22,9 @@ type JoinRoomMessage struct {
 	RoomID uint          `json:"room_id"`
 	Player *types.Player `json:"player"`
 }
+
+type LeaveRoomMessage struct {
+	UserID     uint   `json:"user_id"`
+	RoomID     uint   `json:"room_id"`
+	PlayerCode string `json:"player_code"`
+}
