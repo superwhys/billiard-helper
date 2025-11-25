@@ -143,7 +143,8 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 	joinMsg := &constant.JoinRoomMessage{
 		EventMsgBase: constant.EventMsgBase{
 			UserID: userID,
-			RoomID: req.RoomID,
+			RoomID: roomID,
+			UUID:   userClaims.UUID,
 		},
 		Player: playerObj.ToType(),
 	}
@@ -223,6 +224,26 @@ func (s *roomService) LeaveRoom(ctx context.Context, req *request.LeaveRoomReque
 		}
 	}()
 
+	// 获取玩家信息
+	playerObj, err := s.srvCtx.PlayerRepo.GetPlayerByCode(ctx, req.PlayerCode)
+	if err != nil {
+		return err
+	}
+
+	// 获取房间信息
+	roomObj, err := s.srvCtx.RoomRepo.GetRoom(ctx, req.RoomID)
+	if err != nil {
+		return err
+	}
+
+	isRoomOwner := roomObj.UserID == userClaims.User.ID
+	// 如果不是房主，则只能退出自己
+	if !isRoomOwner && playerObj.UserID != nil {
+		if ptrx.UintValue(playerObj.UserID) != userClaims.User.ID {
+			return errcode.ErrCodePlayerNotAllowed
+		}
+	}
+
 	// reallyLeave 为 true 时，删除玩家
 	if req.ReallyLeave {
 		err = s.srvCtx.PlayerRepo.DeletePlayer(ctx, req.PlayerCode)
@@ -231,11 +252,6 @@ func (s *roomService) LeaveRoom(ctx context.Context, req *request.LeaveRoomReque
 		}
 	} else {
 		// 标记玩家离线
-		playerObj, err := s.srvCtx.PlayerRepo.GetPlayerByCode(ctx, req.PlayerCode)
-		if err != nil {
-			return err
-		}
-
 		playerObj.IsOnline = false
 		err = s.srvCtx.PlayerRepo.UpdatePlayer(ctx, req.PlayerCode, playerObj)
 		if err != nil {
@@ -243,19 +259,15 @@ func (s *roomService) LeaveRoom(ctx context.Context, req *request.LeaveRoomReque
 		}
 	}
 
-	// session 退出房间
-	roomID := types.SocketRoomID(req.RoomID)
-	if err := s.srvCtx.SessionManager.LeaveRoom(ctx, userClaims.UUID, roomID); err != nil {
-		return err
-	}
-
 	// 发布玩家离开房间事件
 	leaveMsg := &constant.LeaveRoomMessage{
 		EventMsgBase: constant.EventMsgBase{
 			UserID: userClaims.User.ID,
-			RoomID: req.RoomID,
+			RoomID: types.SocketRoomID(req.RoomID),
+			UUID:   userClaims.UUID,
 		},
-		PlayerCode: req.PlayerCode,
+		PlayerCode:   req.PlayerCode,
+		PlayerUserID: playerObj.UserID,
 	}
 
 	if err := s.publishRoomEvent(ctx, constant.EventPlayerLeaveRoom, leaveMsg); err != nil {

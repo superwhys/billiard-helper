@@ -25,6 +25,7 @@ const (
 	ErrCodeJoinRoomFailed
 	ErrCodeLeaveRoomFailed
 	ErrCodeDeleteRoomFailed
+	ErrCodePlayerNotAllowed
 	// Player error codes
 	ErrCodePlayerAlreadyJoined
 	ErrCodePlayerNotFound
@@ -93,6 +94,11 @@ func (c ErrCode) String() string {
 		return "用户登录失败"
 	case ErrCodeNoToken:
 		return "未提供 token"
+	case ErrCodeSessionNotFound:
+		return "会话不存在"
+	case ErrCodePlayerNotAllowed:
+		return "玩家不允许操作"
+
 	default:
 		return "未知错误"
 	}

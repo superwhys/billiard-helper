@@ -18,8 +18,9 @@ const (
 )
 
 type EventMsgBase struct {
-	UserID uint `json:"user_id"`
-	RoomID uint `json:"room_id"`
+	UserID uint   `json:"user_id"`
+	UUID   string `json:"uuid"`
+	RoomID string `json:"room_id"`
 }
 
 type JoinRoomMessage struct {
@@ -29,5 +30,6 @@ type JoinRoomMessage struct {
 
 type LeaveRoomMessage struct {
 	EventMsgBase
-	PlayerCode string `json:"player_code"`
+	PlayerCode   string `json:"player_code"`
+	PlayerUserID *uint  `json:"player_user_id"`
 }

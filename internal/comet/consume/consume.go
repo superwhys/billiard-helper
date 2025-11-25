@@ -5,7 +5,6 @@ import (
 
 	"github.com/miebyte/goutils/logging"
 	"github.com/superwhys/billiard-helper/internal/models/constant"
-	"github.com/superwhys/billiard-helper/internal/models/types"
 	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
 	"github.com/superwhys/billiard-helper/internal/service"
 )
@@ -46,6 +45,6 @@ func (h *Handlers) Call(ctx context.Context, event string, data []byte) {
 	handler(ctx, data)
 }
 
-func (h *Handlers) broadcastRoom(session longnet.ISession, roomID uint, event string, data any) error {
-	return session.Namespace().To(types.SocketRoomID(roomID)).EmitExcept(event, data, session)
+func (h *Handlers) broadcastRoom(session longnet.ISession, roomID string, event string, data any) error {
+	return session.Namespace().To(roomID).EmitExcept(event, data, session)
 }
