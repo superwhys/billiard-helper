@@ -141,8 +141,10 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 
 	// 发布玩家加入房间事件
 	joinMsg := &constant.JoinRoomMessage{
-		UserID: userID,
-		RoomID: req.RoomID,
+		EventMsgBase: constant.EventMsgBase{
+			UserID: userID,
+			RoomID: req.RoomID,
+		},
 		Player: playerObj.ToType(),
 	}
 
@@ -249,8 +251,10 @@ func (s *roomService) LeaveRoom(ctx context.Context, req *request.LeaveRoomReque
 
 	// 发布玩家离开房间事件
 	leaveMsg := &constant.LeaveRoomMessage{
-		UserID:     userClaims.User.ID,
-		RoomID:     req.RoomID,
+		EventMsgBase: constant.EventMsgBase{
+			UserID: userClaims.User.ID,
+			RoomID: req.RoomID,
+		},
 		PlayerCode: req.PlayerCode,
 	}
 

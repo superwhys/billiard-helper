@@ -17,14 +17,17 @@ const (
 	EventPlayerKickPlayer     = "player_kick_player"
 )
 
+type EventMsgBase struct {
+	UserID uint `json:"user_id"`
+	RoomID uint `json:"room_id"`
+}
+
 type JoinRoomMessage struct {
-	UserID uint          `json:"user_id"`
-	RoomID uint          `json:"room_id"`
+	EventMsgBase
 	Player *types.Player `json:"player"`
 }
 
 type LeaveRoomMessage struct {
-	UserID     uint   `json:"user_id"`
-	RoomID     uint   `json:"room_id"`
+	EventMsgBase
 	PlayerCode string `json:"player_code"`
 }
