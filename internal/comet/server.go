@@ -63,10 +63,10 @@ func (s *Server) Handler() ginutils.Option {
 	)
 }
 
-func (s *Server) setupSocket(srv *service.Service) {
+func (s *Server) setupSocket() {
 	billiardNamespace := s.socket.Of(constant.BilliardNamespace)
+	// 用户 websocket 连接成功
 	billiardNamespace.On(websocketutils.EventConnection, func(ctx *websocketutils.Context) {
-		// 用户连接成功后，将用户连接信息注册到 session manager
 		claims, err := middlewares.TokenClaimsFromContext(ctx.Context())
 		if err != nil {
 			logging.Errorc(ctx.Context(), "get token claims from context failed: %v", err)
@@ -77,6 +77,7 @@ func (s *Server) setupSocket(srv *service.Service) {
 		_ = ctx.Conn().Emit(constant.EventClientConnectSuccess, response.ResponseWithData(claims))
 	})
 
+	// 用户 websocket 连接断开
 	billiardNamespace.On(websocketutils.EventDisconnect, func(ctx *websocketutils.Context) {
 		claims, err := middlewares.TokenClaimsFromContext(ctx.Context())
 		if err != nil {
@@ -89,13 +90,15 @@ func (s *Server) setupSocket(srv *service.Service) {
 		// 通知所有加入的房间。
 		enterRooms := ctx.Conn().Rooms()
 		for _, room := range enterRooms {
+			if !types.IsSocketRoomID(room) {
+				continue
+			}
 			logging.Infoc(ctx.Context(), "user(%d) leave room(%s)", claims.User.ID, room)
-			// TODO:
 			s.srv.RoomService.LeaveRoom(ctx.Context(), &request.LeaveRoomRequest{
-				RoomID:      types.SocketRoomID(room),
+				RoomID:      types.ParseRoomID(room),
 				UserID:      claims.User.ID,
 				PlayerCode:  room,
-				ReallyLeave: true,
+				ReallyLeave: false,
 			})
 		}
 	})

@@ -9,9 +9,8 @@ import (
 
 type Room struct {
 	gorm.Model
-	RoomCode string           `gorm:"column:room_code;type:varchar(255);unique;not null;comment:房间代码" json:"room_code"`
-	UserID   uint             `gorm:"column:user_id;index;not null;comment:房主ID" json:"user_id"`
-	Status   types.RoomStatus `gorm:"column:status;type:tinyint(1);default:1;not null;comment:房间状态" json:"status"`
+	UserID uint             `gorm:"column:user_id;index;not null;comment:房主ID" json:"user_id"`
+	Status types.RoomStatus `gorm:"column:status;type:tinyint(1);default:1;not null;comment:房间状态" json:"status"`
 
 	Players []*Player `json:"players"`
 	Scores  []*Scores `json:"scores"`
@@ -23,10 +22,9 @@ func (r *Room) TableName() string {
 
 func (r *Room) ToType() *types.Room {
 	roomT := &types.Room{
-		ID:       r.ID,
-		RoomCode: r.RoomCode,
-		UserID:   r.UserID,
-		Status:   r.Status,
+		ID:     r.ID,
+		UserID: r.UserID,
+		Status: r.Status,
 	}
 
 	if len(r.Players) > 0 {

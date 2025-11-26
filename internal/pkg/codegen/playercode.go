@@ -1,4 +1,4 @@
-package hash
+package codegen
 
 import (
 	"crypto/sha256"
@@ -17,7 +17,7 @@ func GenerateHash(contents ...string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func GenerateRoomCode(roomID uint, playerType types.PlayerType, playerNickName string) string {
+func GeneratePlayerCode(roomID uint, playerType types.PlayerType, playerNickName string) string {
 	code := GenerateHash(
 		fmt.Sprintf("%d", roomID),
 		fmt.Sprintf("%d", playerType),

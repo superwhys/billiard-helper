@@ -31,7 +31,6 @@ func newRoom(db *gorm.DB, opts ...gen.DOOption) room {
 	_room.CreatedAt = field.NewTime(tableName, "created_at")
 	_room.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_room.DeletedAt = field.NewField(tableName, "deleted_at")
-	_room.RoomCode = field.NewString(tableName, "room_code")
 	_room.UserID = field.NewUint(tableName, "user_id")
 	_room.Status = field.NewUint(tableName, "status")
 	_room.Players = roomHasManyPlayers{
@@ -72,9 +71,8 @@ type room struct {
 	CreatedAt field.Time
 	UpdatedAt field.Time
 	DeletedAt field.Field
-	RoomCode  field.String // 房间代码
-	UserID    field.Uint   // 房主ID
-	Status    field.Uint   // 房间状态
+	UserID    field.Uint // 房主ID
+	Status    field.Uint // 房间状态
 	Players   roomHasManyPlayers
 
 	Scores roomHasManyScores
@@ -98,7 +96,6 @@ func (r *room) updateTableName(table string) *room {
 	r.CreatedAt = field.NewTime(table, "created_at")
 	r.UpdatedAt = field.NewTime(table, "updated_at")
 	r.DeletedAt = field.NewField(table, "deleted_at")
-	r.RoomCode = field.NewString(table, "room_code")
 	r.UserID = field.NewUint(table, "user_id")
 	r.Status = field.NewUint(table, "status")
 
@@ -125,12 +122,11 @@ func (r *room) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (r *room) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 9)
+	r.fieldMap = make(map[string]field.Expr, 8)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["created_at"] = r.CreatedAt
 	r.fieldMap["updated_at"] = r.UpdatedAt
 	r.fieldMap["deleted_at"] = r.DeletedAt
-	r.fieldMap["room_code"] = r.RoomCode
 	r.fieldMap["user_id"] = r.UserID
 	r.fieldMap["status"] = r.Status
 

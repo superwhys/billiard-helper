@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/miebyte/goutils/utils"
 	"github.com/miebyte/goutils/utils/ptrx"
 	"github.com/superwhys/billiard-helper/api/middlewares"
 	"github.com/superwhys/billiard-helper/internal/dal/cache"
@@ -16,7 +15,7 @@ import (
 	"github.com/superwhys/billiard-helper/internal/models/request"
 	"github.com/superwhys/billiard-helper/internal/models/response"
 	"github.com/superwhys/billiard-helper/internal/models/types"
-	"github.com/superwhys/billiard-helper/internal/pkg/hash"
+	"github.com/superwhys/billiard-helper/internal/pkg/codegen"
 	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
 	"github.com/superwhys/billiard-helper/internal/ports"
 	"gorm.io/gorm"
@@ -44,17 +43,15 @@ func (s *roomService) CreateRoom(ctx context.Context, req *request.CreateRoomReq
 	}
 	userID := userClaims.User.ID
 
-	// TODO: 检查房间码是否重复
-	roomCode := utils.RandUpper(8)
 	roomModel := &dbmodels.Room{
-		RoomCode: roomCode,
-		UserID:   userID,
-		Status:   types.RoomStatusPending,
+		UserID: userID,
+		Status: types.RoomStatusPending,
 	}
 	err = s.srvCtx.RoomRepo.CreateRoom(ctx, roomModel)
 	if err != nil {
 		return nil, err
 	}
+
 	return &response.Room{Room: roomModel.ToType()}, nil
 }
 
@@ -152,7 +149,7 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 	s.markSelfPlayer(roomType, playerType.Code)
 
 	// 获取用户 session 并加入房间
-	roomID := types.SocketRoomID(roomType.RoomCode)
+	roomID := types.SocketRoomID(roomType.ID)
 	if err := s.srvCtx.SessionManager.JoinRoom(ctx, user.ID, userClaims.SessionID, roomID); err != nil {
 		return nil, err
 	}
@@ -175,7 +172,7 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 }
 
 func (s *roomService) joinVirtualPlayer(ctx context.Context, req *request.JoinRoomRequest, user *types.User) (*dbmodels.Player, error) {
-	code := hash.GenerateRoomCode(req.RoomID, req.PlayerType, req.PlayerNickName)
+	code := codegen.GeneratePlayerCode(req.RoomID, req.PlayerType, req.PlayerNickName)
 
 	playerObj, err := s.srvCtx.PlayerRepo.GetPlayerByCode(ctx, code)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -197,7 +194,7 @@ func (s *roomService) joinVirtualPlayer(ctx context.Context, req *request.JoinRo
 }
 
 func (s *roomService) joinRealPlayer(ctx context.Context, req *request.JoinRoomRequest, user *types.User) (*dbmodels.Player, error) {
-	code := hash.GenerateRoomCode(req.RoomID, req.PlayerType, req.PlayerNickName)
+	code := codegen.GeneratePlayerCode(req.RoomID, req.PlayerType, req.PlayerNickName)
 
 	playerObj, err := s.srvCtx.PlayerRepo.GetPlayerByCode(ctx, code)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -296,7 +293,7 @@ func (s *roomService) LeaveRoom(ctx context.Context, req *request.LeaveRoomReque
 	leaveMsg := &constant.LeaveRoomMessage{
 		EventMsgBase: constant.EventMsgBase{
 			UserID:    userClaims.User.ID,
-			RoomID:    types.SocketRoomID(roomObj.RoomCode),
+			RoomID:    types.SocketRoomID(roomObj.ID),
 			SessionID: userClaims.SessionID,
 		},
 		PlayerCode:   req.PlayerCode,
