@@ -6,16 +6,15 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/superwhys/billiard-helper/internal/models/types"
 )
 
 type UserTokenClaims struct {
 	jwt.RegisteredClaims
-	SessionID string      `json:"session_id"`
-	User      *types.User `json:"user"`
+	SessionID string `json:"session_id"`
+	UserID    uint   `json:"user_id"`
 }
 
-func GenerateToken(signingKey []byte, timeout time.Duration, user *types.User) (string, error) {
+func GenerateToken(signingKey []byte, timeout time.Duration, userID uint) (string, error) {
 	if len(signingKey) == 0 {
 		return "", fmt.Errorf("signing key is required")
 	}
@@ -26,7 +25,7 @@ func GenerateToken(signingKey []byte, timeout time.Duration, user *types.User) (
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 		},
 		SessionID: uuid.NewString(),
-		User:      user,
+		UserID:    userID,
 	}
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(signingKey)
