@@ -37,7 +37,8 @@ type ScoresService interface {
 	GetRoomScores(ctx context.Context, req *request.GetRoomScoresRequest) ([]*response.Scores, error)
 }
 
-type App interface {
+type Service interface {
 	RoomService
 	ScoresService
+	AuthService
 }

@@ -12,19 +12,19 @@ import (
 	"github.com/superwhys/billiard-helper/internal/comet/manager"
 	"github.com/superwhys/billiard-helper/internal/comet/queue"
 	"github.com/superwhys/billiard-helper/internal/models/constant"
-	"github.com/superwhys/billiard-helper/internal/service"
+	"github.com/superwhys/billiard-helper/internal/ports"
 )
 
 type Server struct {
-	srv            *service.Service
+	srv            ports.Service
 	sessionManager *manager.SessionManager
 	handlers       *consume.Handlers
 	queue          queue.EventQueue
 }
 
-func NewCometServer(queue queue.EventQueue, srv *service.Service) *Server {
+func NewCometServer(queue queue.EventQueue, srv ports.Service) *Server {
 	sessionManager := manager.NewSessionManager(srv)
-	handlers := consume.NewHandlers(srv, sessionManager)
+	handlers := consume.NewHandlers(sessionManager)
 
 	server := &Server{
 		srv:            srv,

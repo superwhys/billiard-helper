@@ -10,10 +10,10 @@ import (
 )
 
 type Service struct {
-	ctx           *ServiceContext
-	RoomService   ports.RoomService
-	ScoresService ports.ScoresService
-	AuthService   ports.AuthService
+	ctx *ServiceContext
+	ports.RoomService
+	ports.ScoresService
+	ports.AuthService
 }
 
 // NewService 创建服务集合

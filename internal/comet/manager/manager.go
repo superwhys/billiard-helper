@@ -13,13 +13,13 @@ import (
 	"github.com/superwhys/billiard-helper/internal/models/request"
 	"github.com/superwhys/billiard-helper/internal/models/response"
 	"github.com/superwhys/billiard-helper/internal/models/types"
-	"github.com/superwhys/billiard-helper/internal/service"
+	"github.com/superwhys/billiard-helper/internal/ports"
 )
 
 // SessionManager 管理 websocket 连接
 type SessionManager struct {
 	mu                sync.RWMutex
-	srv               *service.Service
+	srv               ports.Service
 	socket            websocketutils.ServerAPI
 	billiardNamespace websocketutils.NamespaceAPI
 	// userConns 管理一个用户多端登录的连接
@@ -27,11 +27,11 @@ type SessionManager struct {
 	sessionMap map[string]ISession          // sessionID -> ISession
 }
 
-func NewSessionManager(srv *service.Service) *SessionManager {
+func NewSessionManager(srv ports.Service) *SessionManager {
 	socket := websocketutils.NewServer(
 		websocketutils.WithNamespacePrefix("/ws"),
 		websocketutils.WithHeartbeat(time.Second*10, time.Minute*20),
-		websocketutils.WithAllowRequestFunc(middlewares.TokenVerifyFromSocket(srv.AuthService)),
+		websocketutils.WithAllowRequestFunc(middlewares.TokenVerifyFromSocket(srv)),
 	)
 
 	sm := &SessionManager{
@@ -75,7 +75,7 @@ func (sm *SessionManager) setupSocket() {
 				continue
 			}
 			logging.Infoc(ctx.Context(), "user(%d) leave room(%s)", claims.User.ID, room)
-			sm.srv.RoomService.LeaveRoom(ctx.Context(), &request.LeaveRoomRequest{
+			sm.srv.LeaveRoom(ctx.Context(), &request.LeaveRoomRequest{
 				RoomID:      types.ParseRoomID(room),
 				UserID:      claims.User.ID,
 				PlayerCode:  room,

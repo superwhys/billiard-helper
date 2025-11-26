@@ -7,20 +7,17 @@ import (
 	"github.com/miebyte/goutils/logging"
 	"github.com/superwhys/billiard-helper/internal/comet/manager"
 	"github.com/superwhys/billiard-helper/internal/models/constant"
-	"github.com/superwhys/billiard-helper/internal/service"
 )
 
 type EventHandler func(ctx context.Context, data []byte)
 
 type Handlers struct {
-	srv            *service.Service
 	sessionManager *manager.SessionManager
 	handlers       map[string]EventHandler
 }
 
-func NewHandlers(srv *service.Service, sessionManager *manager.SessionManager) *Handlers {
+func NewHandlers(sessionManager *manager.SessionManager) *Handlers {
 	h := &Handlers{
-		srv:            srv,
 		sessionManager: sessionManager,
 		handlers:       make(map[string]EventHandler),
 	}
