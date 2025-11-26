@@ -130,7 +130,7 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 
 	var playerObj *dbmodels.Player
 	if req.IsVirtualPlayer() {
-		playerObj, err = s.joinVirtualPlayer(ctx, req, user)
+		playerObj, err = s.joinVirtualPlayer(ctx, req)
 	} else {
 		playerObj, err = s.joinRealPlayer(ctx, req, user)
 	}
@@ -171,7 +171,7 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 	return &response.Room{Room: roomType}, nil
 }
 
-func (s *roomService) joinVirtualPlayer(ctx context.Context, req *request.JoinRoomRequest, user *types.User) (*dbmodels.Player, error) {
+func (s *roomService) joinVirtualPlayer(ctx context.Context, req *request.JoinRoomRequest) (*dbmodels.Player, error) {
 	code := codegen.GeneratePlayerCode(req.RoomID, req.PlayerType, req.PlayerNickName)
 
 	playerObj, err := s.srvCtx.PlayerRepo.GetPlayerByCode(ctx, code)

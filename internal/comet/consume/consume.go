@@ -33,7 +33,6 @@ func (h *Handlers) register() {
 	h.handlers[constant.EventPlayerScoreAdd] = h.handlePlayerScoreAdd
 	h.handlers[constant.EventPlayerScoreMinus] = h.handlePlayerScoreMinus
 	h.handlers[constant.EventPlayerScoreReset] = h.handlePlayerScoreReset
-	h.handlers[constant.EventPlayerKickPlayer] = h.handlePlayerKickPlayer
 }
 
 func (h *Handlers) Call(ctx context.Context, event string, data []byte) {

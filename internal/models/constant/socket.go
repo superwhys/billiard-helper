@@ -14,7 +14,6 @@ const (
 	EventPlayerScoreAdd       = "player_score_add"
 	EventPlayerScoreMinus     = "player_score_minus"
 	EventPlayerScoreReset     = "player_score_reset"
-	EventPlayerKickPlayer     = "player_kick_player"
 )
 
 type EventMsgBase struct {

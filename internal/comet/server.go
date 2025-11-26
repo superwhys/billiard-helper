@@ -41,7 +41,7 @@ func NewCometServer(queue longnet.EventQueue, sessionManager longnet.ISessionMan
 		sessionManager: sessionManager,
 	}
 
-	server.setupSocket(srv)
+	server.setupSocket()
 
 	return server
 }
