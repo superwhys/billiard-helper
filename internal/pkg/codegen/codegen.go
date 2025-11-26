@@ -1,62 +1,42 @@
 package codegen
 
 import (
-	"errors"
-	"strings"
+	"fmt"
+
+	"github.com/miebyte/goutils/logging"
+	"github.com/sqids/sqids-go"
 )
 
 const (
-	alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	base     = 36
-	codeLen  = 8        // 固定长度8位
-	mask     = 87231231 // 任意正整数（建议换成你自己的！）
+	alphabet   = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	minCodeLen = 8
 )
 
+var (
+	codeGen *sqids.Sqids
+)
+
+func init() {
+	var err error
+	codeGen, err = sqids.New(sqids.Options{
+		MinLength: minCodeLen,
+		Alphabet:  alphabet,
+	})
+	logging.PanicError(err)
+}
+
 // 编码
-func EncodeIDWithMask(id int64) string {
-	codeNum := id ^ mask
-	var sb strings.Builder
-	if codeNum == 0 {
-		return strings.Repeat("A", codeLen)
-	}
-	for codeNum > 0 {
-		rem := codeNum % base
-		sb.WriteByte(alphabet[rem])
-		codeNum /= base
-	}
-	code := sb.String()
-	// 翻转
-	buf := []rune(code)
-	for i, j := 0, len(buf)-1; i < j; i, j = i+1, j-1 {
-		buf[i], buf[j] = buf[j], buf[i]
-	}
-	realCode := string(buf)
-	// 左侧补A
-	padLen := codeLen - len(realCode)
-	if padLen > 0 {
-		realCode = strings.Repeat("A", padLen) + realCode
-	}
-	return realCode
+func EncodeIDWithMask(id uint64) (string, error) {
+	return codeGen.Encode([]uint64{id})
+
 }
 
 // 解码
-func DecodeIDWithMask(code string) (int64, error) {
-	code = strings.ToUpper(strings.TrimSpace(code))
-	if len(code) != codeLen {
-		return 0, errors.New("invalid code length")
+func DecodeIDWithMask(code string) (uint64, error) {
+	values := codeGen.Decode(code)
+	if len(values) == 0 {
+		return 0, fmt.Errorf("code(%s) can not decode anything", code)
 	}
-	code = strings.TrimLeft(code, "A")
-	if code == "" {
-		return 0, nil
-	}
-	var codeNum int64
-	for _, c := range code {
-		idx := strings.IndexRune(alphabet, c)
-		if idx < 0 {
-			return 0, errors.New("invalid code value")
-		}
-		codeNum = codeNum*base + int64(idx)
-	}
-	id := codeNum ^ mask
-	return id, nil
+
+	return values[0], nil
 }
