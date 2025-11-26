@@ -3,8 +3,8 @@ package constant
 import "github.com/superwhys/billiard-helper/internal/models/types"
 
 const (
-	BilliardNamespace      = "billiard"
-	BilliardMessageChannel = "billiard:message:all"
+	BilliardSocketNamespace = "billiard"
+	BilliardMessageChannel  = "billiard:message:all"
 )
 
 const (
@@ -14,6 +14,7 @@ const (
 	EventPlayerScoreAdd       = "player_score_add"
 	EventPlayerScoreMinus     = "player_score_minus"
 	EventPlayerScoreReset     = "player_score_reset"
+	EventPlayerScoreUndo      = "player_score_undo"
 )
 
 type EventMsgBase struct {
@@ -31,4 +32,9 @@ type LeaveRoomMessage struct {
 	EventMsgBase
 	PlayerCode   string `json:"player_code"`
 	PlayerUserID *uint  `json:"player_user_id"`
+}
+
+type ScoreUpdateMessage struct {
+	EventMsgBase
+	Score *types.Scores `json:"score"`
 }

@@ -33,6 +33,7 @@ const (
 	ErrCodeAddScoreFailed
 	ErrCodeMinusScoreFailed
 	ErrCodeResetScoreFailed
+	ErrCodeUndoScoreFailed
 	ErrCodeGetRoomScoresFailed
 	// Session error codes
 	ErrCodeSessionNotFound
@@ -74,6 +75,8 @@ func (c ErrCode) String() string {
 		return "减少分数失败"
 	case ErrCodeResetScoreFailed:
 		return "重置分数失败"
+	case ErrCodeUndoScoreFailed:
+		return "撤回分数失败"
 	case ErrCodeGetRoomScoresFailed:
 		return "获取房间分数失败"
 	case ErrCodeSendEmailCodeFailed:

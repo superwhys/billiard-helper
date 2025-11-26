@@ -16,22 +16,13 @@ func (h *Handlers) handlePlayerLeaveRoom(ctx context.Context, data []byte) {
 		return
 	}
 
-	sessions := h.sessionManager.GetSessionsByUserID(msg.UserID)
-	if len(sessions) == 0 {
-		logging.Errorc(ctx, "user(%d) session not found", msg.UserID)
-		return
+	err := h.broadcastRoom(ctx, msg.RoomID, constant.EventPlayerLeaveRoom, msg.PlayerCode)
+	if err != nil {
+		logging.Errorc(ctx, "broadcast room failed: %v", err)
 	}
 
-	// 先广播玩家离开的消息。
-	for _, session := range sessions {
-		err := h.broadcastRoom(session, msg.RoomID, constant.EventPlayerLeaveRoom, msg.PlayerCode)
-		if err != nil {
-			logging.Errorc(ctx, "broadcast room failed: %v", err)
-		}
-	}
-
-	// 移除离开房间玩家的 session
 	if msg.PlayerUserID != nil {
+		// 获取该玩家的所有 session 并逐一离开房间
 		sessions := h.sessionManager.GetSessionsByUserID(ptrx.UintValue(msg.PlayerUserID))
 		if len(sessions) == 0 {
 			logging.Errorc(ctx, "user(%d) session not found", ptrx.UintValue(msg.PlayerUserID))

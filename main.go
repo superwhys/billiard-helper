@@ -9,8 +9,8 @@ import (
 	"github.com/superwhys/billiard-helper/api"
 	"github.com/superwhys/billiard-helper/config"
 	"github.com/superwhys/billiard-helper/internal/comet"
+	"github.com/superwhys/billiard-helper/internal/comet/queue"
 	"github.com/superwhys/billiard-helper/internal/models/dbmodels"
-	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
 	"github.com/superwhys/billiard-helper/internal/service"
 )
 
@@ -43,12 +43,9 @@ func main() {
 	err = mysqlDB.AutoMigrate(dbmodels.Tables()...)
 	logging.PanicError(err)
 
-	eventQueue := longnet.NewMemoryQueue()
-	sessionManager := longnet.NewSessionManager()
-
-	services := service.NewService(config, mysqlDB, redisClient, eventQueue, sessionManager)
-	cometServer := comet.NewCometServer(eventQueue, sessionManager, services)
-
+	eventQueue := queue.NewMemoryQueue()
+	services := service.NewService(config, mysqlDB, redisClient, eventQueue)
+	cometServer := comet.NewCometServer(eventQueue, services)
 	apiApp := api.SetupAPI(isDev(), services, cometServer)
 
 	srv := cores.NewCores(

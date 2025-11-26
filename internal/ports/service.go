@@ -33,6 +33,7 @@ type ScoresService interface {
 	AddScore(ctx context.Context, req *request.AddScoreRequest) error
 	MinusScore(ctx context.Context, req *request.MinusScoreRequest) error
 	ResetScore(ctx context.Context, req *request.ResetScoreRequest) error
+	UndoScore(ctx context.Context, req *request.UndoScoreRequest) error
 	GetRoomScores(ctx context.Context, req *request.GetRoomScoresRequest) ([]*response.Scores, error)
 }
 

@@ -3,8 +3,8 @@ package service
 import (
 	"github.com/miebyte/goutils/redisutils"
 	"github.com/superwhys/billiard-helper/config"
+	"github.com/superwhys/billiard-helper/internal/comet/queue"
 	"github.com/superwhys/billiard-helper/internal/dal/db/manager"
-	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
 	"github.com/superwhys/billiard-helper/internal/ports"
 	"gorm.io/gorm"
 )
@@ -21,8 +21,7 @@ func NewService(
 	config *config.Config,
 	db *gorm.DB,
 	redisClient *redisutils.RedisClient,
-	eventQueue longnet.EventQueue,
-	sessionManager longnet.ISessionManager,
+	eventQueue queue.EventQueue,
 ) *Service {
 	roomRepo := manager.NewRoomManager(db)
 	playerRepo := manager.NewPlayerManager(db)
@@ -30,14 +29,13 @@ func NewService(
 	userRepo := manager.NewUserRepo(db)
 
 	ctx := &ServiceContext{
-		Config:         config,
-		RedisClient:    redisClient,
-		RoomRepo:       roomRepo,
-		PlayerRepo:     playerRepo,
-		ScoreRepo:      scoreRepo,
-		UserRepo:       userRepo,
-		EventQueue:     eventQueue,
-		SessionManager: sessionManager,
+		Config:      config,
+		RedisClient: redisClient,
+		RoomRepo:    roomRepo,
+		PlayerRepo:  playerRepo,
+		ScoreRepo:   scoreRepo,
+		UserRepo:    userRepo,
+		EventQueue:  eventQueue,
 	}
 
 	return &Service{

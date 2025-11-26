@@ -7,7 +7,6 @@ import (
 	"github.com/superwhys/billiard-helper/api/middlewares"
 	"github.com/superwhys/billiard-helper/api/router"
 	"github.com/superwhys/billiard-helper/internal/comet"
-	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
 	"github.com/superwhys/billiard-helper/internal/service"
 
 	_ "github.com/superwhys/billiard-helper/cmd/swagger/docs"
@@ -15,11 +14,10 @@ import (
 )
 
 type apiApp struct {
-	isDev          bool
-	sessionManager longnet.ISessionManager
-	services       *service.Service
-	cometServer    *comet.Server
-	httpHandler    http.Handler
+	isDev       bool
+	services    *service.Service
+	cometServer *comet.Server
+	httpHandler http.Handler
 }
 
 // SetupRouter godoc

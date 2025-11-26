@@ -349,6 +349,45 @@ const docTemplate = `{
                 }
             }
         },
+        "/scores/add": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "添加分数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scores"
+                ],
+                "summary": "添加分数",
+                "parameters": [
+                    {
+                        "description": "添加分数请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AddScoreRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
         "/scores/list": {
             "get": {
                 "security": [
@@ -383,6 +422,123 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/ginutils.Ret-array_response_Scores"
+                        }
+                    }
+                }
+            }
+        },
+        "/scores/minus": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "减少分数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scores"
+                ],
+                "summary": "减少分数",
+                "parameters": [
+                    {
+                        "description": "减少分数请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.MinusScoreRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/scores/reset": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "重置分数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scores"
+                ],
+                "summary": "重置分数",
+                "parameters": [
+                    {
+                        "description": "重置分数请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ResetScoreRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/scores/undo": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "撤回分数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scores"
+                ],
+                "summary": "撤回分数",
+                "parameters": [
+                    {
+                        "description": "撤回分数请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UndoScoreRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
                         }
                     }
                 }
@@ -454,16 +610,31 @@ const docTemplate = `{
                 "message": {}
             }
         },
-        "request.CreateRoomRequest": {
+        "request.AddScoreRequest": {
             "type": "object",
             "required": [
-                "room_code"
+                "change",
+                "operator_id",
+                "player_id",
+                "room_id"
             ],
             "properties": {
-                "room_code": {
-                    "type": "string"
+                "change": {
+                    "type": "integer"
+                },
+                "operator_id": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "integer"
+                },
+                "room_id": {
+                    "type": "integer"
                 }
             }
+        },
+        "request.CreateRoomRequest": {
+            "type": "object"
         },
         "request.DeleteRoomRequest": {
             "type": "object",
@@ -504,13 +675,12 @@ const docTemplate = `{
         "request.JoinRoomRequest": {
             "type": "object",
             "required": [
+                "player_type",
                 "room_id"
             ],
             "properties": {
-                "player_avatar": {
-                    "type": "string"
-                },
                 "player_nick_name": {
+                    "description": "PlayerNickName 虚拟用户必填",
                     "type": "string"
                 },
                 "player_type": {
@@ -525,13 +695,22 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "player_code",
-                "room_id"
+                "really_leave",
+                "room_id",
+                "user_id"
             ],
             "properties": {
                 "player_code": {
                     "type": "string"
                 },
+                "really_leave": {
+                    "description": "是否真的离开房间，如果为 false，则只是标记玩家离线",
+                    "type": "boolean"
+                },
                 "room_id": {
+                    "type": "integer"
+                },
+                "user_id": {
                     "type": "integer"
                 }
             }
@@ -553,6 +732,29 @@ const docTemplate = `{
                 "secret": {
                     "description": "if login type is code, secret is the code\nif login type is password, secret is the password",
                     "type": "string"
+                }
+            }
+        },
+        "request.MinusScoreRequest": {
+            "type": "object",
+            "required": [
+                "change",
+                "operator_id",
+                "player_id",
+                "room_id"
+            ],
+            "properties": {
+                "change": {
+                    "type": "integer"
+                },
+                "operator_id": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "integer"
+                },
+                "room_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -579,6 +781,25 @@ const docTemplate = `{
                 }
             }
         },
+        "request.ResetScoreRequest": {
+            "type": "object",
+            "required": [
+                "operator_id",
+                "player_id",
+                "room_id"
+            ],
+            "properties": {
+                "operator_id": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "integer"
+                },
+                "room_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "request.SendEmailCodeReq": {
             "type": "object",
             "required": [
@@ -594,6 +815,25 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UndoScoreRequest": {
+            "type": "object",
+            "required": [
+                "operator_id",
+                "player_id",
+                "room_id"
+            ],
+            "properties": {
+                "operator_id": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "integer"
+                },
+                "room_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "response.Room": {
             "type": "object",
             "properties": {
@@ -605,9 +845,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/types.Player"
                     }
-                },
-                "room_code": {
-                    "type": "string"
                 },
                 "scores": {
                     "type": "array",
@@ -679,14 +916,14 @@ const docTemplate = `{
         "types.Player": {
             "type": "object",
             "properties": {
-                "avatar_url": {
-                    "type": "string"
-                },
                 "code": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
+                },
+                "is_online": {
+                    "type": "boolean"
                 },
                 "is_you": {
                     "description": "用来标识返回给客户端的数据时，是否是当前客户端用户",
@@ -735,6 +972,11 @@ const docTemplate = `{
                 "RoomStatusInProgress": "进行中",
                 "RoomStatusPending": "未开始"
             },
+            "x-enum-descriptions": [
+                "未开始",
+                "进行中",
+                "已完成"
+            ],
             "x-enum-varnames": [
                 "RoomStatusPending",
                 "RoomStatusInProgress",

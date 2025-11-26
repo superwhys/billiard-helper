@@ -15,16 +15,19 @@ func (h *Handlers) handlePlayerJoinRoom(ctx context.Context, data []byte) {
 		return
 	}
 
-	sessions := h.sessionManager.GetSessionsByUserID(msg.UserID)
-	if len(sessions) == 0 {
-		logging.Errorc(ctx, "user(%d) session not found", msg.UserID)
+	// 广播玩家加入消息
+	err := h.broadcastRoom(ctx, msg.RoomID, constant.EventPlayerJoinRoom, msg.Player)
+	if err != nil {
+		logging.Errorc(ctx, "broadcast room failed: %v", err)
 		return
 	}
 
-	for _, session := range sessions {
-		err := h.broadcastRoom(session, msg.RoomID, constant.EventPlayerJoinRoom, msg.Player)
-		if err != nil {
-			logging.Errorc(ctx, "broadcast room failed: %v", err)
-		}
+	// 获取该玩家的 socket 连接并加入房间
+	session := h.sessionManager.GetUserSession(msg.UserID, msg.SessionID)
+	if session == nil {
+		logging.Errorc(ctx, "session not found")
+		return
 	}
+
+	_ = session.Join(msg.RoomID)
 }

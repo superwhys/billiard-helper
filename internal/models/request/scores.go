@@ -20,6 +20,12 @@ type ResetScoreRequest struct {
 	OperatorID uint `json:"operator_id" binding:"required"`
 }
 
+type UndoScoreRequest struct {
+	RoomID     uint `json:"room_id" binding:"required"`
+	PlayerID   uint `json:"player_id" binding:"required"`
+	OperatorID uint `json:"operator_id" binding:"required"`
+}
+
 type GetRoomScoresRequest struct {
 	RoomID uint `json:"room_id" binding:"required"`
 }

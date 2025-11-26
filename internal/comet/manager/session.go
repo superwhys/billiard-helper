@@ -1,8 +1,15 @@
-package longnet
+package manager
 
 import (
 	"github.com/miebyte/goutils/websocketutils"
 )
+
+type ISession interface {
+	websocketutils.Conn
+	UserID() uint
+	ConnID() string
+	SessionID() string
+}
 
 type Session struct {
 	websocketutils.Conn

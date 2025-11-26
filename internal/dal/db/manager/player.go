@@ -38,6 +38,13 @@ func (m *playerManager) GetPlayerByCode(ctx context.Context, code string) (*dbmo
 		First()
 }
 
+func (m *playerManager) GetPlayerByID(ctx context.Context, id uint) (*dbmodels.Player, error) {
+	p := m.query.Player
+	return p.WithContext(ctx).
+		Where(p.ID.Eq(id)).
+		First()
+}
+
 func (m *playerManager) UpdatePlayer(ctx context.Context, playerCode string, player *dbmodels.Player) error {
 	p := m.query.Player
 	resp, err := p.WithContext(ctx).

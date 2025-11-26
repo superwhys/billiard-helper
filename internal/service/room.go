@@ -8,6 +8,7 @@ import (
 
 	"github.com/miebyte/goutils/utils/ptrx"
 	"github.com/superwhys/billiard-helper/api/middlewares"
+	"github.com/superwhys/billiard-helper/internal/comet/queue"
 	"github.com/superwhys/billiard-helper/internal/dal/cache"
 	"github.com/superwhys/billiard-helper/internal/models/constant"
 	"github.com/superwhys/billiard-helper/internal/models/dbmodels"
@@ -16,7 +17,6 @@ import (
 	"github.com/superwhys/billiard-helper/internal/models/response"
 	"github.com/superwhys/billiard-helper/internal/models/types"
 	"github.com/superwhys/billiard-helper/internal/pkg/codegen"
-	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
 	"github.com/superwhys/billiard-helper/internal/ports"
 	"gorm.io/gorm"
 )
@@ -148,17 +148,11 @@ func (s *roomService) JoinRoom(ctx context.Context, req *request.JoinRoomRequest
 	roomType := room.ToType()
 	s.markSelfPlayer(roomType, playerType.Code)
 
-	// 获取用户 session 并加入房间
-	roomID := types.SocketRoomID(roomType.ID)
-	if err := s.srvCtx.SessionManager.JoinRoom(ctx, user.ID, userClaims.SessionID, roomID); err != nil {
-		return nil, err
-	}
-
 	// 发布玩家加入房间事件
 	joinMsg := &constant.JoinRoomMessage{
 		EventMsgBase: constant.EventMsgBase{
 			UserID:    user.ID,
-			RoomID:    roomID,
+			RoomID:    types.SocketRoomID(roomType.ID),
 			SessionID: userClaims.SessionID,
 		},
 		Player: playerType,
@@ -332,7 +326,7 @@ func (s *roomService) publishRoomEvent(ctx context.Context, event string, data a
 		return fmt.Errorf("marshal data failed: %w", err)
 	}
 
-	msg := &longnet.MemoryQueueMessage{
+	msg := &queue.QueueMessage{
 		Event: event,
 		Data:  bytes,
 	}

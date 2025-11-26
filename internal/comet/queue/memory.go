@@ -1,4 +1,4 @@
-package longnet
+package queue
 
 import (
 	"context"
@@ -28,7 +28,7 @@ func (m *MemoryQueue) Subscribe(ctx context.Context, channel string) <-chan []by
 	return ch
 }
 
-func (m *MemoryQueue) Publish(ctx context.Context, channel string, data *MemoryQueueMessage) error {
+func (m *MemoryQueue) Publish(ctx context.Context, channel string, data *QueueMessage) error {
 	bytes, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("marshal data failed: %w", err)

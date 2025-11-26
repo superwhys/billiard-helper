@@ -2,10 +2,11 @@ package consume
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/miebyte/goutils/logging"
+	"github.com/superwhys/billiard-helper/internal/comet/manager"
 	"github.com/superwhys/billiard-helper/internal/models/constant"
-	"github.com/superwhys/billiard-helper/internal/pkg/longnet"
 	"github.com/superwhys/billiard-helper/internal/service"
 )
 
@@ -13,11 +14,11 @@ type EventHandler func(ctx context.Context, data []byte)
 
 type Handlers struct {
 	srv            *service.Service
-	sessionManager longnet.ISessionManager
+	sessionManager *manager.SessionManager
 	handlers       map[string]EventHandler
 }
 
-func NewHandlers(srv *service.Service, sessionManager longnet.ISessionManager) *Handlers {
+func NewHandlers(srv *service.Service, sessionManager *manager.SessionManager) *Handlers {
 	h := &Handlers{
 		srv:            srv,
 		sessionManager: sessionManager,
@@ -33,6 +34,7 @@ func (h *Handlers) register() {
 	h.handlers[constant.EventPlayerScoreAdd] = h.handlePlayerScoreAdd
 	h.handlers[constant.EventPlayerScoreMinus] = h.handlePlayerScoreMinus
 	h.handlers[constant.EventPlayerScoreReset] = h.handlePlayerScoreReset
+	h.handlers[constant.EventPlayerScoreUndo] = h.handlePlayerScoreUndo
 }
 
 func (h *Handlers) Call(ctx context.Context, event string, data []byte) {
@@ -44,6 +46,20 @@ func (h *Handlers) Call(ctx context.Context, event string, data []byte) {
 	handler(ctx, data)
 }
 
-func (h *Handlers) broadcastRoom(session longnet.ISession, roomID string, event string, data any) error {
-	return session.Namespace().To(roomID).EmitExcept(event, data, session)
+func (h *Handlers) broadcastRoom(ctx context.Context, roomID string, event string, data any) error {
+	return h.sessionManager.BroadcastToRoom(ctx, roomID, event, data)
+}
+
+// broadcastScoreEvent 是一个通用的分数事件广播方法，因为分数事件的消息结构都是一样的
+func (h *Handlers) broadcastScoreEvent(ctx context.Context, data []byte, event string) {
+	var msg constant.ScoreUpdateMessage
+	if err := json.Unmarshal(data, &msg); err != nil {
+		logging.Errorc(ctx, "unmarshal message failed: %v", err)
+		return
+	}
+
+	err := h.broadcastRoom(ctx, msg.RoomID, event, msg.Score)
+	if err != nil {
+		logging.Errorc(ctx, "broadcast room failed: %v", err)
+	}
 }

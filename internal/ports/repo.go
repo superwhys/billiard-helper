@@ -26,6 +26,7 @@ type PlayerRepo interface {
 	CreatePlayer(ctx context.Context, player *dbmodels.Player) error
 	GetPlayer(ctx context.Context, playerCode string) (*dbmodels.Player, error)
 	GetPlayerByCode(ctx context.Context, code string) (*dbmodels.Player, error)
+	GetPlayerByID(ctx context.Context, id uint) (*dbmodels.Player, error)
 	UpdatePlayer(ctx context.Context, playerCode string, player *dbmodels.Player) error
 	DeletePlayer(ctx context.Context, playerCode string) error
 }
@@ -33,4 +34,6 @@ type PlayerRepo interface {
 type ScoreRepo interface {
 	CreateScore(ctx context.Context, score *dbmodels.Scores) error
 	DeleteScore(ctx context.Context, scoreID uint) error
+	GetLatestScore(ctx context.Context, roomID, playerID uint) (*dbmodels.Scores, error)
+	GetRoomScores(ctx context.Context, roomID uint) ([]*dbmodels.Scores, error)
 }
