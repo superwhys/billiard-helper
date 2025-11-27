@@ -8,8 +8,7 @@ import (
 )
 
 type JwtConfig struct {
-	JwtSecret string
-	// trial token timeout, if not trial, will not be expired
+	JwtSecret  string
 	JwtTimeout time.Duration
 }
 

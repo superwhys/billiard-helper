@@ -10,10 +10,11 @@ import (
 	"github.com/superwhys/billiard-helper/internal/errcode"
 )
 
+var ErrTokenExpired = jwt.ErrTokenExpired
+
 type UserTokenClaims struct {
 	jwt.RegisteredClaims
-	SessionID string `json:"session_id"`
-	UserID    uint   `json:"user_id"`
+	UserID uint `json:"user_id"`
 }
 
 func GenerateToken(signingKey []byte, timeout time.Duration, userID uint) (string, error) {
@@ -25,9 +26,9 @@ func GenerateToken(signingKey []byte, timeout time.Duration, userID uint) (strin
 	claims := &UserTokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
+			ID:        uuid.NewString(), // JTI
 		},
-		SessionID: uuid.NewString(),
-		UserID:    userID,
+		UserID: userID,
 	}
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(signingKey)

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/superwhys/billiard-helper/config"
 	"github.com/superwhys/billiard-helper/internal/app/assembler"
@@ -13,17 +14,19 @@ import (
 type UserApp struct {
 	userService   user.IUserService
 	userAssembler *assembler.UserAssembler
+	sessionRepo   user.ISessionRepository
 	jwtConfig     *config.JwtConfig
 }
 
 func NewUserApp(
 	userService user.IUserService,
-	userAssembler *assembler.UserAssembler,
+	sessionRepo user.ISessionRepository,
 	jwtConfig *config.JwtConfig,
 ) *UserApp {
 	return &UserApp{
 		userService:   userService,
-		userAssembler: userAssembler,
+		userAssembler: assembler.NewUserAssembler(),
+		sessionRepo:   sessionRepo,
 		jwtConfig:     jwtConfig,
 	}
 }
@@ -34,22 +37,19 @@ func (a *UserApp) SendRegisterCode(ctx context.Context, req *dto.SendRegisterCod
 }
 
 // Register 注册用户
-// 流程：调用领域服务注册 -> 返回结果
 func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
-	// 1. 调用领域服务完成核心业务逻辑
 	return a.userService.RegisterWithCode(ctx, req.Email, req.Code, req.Password, req.Name)
 }
 
 // Login 用户登录
-// 流程：调用领域服务验证 -> 生成 Token -> 组装 DTO 返回
 func (a *UserApp) Login(ctx context.Context, req *dto.LoginReq) (string, *dto.User, error) {
-	// 1. 调用领域服务验证账号密码
+	// 1. 验证账号密码
 	u, err := a.userService.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		return "", nil, err
 	}
 
-	// 2. 生成 JWT Token
+	// 2. 生成 Access Token
 	token, err := jwt.GenerateToken(
 		[]byte(a.jwtConfig.JwtSecret),
 		a.jwtConfig.JwtTimeout,
@@ -59,11 +59,31 @@ func (a *UserApp) Login(ctx context.Context, req *dto.LoginReq) (string, *dto.Us
 		return "", nil, err
 	}
 
-	// 3. 组装 User DTO
+	// 3. 存储 Session
+	if err := a.sessionRepo.SetSession(ctx, u.ID, token, a.jwtConfig.JwtTimeout); err != nil {
+		return "", nil, err
+	}
+
 	userDTO := a.userAssembler.ToDTO(u)
 	return token, userDTO, nil
 }
 
 func (a *UserApp) GetUserTokenClaims(ctx context.Context, tokenStr string) (*jwt.UserTokenClaims, error) {
-	return jwt.ParseToken(tokenStr, []byte(a.jwtConfig.JwtSecret))
+	// 1. 解析 Token
+	claims, err := jwt.ParseToken(tokenStr, []byte(a.jwtConfig.JwtSecret))
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 验证 Session (检查是否被踢出或失效)
+	cachedToken, err := a.sessionRepo.GetSession(ctx, claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("session expired or invalid")
+	}
+
+	if cachedToken != tokenStr {
+		return nil, fmt.Errorf("account logged in on another device")
+	}
+
+	return claims, nil
 }

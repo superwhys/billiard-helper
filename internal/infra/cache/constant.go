@@ -1,6 +1,8 @@
 package cache
 
-import "time"
+import (
+	"time"
+)
 
 var (
 	EmailCodeLock          = genCacheWithKey("email_code:lock", 30*time.Second)
@@ -8,4 +10,7 @@ var (
 	EmailCodeCooldownCache = genCacheWithKey("email_code:cooldown", time.Minute)
 
 	MatchLockCache = genCacheWithKey("match:lock", 5*time.Second)
+
+	// AuthSessionCache stores the currently valid token for a user (Single Device Login)
+	AuthSessionCache = genCacheWithKey("auth:session", 24*time.Hour)
 )

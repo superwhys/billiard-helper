@@ -21,8 +21,8 @@ func NewVerifyCodeRepository(client *redisutils.RedisClient) *VerifyCodeReposito
 }
 
 // SetCode 存储验证码 (设置过期时间)
-func (r *VerifyCodeRepository) SetCode(ctx context.Context, email string, code string, ttl int) error {
-	cacheKey := EmailCodeCache(email, Withexpire(time.Duration(ttl)*time.Second))
+func (r *VerifyCodeRepository) SetCode(ctx context.Context, email string, code string, ttl time.Duration) error {
+	cacheKey := EmailCodeCache(email, Withexpire(ttl))
 	return cacheKey.Set(ctx, r.client, code)
 }
 

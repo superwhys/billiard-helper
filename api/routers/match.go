@@ -41,7 +41,6 @@ func MatchCreateHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 			return
 		}
 		req.UserID = claims.UserID
-		req.SessionID = claims.SessionID
 
 		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
 		Match, err := matchApp.CreateMatch(ctx, req)
@@ -69,7 +68,6 @@ func MatchJoinHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 			return
 		}
 		req.UserID = claims.UserID
-		req.SessionID = claims.SessionID
 
 		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
 		Match, err := matchApp.JoinMatch(ctx, req)
@@ -97,7 +95,6 @@ func MatchStartHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 			return
 		}
 		req.UserID = claims.UserID
-		req.SessionID = claims.SessionID
 
 		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
 		err = matchApp.StartMatch(ctx, req)
@@ -125,7 +122,6 @@ func MatchEndHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 			return
 		}
 		req.UserID = claims.UserID
-		req.SessionID = claims.SessionID
 
 		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
 		err = matchApp.EndMatch(ctx, req)
@@ -153,7 +149,6 @@ func MatchLeaveHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 			return
 		}
 		req.UserID = claims.UserID
-		req.SessionID = claims.SessionID
 
 		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
 		err = matchApp.LeaveMatch(ctx, req)
@@ -181,7 +176,6 @@ func MatchKickHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 			return
 		}
 		req.UserID = claims.UserID
-		req.SessionID = claims.SessionID
 
 		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
 		err = matchApp.KickMatchPlayer(ctx, req)

@@ -73,9 +73,8 @@ func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*d
 	matchDTO := a.matchAssembler.ToMatchDTO(matchRoom)
 	msg := dto.JoinMatchEventMessage{
 		EventMsgBase: dto.EventMsgBase{
-			UserID:    req.UserID,
-			SessionID: req.SessionID,
-			MatchID:   matchDTO.ID,
+			UserID:  req.UserID,
+			MatchID: matchDTO.ID,
 		},
 		Player: &playerDTO,
 	}
@@ -109,9 +108,8 @@ func (a *MatchApp) StartMatch(ctx context.Context, req *dto.MatchActionRequest) 
 	// 4. 发布开始事件
 	msg := dto.MatchStartedEventMessage{
 		EventMsgBase: dto.EventMsgBase{
-			UserID:    req.UserID,
-			SessionID: req.SessionID,
-			MatchID:   req.MatchID,
+			UserID:  req.UserID,
+			MatchID: req.MatchID,
 		},
 	}
 	_ = a.publishEvent(ctx, constant.EventMatchStarted, msg)
@@ -142,9 +140,8 @@ func (a *MatchApp) EndMatch(ctx context.Context, req *dto.MatchActionRequest) er
 	// 4. 发布开始事件
 	msg := dto.MatchEndedEventMessage{
 		EventMsgBase: dto.EventMsgBase{
-			UserID:    req.UserID,
-			SessionID: req.SessionID,
-			MatchID:   req.MatchID,
+			UserID:  req.UserID,
+			MatchID: req.MatchID,
 		},
 	}
 	_ = a.publishEvent(ctx, constant.EventMatchEnded, msg)
@@ -179,9 +176,8 @@ func (a *MatchApp) LeaveMatch(ctx context.Context, req *dto.MatchActionRequest) 
 	// 5. 发布离开事件
 	_ = a.publishEvent(ctx, constant.EventPlayerLeaveRoom, &dto.LeaveMatchEventMessage{
 		EventMsgBase: dto.EventMsgBase{
-			UserID:    req.UserID,
-			SessionID: req.SessionID,
-			MatchID:   matchRoom.ID,
+			UserID:  req.UserID,
+			MatchID: matchRoom.ID,
 		},
 		PlayerCode: req.PlayerCode,
 	})
@@ -217,9 +213,8 @@ func (a *MatchApp) KickMatchPlayer(ctx context.Context, req *dto.KickPlayerReque
 	// 5. 发布踢人事件 (通常复用离开事件，或者有单独的 Kick 事件)
 	_ = a.publishEvent(ctx, constant.EventPlayerLeaveRoom, &dto.LeaveMatchEventMessage{
 		EventMsgBase: dto.EventMsgBase{
-			UserID:    req.UserID,
-			SessionID: req.SessionID,
-			MatchID:   matchRoom.ID,
+			UserID:  req.UserID,
+			MatchID: matchRoom.ID,
 		},
 		PlayerCode: req.PlayerCode,
 	})

@@ -1,9 +1,8 @@
 package dto
 
 type EventMsgBase struct {
-	UserID    uint   `json:"user_id"`
-	SessionID string `json:"session_id"`
-	MatchID   uint   `json:"match_id"`
+	UserID  uint `json:"user_id"`
+	MatchID uint `json:"match_id"`
 }
 
 type JoinMatchEventMessage struct {

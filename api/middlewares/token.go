@@ -2,7 +2,9 @@ package middlewares
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/logging"
@@ -14,29 +16,36 @@ import (
 
 func TokenVerifyMiddleware(userApp *services.UserApp) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tokenStr := ctx.GetHeader("Authorization")
-		if tokenStr == "" {
+		authHeader := ctx.GetHeader("Authorization")
+		if authHeader == "" {
 			ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrCodeNoToken))
 			ctx.Abort()
 			return
 		}
 
+		// Support "Bearer <token>" format
+		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+		tokenStr = strings.TrimSpace(tokenStr)
+
 		claims, err := userApp.GetUserTokenClaims(ctx.Request.Context(), tokenStr)
 		if err != nil {
-			logging.Errorc(ctx, "get secret from jwt token failed: %v", err)
-			if ec, ok := errcode.AsErrcode(err); ok {
+			logging.Errorc(ctx, "verify token failed: %v", err)
+
+			// Handle token expiration specifically
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrCodeTokenExpired))
+			} else if ec, ok := errcode.AsErrcode(err); ok {
 				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(ec))
 			} else {
-				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrCodeNoToken))
+				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrCodeInvalidToken))
 			}
 			ctx.Abort()
 			return
 		}
 
-		ctx.Set(string(jwt.TokenContextKey), claims)
-
 		logging.Debugc(ctx, "token claims: %s", logging.JsonifyNoIndent(claims))
-		// 将 claims 注入 request context，供下游以 context.Value 读取
+
+		ctx.Set(string(jwt.TokenContextKey), claims)
 		reqCtx := context.WithValue(ctx.Request.Context(), jwt.TokenContextKey, claims)
 		ctx.Request = ctx.Request.WithContext(reqCtx)
 	}

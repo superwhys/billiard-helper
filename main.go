@@ -9,7 +9,11 @@ import (
 	"github.com/superwhys/billiard-helper/api"
 	"github.com/superwhys/billiard-helper/config"
 	"github.com/superwhys/billiard-helper/internal/app/services"
+	"github.com/superwhys/billiard-helper/internal/domain/user"
+	"github.com/superwhys/billiard-helper/internal/infra/cache"
+	"github.com/superwhys/billiard-helper/internal/infra/db"
 	"github.com/superwhys/billiard-helper/internal/infra/db/models"
+	"github.com/superwhys/billiard-helper/internal/infra/email"
 )
 
 var (
@@ -29,7 +33,7 @@ func main() {
 	redisConf := new(redisutils.RedisConfig)
 	logging.PanicError(redisConfigFlag(redisConf))
 
-	_, err := redisConf.DialGORedisClient()
+	redisClient, err := redisConf.DialGORedisClient()
 	logging.PanicError(err)
 
 	mysqlConf := new(mysqlutils.MysqlConfig)
@@ -41,7 +45,18 @@ func main() {
 	err = mysqlDB.AutoMigrate(models.Tables()...)
 	logging.PanicError(err)
 
-	userApp := services.NewUserApp(nil, nil, config.JwtConfig)
+	emailSender := email.NewEmailSender(config.EmailConfig)
+
+	// Initialize Repositories
+	verifyCodeRepo := cache.NewVerifyCodeRepository(redisClient)
+	sessionRepo := cache.NewSessionRepository(redisClient)
+	userRepo := db.NewUserRepo(mysqlDB)
+
+	// Initialize domain services
+	userService := user.NewUserService(userRepo, verifyCodeRepo, emailSender)
+
+	// Initialize app services
+	userApp := services.NewUserApp(userService, sessionRepo, config.JwtConfig)
 	scoreApp := services.NewScoreApp(nil, nil, nil, nil)
 	matchApp := services.NewMatchApp(nil, nil, nil, nil)
 

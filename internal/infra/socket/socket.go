@@ -21,9 +21,8 @@ type SocketManager struct {
 	hook              SessionHook
 	socket            websocketutils.ServerAPI
 	billiardNamespace websocketutils.NamespaceAPI
-	// userConns 管理一个用户多端登录的连接
-	userConns  map[uint]map[string]ISession // userID -> sessionID -> ISession
-	sessionMap map[string]ISession          // sessionID -> ISession
+	userConns         map[uint]ISession // userID -> ISession
+	connIDMap         map[string]uint   // connID -> userID
 }
 
 func NewSocketManager(hook SessionHook) *SocketManager {
@@ -37,8 +36,8 @@ func NewSocketManager(hook SessionHook) *SocketManager {
 		hook:              hook,
 		socket:            socket,
 		billiardNamespace: socket.Of(BilliardSocketNamespace),
-		userConns:         make(map[uint]map[string]ISession),
-		sessionMap:        make(map[string]ISession),
+		userConns:         make(map[uint]ISession),
+		connIDMap:         make(map[string]uint),
 	}
 	sm.setupSocket()
 	return sm
@@ -65,74 +64,31 @@ func (sm *SocketManager) setupSocket() {
 	sm.billiardNamespace.On(websocketutils.EventDisconnect, sm.hook.OnDisconnect)
 }
 
-func (sm *SocketManager) RegisterSession(userID uint, sessionID string, conn websocketutils.Conn) {
-	session := NewSession(sessionID, userID, conn)
+func (sm *SocketManager) RegisterSession(userID uint, conn websocketutils.Conn) {
+	session := NewSession(userID, conn)
 
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 
 	if _, ok := sm.userConns[userID]; !ok {
-		sm.userConns[userID] = make(map[string]ISession)
+		sm.userConns[userID] = session
+		sm.connIDMap[conn.ID()] = userID
 	}
-	sm.userConns[userID][sessionID] = session
-	sm.sessionMap[sessionID] = session
 }
 
 func (sm *SocketManager) UnregisterSession(conn websocketutils.Conn) {
-	connID := conn.ID()
-
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 
-	var (
-		session   ISession
-		sessionID string
-	)
-
-	for sid, s := range sm.sessionMap {
-		if s.ConnID() == connID {
-			session = s
-			sessionID = sid
-			break
-		}
-	}
-
-	if session == nil {
-		return
-	}
-
-	delete(sm.sessionMap, sessionID)
-
-	if connSet, ok := sm.userConns[session.UserID()]; ok {
-		delete(connSet, sessionID)
-		if len(connSet) == 0 {
-			delete(sm.userConns, session.UserID())
-		}
-	}
+	delete(sm.userConns, sm.connIDMap[conn.ID()])
+	delete(sm.connIDMap, conn.ID())
 }
 
-func (sm *SocketManager) GetSessionsByUserID(userID uint) []ISession {
+func (sm *SocketManager) GetUserSession(userID uint) ISession {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
 
-	if connSet, ok := sm.userConns[userID]; ok {
-		sessions := make([]ISession, 0, len(connSet))
-		for _, session := range connSet {
-			sessions = append(sessions, session)
-		}
-		return sessions
-	}
-	return nil
-}
-
-func (sm *SocketManager) GetUserSession(userID uint, sessionID string) ISession {
-	sm.mu.RLock()
-	defer sm.mu.RUnlock()
-
-	if connSet, ok := sm.userConns[userID]; ok {
-		return connSet[sessionID]
-	}
-	return nil
+	return sm.userConns[userID]
 }
 
 func (sm *SocketManager) BroadcastToRoom(ctx context.Context, roomID string, event string, data any) error {
