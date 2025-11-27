@@ -53,10 +53,10 @@ func main() {
 	userRepo := db.NewUserRepo(mysqlDB)
 
 	// Initialize domain services
-	userService := user.NewUserService(userRepo, verifyCodeRepo, emailSender)
+	userService := user.NewUserService(userRepo)
 
 	// Initialize app services
-	userApp := services.NewUserApp(userService, sessionRepo, config.JwtConfig)
+	userApp := services.NewUserApp(userService, sessionRepo, verifyCodeRepo, emailSender, config.JwtConfig)
 	scoreApp := services.NewScoreApp(nil, nil, nil, nil)
 	matchApp := services.NewMatchApp(nil, nil, nil, nil)
 

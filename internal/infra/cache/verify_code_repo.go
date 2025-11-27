@@ -2,6 +2,9 @@ package cache
 
 import (
 	"context"
+	"crypto/rand"
+	"math/big"
+	"strings"
 	"time"
 
 	"github.com/miebyte/goutils/redisutils"
@@ -20,10 +23,32 @@ func NewVerifyCodeRepository(client *redisutils.RedisClient) *VerifyCodeReposito
 	}
 }
 
-// SetCode 存储验证码 (设置过期时间)
-func (r *VerifyCodeRepository) SetCode(ctx context.Context, email string, code string, ttl time.Duration) error {
+func (r *VerifyCodeRepository) generateDigitCode(length int) (string, error) {
+	var builder strings.Builder
+	for range length {
+		n, err := rand.Int(rand.Reader, big.NewInt(10))
+		if err != nil {
+			return "", err
+		}
+		builder.WriteByte(byte('0' + n.Int64()))
+	}
+	return builder.String(), nil
+}
+
+// GenerateCode 生成并缓存验证码
+func (r *VerifyCodeRepository) GenerateCode(ctx context.Context, email string, ttl time.Duration) (string, error) {
+	code, err := r.generateDigitCode(6)
+	if err != nil {
+		return "", err
+	}
+
 	cacheKey := EmailCodeCache(email, Withexpire(ttl))
-	return cacheKey.Set(ctx, r.client, code)
+	err = cacheKey.Set(ctx, r.client, code)
+	if err != nil {
+		return "", err
+	}
+
+	return code, nil
 }
 
 // GetCode 获取验证码

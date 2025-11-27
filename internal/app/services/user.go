@@ -3,42 +3,68 @@ package services
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/superwhys/billiard-helper/config"
 	"github.com/superwhys/billiard-helper/internal/app/assembler"
 	"github.com/superwhys/billiard-helper/internal/app/dto"
 	"github.com/superwhys/billiard-helper/internal/domain/user"
+	"github.com/superwhys/billiard-helper/internal/errcode"
+	"github.com/superwhys/billiard-helper/internal/infra/email"
 	"github.com/superwhys/billiard-helper/internal/pkg/jwt"
 )
 
 type UserApp struct {
-	userService   user.IUserService
-	userAssembler *assembler.UserAssembler
-	sessionRepo   user.ISessionRepository
-	jwtConfig     *config.JwtConfig
+	userService    user.IUserService
+	userAssembler  *assembler.UserAssembler
+	sessionRepo    user.ISessionRepository
+	verifyCodeRepo user.IVerifyCodeRepository
+	emailSender    email.IEmailSender
+	jwtConfig      *config.JwtConfig
 }
 
 func NewUserApp(
 	userService user.IUserService,
 	sessionRepo user.ISessionRepository,
+	verifyCodeRepo user.IVerifyCodeRepository,
+	emailSender email.IEmailSender,
 	jwtConfig *config.JwtConfig,
 ) *UserApp {
 	return &UserApp{
-		userService:   userService,
-		userAssembler: assembler.NewUserAssembler(),
-		sessionRepo:   sessionRepo,
-		jwtConfig:     jwtConfig,
+		userService:    userService,
+		userAssembler:  assembler.NewUserAssembler(),
+		sessionRepo:    sessionRepo,
+		verifyCodeRepo: verifyCodeRepo,
+		emailSender:    emailSender,
+		jwtConfig:      jwtConfig,
 	}
 }
 
 // SendRegisterCode 发送注册验证码
 func (a *UserApp) SendRegisterCode(ctx context.Context, req *dto.SendRegisterCodeReq) error {
-	return a.userService.SendRegisterCode(ctx, req.Email)
+	code, err := a.verifyCodeRepo.GenerateCode(ctx, req.Email, time.Minute*10)
+	if err != nil {
+		return err
+	}
+
+	return a.emailSender.SendVerifyCode(ctx, req.Email, code)
 }
 
 // Register 注册用户
 func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
-	return a.userService.RegisterWithCode(ctx, req.Email, req.Code, req.Password, req.Name)
+	// 1. 校验验证码
+	storedCode, err := a.verifyCodeRepo.GetCode(ctx, req.Email)
+	if err != nil {
+		return err
+	}
+	if req.Code != storedCode {
+		return errcode.ErrCodeInvalidCode
+	}
+
+	// 删除验证码，不需要关心是否失败
+	_ = a.verifyCodeRepo.DeleteCode(ctx, req.Email)
+
+	return a.userService.RegisterWithCode(ctx, req.Email, req.Password, req.Name)
 }
 
 // Login 用户登录
@@ -86,4 +112,13 @@ func (a *UserApp) GetUserTokenClaims(ctx context.Context, tokenStr string) (*jwt
 	}
 
 	return claims, nil
+}
+
+func (a *UserApp) Logout(ctx context.Context, tokenStr string) error {
+	claims, err := a.GetUserTokenClaims(ctx, tokenStr)
+	if err != nil {
+		return err
+	}
+
+	return a.sessionRepo.DeleteSession(ctx, claims.UserID)
 }

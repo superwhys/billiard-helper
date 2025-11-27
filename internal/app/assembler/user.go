@@ -16,12 +16,10 @@ func (a *UserAssembler) ToDTO(u *user.User) *dto.User {
 		return nil
 	}
 	return &dto.User{
-		ID:        u.ID,
-		Email:     u.Email.String(),
-		Name:      u.Name,
-		Avatar:    u.Avatar,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
+		ID:     u.ID,
+		Email:  u.Email.String(),
+		Name:   u.Name,
+		Avatar: u.Avatar,
 	}
 }
 
@@ -32,12 +30,10 @@ func (a *UserAssembler) ToEntity(d *dto.User) *user.User {
 
 	email, _ := user.NewEmail(d.Email)
 	return &user.User{
-		ID:        d.ID,
-		Email:     email,
-		Name:      d.Name,
-		Avatar:    d.Avatar,
-		CreatedAt: d.CreatedAt,
-		UpdatedAt: d.UpdatedAt,
+		ID:     d.ID,
+		Email:  email,
+		Name:   d.Name,
+		Avatar: d.Avatar,
 		// Password: 留空或由业务逻辑处理
 	}
 }

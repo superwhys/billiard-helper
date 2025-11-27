@@ -20,13 +20,11 @@ func (a *UserPoAssembler) ToEntity(po *models.User) *user.User {
 	email, _ := user.NewEmail(po.Email)
 	password := user.NewPasswordFromHash(po.Password)
 	return &user.User{
-		ID:        po.ID,
-		Email:     email,
-		Name:      po.Name,
-		Password:  password,
-		Avatar:    po.Avatar,
-		CreatedAt: po.CreatedAt,
-		UpdatedAt: po.UpdatedAt,
+		ID:       po.ID,
+		Email:    email,
+		Name:     po.Name,
+		Password: password,
+		Avatar:   po.Avatar,
 	}
 }
 

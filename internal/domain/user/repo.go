@@ -6,7 +6,7 @@ import (
 )
 
 type IVerifyCodeRepository interface {
-	SetCode(ctx context.Context, email string, code string, ttl time.Duration) error
+	GenerateCode(ctx context.Context, email string, ttl time.Duration) (string, error)
 	GetCode(ctx context.Context, email string) (string, error)
 	DeleteCode(ctx context.Context, email string) error
 }
