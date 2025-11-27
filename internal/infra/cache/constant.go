@@ -7,5 +7,5 @@ var (
 	EmailCodeCache         = genCacheWithKey("email_code", 10*time.Minute)
 	EmailCodeCooldownCache = genCacheWithKey("email_code:cooldown", time.Minute)
 
-	RoomLockCache = genCacheWithKey("room:lock", 5*time.Second)
+	MatchLockCache = genCacheWithKey("match:lock", 5*time.Second)
 )

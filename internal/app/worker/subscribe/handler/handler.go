@@ -7,12 +7,14 @@ import (
 	"github.com/miebyte/goutils/logging"
 	"github.com/superwhys/billiard-helper/internal/app/dto"
 	"github.com/superwhys/billiard-helper/internal/constant"
+	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/infra/socket"
 )
 
 type EventHandler func(ctx context.Context, data []byte)
 
 type Handlers struct {
+	matchService  match.IMatchService
 	socketManager *socket.SocketManager
 	handlers      map[string]EventHandler
 }
@@ -50,13 +52,14 @@ func (h *Handlers) broadcastRoom(ctx context.Context, roomID string, event strin
 
 // broadcastScoreEvent 是一个通用的分数事件广播方法，因为分数事件的消息结构都是一样的
 func (h *Handlers) broadcastScoreEvent(ctx context.Context, data []byte, event string) {
-	var msg dto.ScoreUpdateMessage
+	var msg dto.MatchScoreUpdateEventMessage
 	if err := json.Unmarshal(data, &msg); err != nil {
 		logging.Errorc(ctx, "unmarshal message failed: %v", err)
 		return
 	}
 
-	err := h.broadcastRoom(ctx, msg.RoomID, event, msg.Score)
+	roomID := constant.MatchRoomID(msg.MatchID)
+	err := h.broadcastRoom(ctx, roomID, event, msg.Score)
 	if err != nil {
 		logging.Errorc(ctx, "broadcast room failed: %v", err)
 	}

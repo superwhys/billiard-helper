@@ -7,6 +7,8 @@ import (
 	"github.com/superwhys/billiard-helper/api/middlewares"
 	"github.com/superwhys/billiard-helper/api/routers"
 	"github.com/superwhys/billiard-helper/internal/app/services"
+
+	_ "github.com/superwhys/billiard-helper/cmd/swagger/docs"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
@@ -39,7 +41,7 @@ func SetupApi(
 		ginutils.WithGroupHandlers(
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(userApp)),
 			ginutils.WithGroupHandlers(
-				routers.RoomGroupRouter(matchApp),
+				routers.MatchGroupRouter(matchApp),
 			// router.ScoresGroupRouter(services.ScoresService),
 			),
 		),

@@ -3,21 +3,28 @@ package dto
 type EventMsgBase struct {
 	UserID    uint   `json:"user_id"`
 	SessionID string `json:"session_id"`
-	RoomID    string `json:"room_id"`
+	MatchID   uint   `json:"match_id"`
 }
 
-type JoinRoomMessage struct {
+type JoinMatchEventMessage struct {
 	EventMsgBase
 	Player *Player `json:"player"`
 }
 
-type LeaveRoomMessage struct {
+type LeaveMatchEventMessage struct {
 	EventMsgBase
-	PlayerCode   string `json:"player_code"`
-	PlayerUserID *uint  `json:"player_user_id"`
+	PlayerCode string `json:"player_code"`
 }
 
-type ScoreUpdateMessage struct {
+type MatchStartedEventMessage struct {
+	EventMsgBase
+}
+
+type MatchEndedEventMessage struct {
+	EventMsgBase
+}
+
+type MatchScoreUpdateEventMessage struct {
 	EventMsgBase
 	Score *Score `json:"score"`
 }

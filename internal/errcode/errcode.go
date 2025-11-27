@@ -13,13 +13,17 @@ const (
 	ErrCodeUserRegisterFailed
 	ErrCodeUserLoginFailed
 
-	// Room error codes
-	ErrCodeCreateRoomFailed
-	ErrCodeJoinRoomFailed
-	ErrCodeStartRoomFailed
-	ErrCodeEndRoomFailed
-	ErrCodeLeaveRoomFailed
+	// Match error codes
+	ErrCodeCreateMatchFailed
+	ErrCodeJoinMatchFailed
+	ErrCodeStartMatchFailed
+	ErrCodeEndMatchFailed
+	ErrCodeLeaveMatchFailed
 	ErrCodeKickPlayerFailed
+	ErrCodeMatchPlayerFull
+	ErrCodeMatchNotPending
+	ErrCodeMatchPlayerAlreadyJoined
+	ErrCodeMatchNotExists
 )
 
 func (c ErrCode) Error() string {
@@ -44,19 +48,26 @@ func (c ErrCode) String() string {
 		return "用户注册失败"
 	case ErrCodeUserLoginFailed:
 		return "用户登录失败"
-	case ErrCodeCreateRoomFailed:
-		return "创建房间失败"
-	case ErrCodeJoinRoomFailed:
-		return "加入房间失败"
-	case ErrCodeStartRoomFailed:
+	case ErrCodeCreateMatchFailed:
+		return "创建比赛失败"
+	case ErrCodeJoinMatchFailed:
+		return "加入比赛失败"
+	case ErrCodeStartMatchFailed:
 		return "开始比赛失败"
-	case ErrCodeEndRoomFailed:
+	case ErrCodeEndMatchFailed:
 		return "结束比赛失败"
-	case ErrCodeLeaveRoomFailed:
-		return "离开房间失败"
+	case ErrCodeLeaveMatchFailed:
+		return "离开比赛失败"
 	case ErrCodeKickPlayerFailed:
-		return "踢出玩家失败"
-
+		return "踢出比赛失败"
+	case ErrCodeMatchPlayerFull:
+		return "比赛人员已满"
+	case ErrCodeMatchNotPending:
+		return "比赛已开始"
+	case ErrCodeMatchPlayerAlreadyJoined:
+		return "玩家已加入"
+	case ErrCodeMatchNotExists:
+		return "比赛不存在"
 	default:
 		return "未知错误"
 	}

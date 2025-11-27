@@ -1,11 +1,11 @@
 package match
 
-type RoomStatus uint8
+type MatchStatus uint8
 
 const (
-	RoomStatusPending    RoomStatus = 1 // 未开始
-	RoomStatusInProgress RoomStatus = 2 // 进行中
-	RoomStatusFinished   RoomStatus = 3 // 已完成
+	MatchStatusPending    MatchStatus = 1 // 未开始
+	MatchStatusInProgress MatchStatus = 2 // 进行中
+	MatchStatusFinished   MatchStatus = 3 // 已完成
 )
 
 type PlayerType uint8

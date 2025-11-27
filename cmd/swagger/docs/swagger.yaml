@@ -1,6 +1,6 @@
 basePath: /api
 definitions:
-  dto.CreateRoomRequest:
+  dto.CreateMatchRequest:
     properties:
       game_type:
         type: integer
@@ -19,19 +19,21 @@ definitions:
       target_score:
         type: integer
     type: object
-  dto.JoinRoomRequest:
+  dto.JoinMatchRequest:
     properties:
+      match_id:
+        type: integer
       nick_name:
         type: string
-      room_id:
-        type: integer
+      player_type:
+        $ref: '#/definitions/match.PlayerType'
     type: object
   dto.KickPlayerRequest:
     properties:
-      room_id:
+      match_id:
         type: integer
-      target_user_id:
-        type: integer
+      player_code:
+        type: string
     type: object
   dto.LoginReq:
     properties:
@@ -40,12 +42,36 @@ definitions:
       password:
         type: string
     type: object
-  dto.Player:
+  dto.Match:
     properties:
+      config:
+        $ref: '#/definitions/dto.GameConfig'
+      created_at:
+        type: string
       id:
         type: integer
-      is_online:
-        type: boolean
+      owner_id:
+        type: integer
+      players:
+        items:
+          $ref: '#/definitions/dto.Player'
+        type: array
+      status:
+        type: integer
+    type: object
+  dto.MatchActionRequest:
+    properties:
+      match_id:
+        type: integer
+      player_code:
+        type: string
+    type: object
+  dto.Player:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
       join_time:
         type: string
       nick_name:
@@ -65,30 +91,6 @@ definitions:
         type: string
       password:
         type: string
-    type: object
-  dto.Room:
-    properties:
-      config:
-        $ref: '#/definitions/dto.GameConfig'
-      created_at:
-        type: string
-      id:
-        type: integer
-      owner_id:
-        type: integer
-      players:
-        items:
-          $ref: '#/definitions/dto.Player'
-        type: array
-      room_code:
-        type: string
-      status:
-        type: integer
-    type: object
-  dto.RoomActionRequest:
-    properties:
-      room_id:
-        type: integer
     type: object
   dto.SendRegisterCodeReq:
     properties:
@@ -124,12 +126,12 @@ definitions:
       data: {}
       message: {}
     type: object
-  ginutils.Ret-dto_Room:
+  ginutils.Ret-dto_Match:
     properties:
       code:
         type: integer
       data:
-        $ref: '#/definitions/dto.Room'
+        $ref: '#/definitions/dto.Match'
       message: {}
     type: object
   ginutils.Ret-dto_TokenResponse:
@@ -140,6 +142,15 @@ definitions:
         $ref: '#/definitions/dto.TokenResponse'
       message: {}
     type: object
+  match.PlayerType:
+    enum:
+    - 1
+    - 2
+    format: int32
+    type: integer
+    x-enum-varnames:
+    - PlayerTypeVirtual
+    - PlayerTypeReal
 info:
   contact: {}
   description: BilliardHelper
@@ -212,29 +223,29 @@ paths:
       summary: 发送邮箱验证码
       tags:
       - Auth
-  /room/create:
+  /match/create:
     post:
       consumes:
       - application/json
       description: 创建房间
       parameters:
-      - description: 创建房间请求体
+      - description: 创建比赛请求体
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateRoomRequest'
+          $ref: '#/definitions/dto.CreateMatchRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-dto_Room'
+            $ref: '#/definitions/ginutils.Ret-dto_Match'
       summary: 创建房间
       tags:
-      - Room
-  /room/end:
+      - Match
+  /match/end:
     post:
       consumes:
       - application/json
@@ -245,7 +256,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.RoomActionRequest'
+          $ref: '#/definitions/dto.MatchActionRequest'
       produces:
       - application/json
       responses:
@@ -255,8 +266,8 @@ paths:
             $ref: '#/definitions/ginutils.Ret-any'
       summary: 结束比赛
       tags:
-      - Room
-  /room/join:
+      - Match
+  /match/join:
     post:
       consumes:
       - application/json
@@ -267,18 +278,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.JoinRoomRequest'
+          $ref: '#/definitions/dto.JoinMatchRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ginutils.Ret-dto_Room'
+            $ref: '#/definitions/ginutils.Ret-dto_Match'
       summary: 加入房间
       tags:
-      - Room
-  /room/kick:
+      - Match
+  /match/kick:
     post:
       consumes:
       - application/json
@@ -299,8 +310,8 @@ paths:
             $ref: '#/definitions/ginutils.Ret-any'
       summary: 踢出玩家
       tags:
-      - Room
-  /room/leave:
+      - Match
+  /match/leave:
     post:
       consumes:
       - application/json
@@ -311,7 +322,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.RoomActionRequest'
+          $ref: '#/definitions/dto.MatchActionRequest'
       produces:
       - application/json
       responses:
@@ -321,8 +332,8 @@ paths:
             $ref: '#/definitions/ginutils.Ret-any'
       summary: 离开房间
       tags:
-      - Room
-  /room/start:
+      - Match
+  /match/start:
     post:
       consumes:
       - application/json
@@ -333,7 +344,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.RoomActionRequest'
+          $ref: '#/definitions/dto.MatchActionRequest'
       produces:
       - application/json
       responses:
@@ -343,7 +354,7 @@ paths:
             $ref: '#/definitions/ginutils.Ret-any'
       summary: 开始比赛
       tags:
-      - Room
+      - Match
 securityDefinitions:
   BearerAuth:
     in: header

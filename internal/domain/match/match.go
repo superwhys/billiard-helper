@@ -1,25 +1,70 @@
 package match
 
-import "time"
+import (
+	"time"
 
-// Room 聚合根
-type Room struct {
+	"github.com/superwhys/billiard-helper/internal/errcode"
+	"github.com/superwhys/billiard-helper/internal/pkg/codegen"
+)
+
+// Match 聚合根
+type Match struct {
 	ID        uint        `json:"id"`
-	RoomCode  string      `json:"room_code"`
 	OwnerID   uint        `json:"owner_id"`
-	Status    RoomStatus  `json:"status"`
+	Status    MatchStatus `json:"status"`
 	Config    *GameConfig `json:"config"`
 	Players   []*Player   `json:"players"`
 	CreatedAt time.Time   `json:"created_at"`
 	UpdatedAt time.Time   `json:"updated_at"`
 }
 
+func (m *Match) JoinPlayer(player *Player) error {
+	if m.Status != MatchStatusPending {
+		return errcode.ErrCodeMatchNotPending
+	}
+
+	if len(m.Players) >= m.Config.MaxPlayers {
+		return errcode.ErrCodeMatchPlayerFull
+	}
+
+	// 检查是否重复加入
+	for _, p := range m.Players {
+		// 如果是真实玩家，检查 id 是否相同
+		if player.Type == PlayerTypeReal {
+			if p.UserID != nil && *p.UserID == *player.UserID {
+				return errcode.ErrCodeMatchPlayerAlreadyJoined
+			} else {
+				// 如果是虚拟玩家，检查昵称是否相同
+				if p.NickName == player.NickName {
+					return errcode.ErrCodeMatchPlayerAlreadyJoined
+				}
+			}
+		}
+	}
+
+	m.Players = append(m.Players, player)
+	return nil
+}
+
 type Player struct {
 	ID       uint       `json:"id"`
-	RoomID   uint       `json:"room_id"`
+	Code     string     `json:"code"`
+	MatchID  uint       `json:"match_id"`
 	UserID   *uint      `json:"user_id"`
 	NickName string     `json:"nick_name"`
 	Type     PlayerType `json:"type"`
-	IsOnline bool       `json:"is_online"`
 	JoinTime time.Time  `json:"join_time"`
+}
+
+func NewPlayer(matchID uint, userID *uint, nickName string, pType PlayerType) *Player {
+	// 领域层负责生成 Code 和初始化时间
+	code := codegen.GeneratePlayerCode(matchID, uint8(pType), nickName)
+	return &Player{
+		Code:     code,
+		MatchID:  matchID,
+		UserID:   userID,
+		NickName: nickName,
+		Type:     pType,
+		JoinTime: time.Now(),
+	}
 }

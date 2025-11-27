@@ -10,14 +10,15 @@ import (
 )
 
 func (h *Handlers) handlePlayerJoinRoom(ctx context.Context, data []byte) {
-	var msg dto.JoinRoomMessage
+	var msg dto.JoinMatchEventMessage
 	if err := json.Unmarshal(data, &msg); err != nil {
 		logging.Errorc(ctx, "unmarshal message failed: %v", err)
 		return
 	}
 
 	// 广播玩家加入消息
-	err := h.broadcastRoom(ctx, msg.RoomID, constant.EventPlayerJoinRoom, msg.Player)
+	roomID := constant.MatchRoomID(msg.MatchID)
+	err := h.broadcastRoom(ctx, roomID, constant.EventPlayerJoinRoom, msg.Player)
 	if err != nil {
 		logging.Errorc(ctx, "broadcast room failed: %v", err)
 		return
@@ -30,5 +31,5 @@ func (h *Handlers) handlePlayerJoinRoom(ctx context.Context, data []byte) {
 		return
 	}
 
-	_ = session.Join(msg.RoomID)
+	_ = session.Join(roomID)
 }

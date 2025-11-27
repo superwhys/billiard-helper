@@ -117,7 +117,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/room/create": {
+        "/match/create": {
             "post": {
                 "description": "创建房间",
                 "consumes": [
@@ -127,17 +127,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Room"
+                    "Match"
                 ],
                 "summary": "创建房间",
                 "parameters": [
                     {
-                        "description": "创建房间请求体",
+                        "description": "创建比赛请求体",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateRoomRequest"
+                            "$ref": "#/definitions/dto.CreateMatchRequest"
                         }
                     }
                 ],
@@ -145,13 +145,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-dto_Room"
+                            "$ref": "#/definitions/ginutils.Ret-dto_Match"
                         }
                     }
                 }
             }
         },
-        "/room/end": {
+        "/match/end": {
             "post": {
                 "description": "结束比赛",
                 "consumes": [
@@ -161,7 +161,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Room"
+                    "Match"
                 ],
                 "summary": "结束比赛",
                 "parameters": [
@@ -171,7 +171,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RoomActionRequest"
+                            "$ref": "#/definitions/dto.MatchActionRequest"
                         }
                     }
                 ],
@@ -185,7 +185,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/room/join": {
+        "/match/join": {
             "post": {
                 "description": "加入房间",
                 "consumes": [
@@ -195,7 +195,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Room"
+                    "Match"
                 ],
                 "summary": "加入房间",
                 "parameters": [
@@ -205,7 +205,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.JoinRoomRequest"
+                            "$ref": "#/definitions/dto.JoinMatchRequest"
                         }
                     }
                 ],
@@ -213,13 +213,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-dto_Room"
+                            "$ref": "#/definitions/ginutils.Ret-dto_Match"
                         }
                     }
                 }
             }
         },
-        "/room/kick": {
+        "/match/kick": {
             "post": {
                 "description": "踢出玩家",
                 "consumes": [
@@ -229,7 +229,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Room"
+                    "Match"
                 ],
                 "summary": "踢出玩家",
                 "parameters": [
@@ -253,7 +253,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/room/leave": {
+        "/match/leave": {
             "post": {
                 "description": "离开房间",
                 "consumes": [
@@ -263,7 +263,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Room"
+                    "Match"
                 ],
                 "summary": "离开房间",
                 "parameters": [
@@ -273,7 +273,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RoomActionRequest"
+                            "$ref": "#/definitions/dto.MatchActionRequest"
                         }
                     }
                 ],
@@ -287,7 +287,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/room/start": {
+        "/match/start": {
             "post": {
                 "description": "开始比赛",
                 "consumes": [
@@ -297,7 +297,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Room"
+                    "Match"
                 ],
                 "summary": "开始比赛",
                 "parameters": [
@@ -307,7 +307,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RoomActionRequest"
+                            "$ref": "#/definitions/dto.MatchActionRequest"
                         }
                     }
                 ],
@@ -323,7 +323,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.CreateRoomRequest": {
+        "dto.CreateMatchRequest": {
             "type": "object",
             "properties": {
                 "game_type": {
@@ -352,25 +352,28 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.JoinRoomRequest": {
+        "dto.JoinMatchRequest": {
             "type": "object",
             "properties": {
+                "match_id": {
+                    "type": "integer"
+                },
                 "nick_name": {
                     "type": "string"
                 },
-                "room_id": {
-                    "type": "integer"
+                "player_type": {
+                    "$ref": "#/definitions/match.PlayerType"
                 }
             }
         },
         "dto.KickPlayerRequest": {
             "type": "object",
             "properties": {
-                "room_id": {
+                "match_id": {
                     "type": "integer"
                 },
-                "target_user_id": {
-                    "type": "integer"
+                "player_code": {
+                    "type": "string"
                 }
             }
         },
@@ -385,14 +388,51 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.Player": {
+        "dto.Match": {
             "type": "object",
             "properties": {
+                "config": {
+                    "$ref": "#/definitions/dto.GameConfig"
+                },
+                "created_at": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
-                "is_online": {
-                    "type": "boolean"
+                "owner_id": {
+                    "type": "integer"
+                },
+                "players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Player"
+                    }
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.MatchActionRequest": {
+            "type": "object",
+            "properties": {
+                "match_id": {
+                    "type": "integer"
+                },
+                "player_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.Player": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
                 },
                 "join_time": {
                     "type": "string"
@@ -422,43 +462,6 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
-                }
-            }
-        },
-        "dto.Room": {
-            "type": "object",
-            "properties": {
-                "config": {
-                    "$ref": "#/definitions/dto.GameConfig"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "owner_id": {
-                    "type": "integer"
-                },
-                "players": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.Player"
-                    }
-                },
-                "room_code": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.RoomActionRequest": {
-            "type": "object",
-            "properties": {
-                "room_id": {
-                    "type": "integer"
                 }
             }
         },
@@ -514,14 +517,14 @@ const docTemplate = `{
                 "message": {}
             }
         },
-        "ginutils.Ret-dto_Room": {
+        "ginutils.Ret-dto_Match": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
                 "data": {
-                    "$ref": "#/definitions/dto.Room"
+                    "$ref": "#/definitions/dto.Match"
                 },
                 "message": {}
             }
@@ -537,6 +540,18 @@ const docTemplate = `{
                 },
                 "message": {}
             }
+        },
+        "match.PlayerType": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "PlayerTypeVirtual",
+                "PlayerTypeReal"
+            ]
         }
     },
     "securityDefinitions": {

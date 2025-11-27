@@ -11,26 +11,33 @@ import (
 )
 
 func (h *Handlers) handlePlayerLeaveRoom(ctx context.Context, data []byte) {
-	var msg dto.LeaveRoomMessage
+	var msg dto.LeaveMatchEventMessage
 	if err := json.Unmarshal(data, &msg); err != nil {
 		logging.Errorc(ctx, "unmarshal message failed: %v", err)
 		return
 	}
 
-	err := h.broadcastRoom(ctx, msg.RoomID, constant.EventPlayerLeaveRoom, msg.PlayerCode)
+	roomID := constant.MatchRoomID(msg.MatchID)
+	err := h.broadcastRoom(ctx, roomID, constant.EventPlayerLeaveRoom, msg.PlayerCode)
 	if err != nil {
 		logging.Errorc(ctx, "broadcast room failed: %v", err)
 	}
 
-	if msg.PlayerUserID != nil {
+	player, err := h.matchService.FindPlayerByCode(ctx, msg.PlayerCode)
+	if err != nil {
+		logging.Errorc(ctx, "find player by code failed: %v", err)
+		return
+	}
+
+	if player.UserID != nil {
 		// 获取该玩家的所有 session 并逐一离开房间
-		sessions := h.socketManager.GetSessionsByUserID(ptrx.UintValue(msg.PlayerUserID))
+		sessions := h.socketManager.GetSessionsByUserID(ptrx.UintValue(player.UserID))
 		if len(sessions) == 0 {
-			logging.Errorc(ctx, "user(%d) session not found", ptrx.UintValue(msg.PlayerUserID))
+			logging.Errorc(ctx, "user(%d) session not found", ptrx.UintValue(player.UserID))
 			return
 		}
 		for _, session := range sessions {
-			_ = session.Leave(msg.RoomID)
+			_ = session.Leave(roomID)
 		}
 	}
 }

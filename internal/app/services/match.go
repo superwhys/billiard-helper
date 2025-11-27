@@ -4,108 +4,225 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/miebyte/goutils/utils/ptrx"
 	"github.com/superwhys/billiard-helper/internal/app/assembler"
 	"github.com/superwhys/billiard-helper/internal/app/dto"
 	"github.com/superwhys/billiard-helper/internal/constant"
 	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/domain/shared"
+	"github.com/superwhys/billiard-helper/internal/infra/cache"
 )
 
 type MatchApp struct {
 	matchService   match.IMatchService
 	matchAssembler *assembler.MatchAssembler
 	eventBus       shared.EventBus
+	lockManager    *cache.LockManager
 }
 
 func NewMatchApp(
 	matchService match.IMatchService,
 	matchAssembler *assembler.MatchAssembler,
 	eventBus shared.EventBus,
+	lockManager *cache.LockManager,
 ) *MatchApp {
 	return &MatchApp{
 		matchService:   matchService,
 		matchAssembler: matchAssembler,
 		eventBus:       eventBus,
+		lockManager:    lockManager,
 	}
 }
 
-// CreateRoom 创建房间
-func (a *MatchApp) CreateRoom(ctx context.Context, req *dto.CreateRoomRequest) (*dto.Room, error) {
+// CreateMatch 创建比赛
+func (a *MatchApp) CreateMatch(ctx context.Context, req *dto.CreateMatchRequest) (*dto.Match, error) {
 	config := a.matchAssembler.ToGameConfig(req)
-	room, err := a.matchService.CreateRoom(ctx, req.UserID, config)
+	match, err := a.matchService.CreateMatch(ctx, req.UserID, config)
 	if err != nil {
 		return nil, err
 	}
-	return a.matchAssembler.ToRoomDTO(room), nil
+	return a.matchAssembler.ToMatchDTO(match), nil
 }
 
 // JoinRoom 加入房间
-func (a *MatchApp) JoinRoom(ctx context.Context, req *dto.JoinRoomRequest) (*dto.Room, error) {
-	room, err := a.matchService.JoinRoom(ctx, req.RoomID, req.UserID, req.NickName)
+func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*dto.Match, error) {
+	// 1. 获取比赛锁
+	lock := a.lockManager.MatchLock(req.MatchID)
+	if err := lock.Lock(ctx); err != nil {
+		return nil, err
+	}
+	defer lock.Unlock(ctx)
+
+	// 2. 获取比赛房间
+
+	matchRoom, err := a.matchService.FindMatchByID(ctx, req.MatchID)
+	if err != nil {
+		return nil, err
+	}
+	// 3. 创建玩家
+	player := match.NewPlayer(req.MatchID, ptrx.Uint(req.UserID), req.NickName, req.PlayerType)
+
+	// 4. 加入比赛
+	joinedPlayer, err := a.matchService.JoinMatch(ctx, matchRoom, player)
 	if err != nil {
 		return nil, err
 	}
 
-	roomDTO := a.matchAssembler.ToRoomDTO(room)
-	// 发布事件
-	// 注意：这里通常只需要推送给房间内的其他人，或者推送整个房间的最新状态
-	// 为了简化，这里推送整个 RoomDTO，前端自己判断
-	_ = a.publishEvent(ctx, constant.EventPlayerJoinRoom, roomDTO)
+	// 6. 发送事件
+	playerDTO := a.matchAssembler.ToPlayerDTO(joinedPlayer)
+	matchDTO := a.matchAssembler.ToMatchDTO(matchRoom)
+	msg := dto.JoinMatchEventMessage{
+		EventMsgBase: dto.EventMsgBase{
+			UserID:    req.UserID,
+			SessionID: req.SessionID,
+			MatchID:   matchDTO.ID,
+		},
+		Player: &playerDTO,
+	}
+	_ = a.publishEvent(ctx, constant.EventPlayerJoinRoom, msg)
+	// 7. 返回比赛
 
-	return roomDTO, nil
+	return matchDTO, nil
 }
 
 // StartRoom 开始比赛
-func (a *MatchApp) StartRoom(ctx context.Context, req *dto.RoomActionRequest) error {
-	err := a.matchService.StartRoom(ctx, req.RoomID)
+func (a *MatchApp) StartMatch(ctx context.Context, req *dto.MatchActionRequest) error {
+	// 1. 获取比赛锁
+	lock := a.lockManager.MatchLock(req.MatchID)
+	if err := lock.Lock(ctx); err != nil {
+		return err
+	}
+	defer lock.Unlock(ctx)
+
+	// 2. 检查比赛是否存在
+	matchRoom, err := a.matchService.FindMatchByID(ctx, req.MatchID)
 	if err != nil {
 		return err
 	}
-	// 可以在这里发布 RoomStarted 事件
+
+	// 3. 开始比赛
+	err = a.matchService.StartMatch(ctx, matchRoom)
+	if err != nil {
+		return err
+	}
+
+	// 4. 发布开始事件
+	msg := dto.MatchStartedEventMessage{
+		EventMsgBase: dto.EventMsgBase{
+			UserID:    req.UserID,
+			SessionID: req.SessionID,
+			MatchID:   req.MatchID,
+		},
+	}
+	_ = a.publishEvent(ctx, constant.EventMatchStarted, msg)
 	return nil
 }
 
 // EndRoom 结束比赛
-func (a *MatchApp) EndRoom(ctx context.Context, req *dto.RoomActionRequest) error {
-	err := a.matchService.EndRoom(ctx, req.RoomID)
+func (a *MatchApp) EndMatch(ctx context.Context, req *dto.MatchActionRequest) error {
+	// 1. 获取比赛锁
+	lock := a.lockManager.MatchLock(req.MatchID)
+	if err := lock.Lock(ctx); err != nil {
+		return err
+	}
+	defer lock.Unlock(ctx)
+
+	// 2. 检查比赛是否存在
+	matchRoom, err := a.matchService.FindMatchByID(ctx, req.MatchID)
 	if err != nil {
 		return err
 	}
-	// 可以在这里发布 RoomEnded 事件
+
+	// 3. 开始比赛
+	err = a.matchService.EndMatch(ctx, matchRoom)
+	if err != nil {
+		return err
+	}
+
+	// 4. 发布开始事件
+	msg := dto.MatchEndedEventMessage{
+		EventMsgBase: dto.EventMsgBase{
+			UserID:    req.UserID,
+			SessionID: req.SessionID,
+			MatchID:   req.MatchID,
+		},
+	}
+	_ = a.publishEvent(ctx, constant.EventMatchEnded, msg)
 	return nil
 }
 
-// LeaveRoom 离开房间
-func (a *MatchApp) LeaveRoom(ctx context.Context, req *dto.RoomActionRequest) error {
-	err := a.matchService.LeaveRoom(ctx, req.RoomID, req.UserID)
+// LeaveMatch 离开比赛房间
+func (a *MatchApp) LeaveMatch(ctx context.Context, req *dto.MatchActionRequest) error {
+	// 1. 获取比赛锁
+	lock := a.lockManager.MatchLock(req.MatchID)
+	if err := lock.Lock(ctx); err != nil {
+		return err
+	}
+	defer lock.Unlock(ctx)
+
+	// 2. 获取玩家信息
+	player, err := a.matchService.FindPlayerByCode(ctx, req.PlayerCode)
+	if err != nil {
+		return err
+	}
+	// 3. 获取房间信息
+	matchRoom, err := a.matchService.FindMatchByID(ctx, player.MatchID)
+	if err != nil {
+		return err
+	}
+	// 4. 退出比赛
+	err = a.matchService.LeaveMatch(ctx, matchRoom, player)
 	if err != nil {
 		return err
 	}
 
-	// 发布离开事件
-	payload := map[string]any{
-		"room_id": req.RoomID,
-		"user_id": req.UserID,
-	}
-	_ = a.publishEvent(ctx, constant.EventPlayerLeaveRoom, payload)
+	// 5. 发布离开事件
+	_ = a.publishEvent(ctx, constant.EventPlayerLeaveRoom, &dto.LeaveMatchEventMessage{
+		EventMsgBase: dto.EventMsgBase{
+			UserID:    req.UserID,
+			SessionID: req.SessionID,
+			MatchID:   matchRoom.ID,
+		},
+		PlayerCode: req.PlayerCode,
+	})
 
 	return nil
 }
 
 // KickPlayer 踢人
-func (a *MatchApp) KickPlayer(ctx context.Context, req *dto.KickPlayerRequest) error {
-	err := a.matchService.KickPlayer(ctx, req.RoomID, req.TargetUserID)
+func (a *MatchApp) KickMatchPlayer(ctx context.Context, req *dto.KickPlayerRequest) error {
+	// 1. 获取比赛锁
+	lock := a.lockManager.MatchLock(req.MatchID)
+	if err := lock.Lock(ctx); err != nil {
+		return err
+	}
+	defer lock.Unlock(ctx)
+
+	// 2. 获取玩家信息
+	player, err := a.matchService.FindPlayerByCode(ctx, req.PlayerCode)
+	if err != nil {
+		return err
+	}
+	// 3. 获取房间信息
+	matchRoom, err := a.matchService.FindMatchByID(ctx, player.MatchID)
+	if err != nil {
+		return err
+	}
+	// 4. 踢出玩家
+	err = a.matchService.KickMatchPlayer(ctx, matchRoom, player)
 	if err != nil {
 		return err
 	}
 
-	// 发布踢人事件 (通常复用离开事件，或者有单独的 Kick 事件)
-	payload := map[string]any{
-		"room_id": req.RoomID,
-		"user_id": req.UserID,
-		"kicked":  true,
-	}
-	_ = a.publishEvent(ctx, constant.EventPlayerLeaveRoom, payload)
+	// 5. 发布踢人事件 (通常复用离开事件，或者有单独的 Kick 事件)
+	_ = a.publishEvent(ctx, constant.EventPlayerLeaveRoom, &dto.LeaveMatchEventMessage{
+		EventMsgBase: dto.EventMsgBase{
+			UserID:    req.UserID,
+			SessionID: req.SessionID,
+			MatchID:   matchRoom.ID,
+		},
+		PlayerCode: req.PlayerCode,
+	})
 	return nil
 }
 
@@ -120,6 +237,6 @@ func (a *MatchApp) publishEvent(ctx context.Context, eventType string, payload a
 		Event: eventType,
 		Data:  data,
 	}
-	// 使用默认的业务频道
+
 	return a.eventBus.Publish(ctx, constant.BilliardMessageChannel, msg)
 }

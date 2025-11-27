@@ -2,6 +2,8 @@ package dto
 
 import (
 	"time"
+
+	"github.com/superwhys/billiard-helper/internal/domain/match"
 )
 
 type GameConfig struct {
@@ -10,9 +12,8 @@ type GameConfig struct {
 	TargetScore int `json:"target_score"`
 }
 
-type Room struct {
+type Match struct {
 	ID        uint       `json:"id"`
-	RoomCode  string     `json:"room_code"`
 	OwnerID   uint       `json:"owner_id"`
 	Status    int        `json:"status"`
 	Config    GameConfig `json:"config"`
@@ -22,37 +23,35 @@ type Room struct {
 
 type Player struct {
 	ID       uint      `json:"id"`
+	Code     string    `json:"code"`
 	UserID   *uint     `json:"user_id,omitempty"`
 	NickName string    `json:"nick_name"`
 	Type     int       `json:"type"`
-	IsOnline bool      `json:"is_online"`
 	JoinTime time.Time `json:"join_time"`
 }
 
-type Operator struct {
-	UserID uint `json:"-"`
-}
-
-type CreateRoomRequest struct {
+type CreateMatchRequest struct {
 	Operator
 	GameType    int `json:"game_type"`
 	MaxPlayers  int `json:"max_players"`
 	TargetScore int `json:"target_score"`
 }
 
-type JoinRoomRequest struct {
+type JoinMatchRequest struct {
 	Operator
-	RoomID   uint   `json:"room_id"`
-	NickName string `json:"nick_name"`
+	MatchID    uint             `json:"match_id"`
+	NickName   string           `json:"nick_name"`
+	PlayerType match.PlayerType `json:"player_type"`
 }
 
-type RoomActionRequest struct {
+type MatchActionRequest struct {
 	Operator
-	RoomID uint `json:"room_id"`
+	MatchID    uint   `json:"match_id"`
+	PlayerCode string `json:"player_code"`
 }
 
 type KickPlayerRequest struct {
 	Operator
-	RoomID       uint `json:"room_id"`
-	TargetUserID uint `json:"target_user_id"`
+	MatchID    uint   `json:"match_id"`
+	PlayerCode string `json:"player_code"`
 }

@@ -43,7 +43,7 @@ func main() {
 
 	userApp := services.NewUserApp(nil, nil, config.JwtConfig)
 	scoreApp := services.NewScoreApp(nil, nil, nil, nil)
-	matchApp := services.NewMatchApp(nil, nil, nil)
+	matchApp := services.NewMatchApp(nil, nil, nil, nil)
 
 	apiApp := api.SetupApi(isDev(), userApp, scoreApp, matchApp)
 
