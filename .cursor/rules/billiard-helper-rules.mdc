@@ -4,6 +4,8 @@ alwaysApply: true
 
 # 项目说明
 
+该项目采用 DDD 架构
+
 该项目是 `台球记分助手` 项目的后端服务，支持用户登录、创建房间、添加真实/虚拟球员、实时记分、撤回、历史查询等。
 
 目标：为移动端/小程序/网页前端提供稳定的 RESTful API，保证在多人并发下的记录一致性与便捷的撤回能力。
@@ -148,43 +150,6 @@ alwaysApply: true
 - 当前项目统一使用团队内部开发的脚手架工具`github.com/miebyte/goutils`,其中包括日志，gin,等各种工具：
     - `github.com/miebyte/goutils/logging`
     - `github.com/miebyte/goutils/ginutils`   
-
-## 项目目录架构
-```
-.
-├── api              // api 相关
-│   ├── api.go       // 主 api 路由定义
-│   ├── middleware   // api 中间件定义
-│   └── router       // api 子路由 handler 实现
-├── cmd
-│   ├── gen          // gorm/gen 生成
-│   └── swagger      // swagger 生成
-├── content
-│   └── config.json
-├── dal
-│   ├── cache        // redis 缓存相关内容
-│   └── db           // mysql db相关实现
-├── go.mod
-├── go.sum
-├── main.go
-├── models
-│   ├── config
-│   ├── dbmodels     // mysql 数据库模型
-│   ├── errcode      // 自定义错误吗
-│   ├── request      // api 请求
-│   ├── response     // api 响应
-│   └── types        // 内部的类型定义（dto, constant 等）
-├── ports
-│   ├── repo.go      // 仓储层接口定义
-│   └── service.go   // 服务层接口定义
-├── README.md
-└── service          // 服务层接口实现
-    ├── room.go
-    ├── player.go
-    └── service.go
-```
-这只是当前初始化的目录架构。还没有完全将各个模块写完，你需要遵循当前架构
-
 
 ## 格式化 (Formatting)
 - 提交代码前，务必运行 `go fmt` 或等效的格式化工具。

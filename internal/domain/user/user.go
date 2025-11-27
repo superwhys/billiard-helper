@@ -3,13 +3,13 @@ package user
 import "time"
 
 type User struct {
-	ID        uint
-	Email     Email
-	Name      string
-	Password  Password
-	Avatar    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uint      `json:"id"`
+	Email     Email     `json:"email"`
+	Name      string    `json:"name"`
+	Password  Password  `json:"password"`
+	Avatar    string    `json:"avatar"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func NewUser(email Email, name string, password Password) *User {

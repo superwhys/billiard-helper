@@ -8,7 +8,7 @@ type IUserService interface {
 
 	// RegisterWithCode 使用验证码注册
 	// 包含逻辑：校验验证码 -> 校验邮箱是否已存在 -> 创建用户 -> 删除验证码
-	RegisterWithCode(ctx context.Context, email, code, password, name string) (*User, error)
+	RegisterWithCode(ctx context.Context, email, code, password, name string) error
 
 	// Login 处理登录校验
 	Login(ctx context.Context, email, password string) (*User, error)

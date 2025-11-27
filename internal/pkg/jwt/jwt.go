@@ -1,11 +1,13 @@
 package jwt
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/superwhys/billiard-helper/internal/errcode"
 )
 
 type UserTokenClaims struct {
@@ -53,4 +55,16 @@ func ParseToken(tokenStr string, signingKey []byte) (*UserTokenClaims, error) {
 	}
 
 	return tc, nil
+}
+
+type ContextKey string
+
+const TokenContextKey ContextKey = "user_token_claims"
+
+func TokenClaimsFromContext(ctx context.Context) (*UserTokenClaims, error) {
+	claims, ok := ctx.Value(TokenContextKey).(*UserTokenClaims)
+	if !ok {
+		return nil, errcode.ErrCodeNoToken
+	}
+	return claims, nil
 }

@@ -26,9 +26,9 @@ const (
 // GameConfig 比赛配置值对象
 // 仅存储配置信息，不包含计算逻辑
 type GameConfig struct {
-	GameType    GameType // 房间类型(台球类型)
-	MaxPlayers  int      // 最大玩家数量
-	TargetScore int      // 目标分数（如抢几）
+	GameType    GameType `json:"game_type"`    // 房间类型(台球类型)
+	MaxPlayers  int      `json:"max_players"`  // 最大玩家数量
+	TargetScore int      `json:"target_score"` // 目标分数（如抢几）
 }
 
 var DefaultGameConfig = GameConfig{
