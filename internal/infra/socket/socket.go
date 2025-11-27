@@ -54,8 +54,7 @@ func (sm *SocketManager) serveHttp() gin.HandlerFunc {
 func (sm *SocketManager) Handler() ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithPrefix("/ws"),
-		ginutils.WithHandler(http.MethodGet, "", sm.serveHttp()),
-		ginutils.WithHandler(http.MethodGet, "/:path", sm.serveHttp()),
+		ginutils.WithHandler(http.MethodGet, BilliardSocketNamespace, sm.serveHttp()),
 	)
 }
 
@@ -76,6 +75,7 @@ func (sm *SocketManager) setupSocket() {
 	// 用户 websocket 连接断开
 	sm.billiardNamespace.On(websocketutils.EventDisconnect, func(ctx *websocketutils.Context) {
 		sm.hook.OnDisconnect(ctx.Context(), ctx.Conn())
+		sm.UnregisterSession(ctx.Conn())
 	})
 }
 

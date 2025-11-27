@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/miebyte/goutils/logging"
 	"github.com/miebyte/goutils/websocketutils"
@@ -83,6 +84,10 @@ func (h *SocketHook) OnAllowRequest(r *http.Request) (*http.Request, error) {
 	if tokenStr == "" {
 		return nil, errcode.ErrCodeNoToken
 	}
+
+	// Support "Bearer <token>" format
+	tokenStr = strings.TrimPrefix(tokenStr, "Bearer ")
+	tokenStr = strings.TrimSpace(tokenStr)
 
 	claims, err := jwt.ParseToken(tokenStr, []byte(h.jwtConfig.JwtSecret))
 	if err != nil {
