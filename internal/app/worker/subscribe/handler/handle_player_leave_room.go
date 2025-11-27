@@ -17,7 +17,7 @@ func (h *Handlers) handlePlayerLeaveRoom(ctx context.Context, data []byte) {
 		return
 	}
 
-	roomID := constant.MatchRoomID(msg.MatchID)
+	roomID := constant.SocketRoomID(msg.MatchID)
 	err := h.broadcastRoom(ctx, roomID, constant.EventPlayerLeaveRoom, msg.PlayerCode)
 	if err != nil {
 		logging.Errorc(ctx, "broadcast room failed: %v", err)

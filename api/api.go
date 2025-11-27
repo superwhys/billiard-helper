@@ -7,17 +7,19 @@ import (
 	"github.com/superwhys/billiard-helper/api/middlewares"
 	"github.com/superwhys/billiard-helper/api/routers"
 	"github.com/superwhys/billiard-helper/internal/app/services"
+	"github.com/superwhys/billiard-helper/internal/infra/socket"
 
 	_ "github.com/superwhys/billiard-helper/cmd/swagger/docs"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 type Api struct {
-	isDev       bool
-	userApp     *services.UserApp
-	scoreApp    *services.ScoreApp
-	matchApp    *services.MatchApp
-	httpHandler http.Handler
+	isDev         bool
+	userApp       *services.UserApp
+	scoreApp      *services.ScoreApp
+	matchApp      *services.MatchApp
+	socketManager *socket.SocketManager
+	httpHandler   http.Handler
 }
 
 // SetupRouter godoc
@@ -30,13 +32,14 @@ type Api struct {
 // @name Authorization
 func SetupApi(
 	isDev bool,
+	socketManager *socket.SocketManager,
 	userApp *services.UserApp,
 	scoreApp *services.ScoreApp,
 	matchApp *services.MatchApp,
 ) *Api {
 	engine := ginutils.NewServerHandler(
 		ginutils.WithMiddleware(ginutils.WithLoggingRequest(true)),
-		// cometServer.Handler(),
+		socketManager.Handler(),
 		routers.AuthGroupRouter(userApp),
 		ginutils.WithGroupHandlers(
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(userApp)),

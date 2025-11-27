@@ -8,7 +8,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/ginutils"
+	"github.com/miebyte/goutils/logging"
 	"github.com/miebyte/goutils/websocketutils"
+	"github.com/superwhys/billiard-helper/api/response"
+	"github.com/superwhys/billiard-helper/internal/constant"
 )
 
 const (
@@ -58,10 +61,22 @@ func (sm *SocketManager) Handler() ginutils.Option {
 
 func (sm *SocketManager) setupSocket() {
 	// 用户 websocket 连接成功
-	sm.billiardNamespace.On(websocketutils.EventConnection, sm.hook.OnConnect)
+	sm.billiardNamespace.On(websocketutils.EventConnection, func(ctx *websocketutils.Context) {
+		userID, err := sm.hook.OnConnect(ctx.Context())
+		if err != nil {
+			logging.Errorc(ctx.Context(), "on connect failed: %v", err)
+			return
+		}
+
+		sm.RegisterSession(userID, ctx.Conn())
+		_ = ctx.Conn().Emit(constant.EventClientConnectSuccess, response.ResponseWithData(userID))
+
+	})
 
 	// 用户 websocket 连接断开
-	sm.billiardNamespace.On(websocketutils.EventDisconnect, sm.hook.OnDisconnect)
+	sm.billiardNamespace.On(websocketutils.EventDisconnect, func(ctx *websocketutils.Context) {
+		sm.hook.OnDisconnect(ctx.Context(), ctx.Conn())
+	})
 }
 
 func (sm *SocketManager) RegisterSession(userID uint, conn websocketutils.Conn) {

@@ -58,7 +58,7 @@ func (h *Handlers) broadcastScoreEvent(ctx context.Context, data []byte, event s
 		return
 	}
 
-	roomID := constant.MatchRoomID(msg.MatchID)
+	roomID := constant.SocketRoomID(msg.MatchID)
 	err := h.broadcastRoom(ctx, roomID, event, msg.Score)
 	if err != nil {
 		logging.Errorc(ctx, "broadcast room failed: %v", err)

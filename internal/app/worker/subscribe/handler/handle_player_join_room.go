@@ -17,7 +17,7 @@ func (h *Handlers) handlePlayerJoinRoom(ctx context.Context, data []byte) {
 	}
 
 	// 广播玩家加入消息
-	roomID := constant.MatchRoomID(msg.MatchID)
+	roomID := constant.SocketRoomID(msg.MatchID)
 	err := h.broadcastRoom(ctx, roomID, constant.EventPlayerJoinRoom, msg.Player)
 	if err != nil {
 		logging.Errorc(ctx, "broadcast room failed: %v", err)

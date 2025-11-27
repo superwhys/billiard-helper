@@ -69,3 +69,7 @@ func TokenClaimsFromContext(ctx context.Context) (*UserTokenClaims, error) {
 	}
 	return claims, nil
 }
+
+func SetTokenClaimsToContext(ctx context.Context, claims *UserTokenClaims) context.Context {
+	return context.WithValue(ctx, TokenContextKey, claims)
+}

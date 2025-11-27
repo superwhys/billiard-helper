@@ -15,11 +15,11 @@ func GenerateHash(contents ...string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func GeneratePlayerCode(roomID uint, playerType uint8, playerNickName string) string {
+func GeneratePlayerCode(roomID uint, playerType uint8, payload string) string {
 	code := GenerateHash(
 		fmt.Sprintf("%d", roomID),
 		fmt.Sprintf("%d", playerType),
-		fmt.Sprintf("%s", playerNickName),
+		payload,
 	)
 	return code
 }

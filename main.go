@@ -8,12 +8,14 @@ import (
 	"github.com/miebyte/goutils/redisutils"
 	"github.com/superwhys/billiard-helper/api"
 	"github.com/superwhys/billiard-helper/config"
+	"github.com/superwhys/billiard-helper/internal/app/hook"
 	"github.com/superwhys/billiard-helper/internal/app/services"
 	"github.com/superwhys/billiard-helper/internal/domain/user"
 	"github.com/superwhys/billiard-helper/internal/infra/cache"
 	"github.com/superwhys/billiard-helper/internal/infra/db"
 	"github.com/superwhys/billiard-helper/internal/infra/db/models"
 	"github.com/superwhys/billiard-helper/internal/infra/email"
+	"github.com/superwhys/billiard-helper/internal/infra/socket"
 )
 
 var (
@@ -60,7 +62,9 @@ func main() {
 	scoreApp := services.NewScoreApp(nil, nil, nil, nil)
 	matchApp := services.NewMatchApp(nil, nil, nil, nil)
 
-	apiApp := api.SetupApi(isDev(), userApp, scoreApp, matchApp)
+	socketManager := socket.NewSocketManager(hook.NewSocketHook(matchApp, config.JwtConfig))
+
+	apiApp := api.SetupApi(isDev(), socketManager, userApp, scoreApp, matchApp)
 
 	srv := cores.NewCores(
 		cores.WithHttpCORS(),

@@ -1,8 +1,10 @@
 package match
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/miebyte/goutils/utils/ptrx"
 	"github.com/superwhys/billiard-helper/internal/errcode"
 	"github.com/superwhys/billiard-helper/internal/pkg/codegen"
 )
@@ -58,7 +60,14 @@ type Player struct {
 
 func NewPlayer(matchID uint, userID *uint, nickName string, pType PlayerType) *Player {
 	// 领域层负责生成 Code 和初始化时间
-	code := codegen.GeneratePlayerCode(matchID, uint8(pType), nickName)
+	var payload string
+	if pType == PlayerTypeReal {
+		payload = fmt.Sprintf("%d", ptrx.UintValue(userID))
+	} else {
+		payload = nickName
+	}
+
+	code := codegen.GeneratePlayerCode(matchID, uint8(pType), payload)
 	return &Player{
 		Code:     code,
 		MatchID:  matchID,
