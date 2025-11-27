@@ -22,8 +22,8 @@ func (a *MatchAssembler) ToMatchDTO(r *match.Match) *dto.Match {
 		players = append(players, a.ToPlayerDTO(p))
 	}
 
-	config := dto.GameConfig{
-		GameType:    int(r.Config.GameType),
+	config := dto.MatchConfig{
+		MatchType:   uint8(r.Config.MatchType),
 		MaxPlayers:  r.Config.MaxPlayers,
 		TargetScore: r.Config.TargetScore,
 	}
@@ -53,11 +53,19 @@ func (a *MatchAssembler) ToPlayerDTO(p *match.Player) dto.Player {
 	}
 }
 
-// ToGameConfig 将 DTO 配置转换为领域值对象
-func (a *MatchAssembler) ToGameConfig(req *dto.CreateMatchRequest) match.GameConfig {
-	return match.GameConfig{
-		GameType:    match.GameType(req.GameType),
-		MaxPlayers:  req.MaxPlayers,
-		TargetScore: req.TargetScore,
+// ToMatchConfig 将 DTO 配置转换为领域值对象
+func (a *MatchAssembler) ToMatchConfig(req *dto.CreateMatchRequest) match.MatchConfig {
+	return match.MatchConfig{
+		MatchType:   match.MatchType(req.MatchType),
+		MaxPlayers:  uint(req.MaxPlayers),
+		TargetScore: uint(req.TargetScore),
+	}
+}
+
+func (a *MatchAssembler) ToDtoMatchConfig(config *match.MatchConfig) dto.MatchConfig {
+	return dto.MatchConfig{
+		MatchType:   uint8(config.MatchType),
+		MaxPlayers:  config.MaxPlayers,
+		TargetScore: config.TargetScore,
 	}
 }

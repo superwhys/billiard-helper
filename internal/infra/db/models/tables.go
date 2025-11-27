@@ -1,9 +1,9 @@
 package models
 
-func Tables() []interface{} {
-	return []interface{}{
+func Tables() []any {
+	return []any{
 		&User{},
-		&Room{},
+		&Match{},
 		&Player{},
 		&Score{},
 	}

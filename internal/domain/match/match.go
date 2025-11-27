@@ -14,7 +14,7 @@ type Match struct {
 	ID        uint        `json:"id"`
 	OwnerID   uint        `json:"owner_id"`
 	Status    MatchStatus `json:"status"`
-	Config    *GameConfig `json:"config"`
+	Config    MatchConfig `json:"config"`
 	Players   []*Player   `json:"players"`
 	CreatedAt time.Time   `json:"created_at"`
 	UpdatedAt time.Time   `json:"updated_at"`
@@ -25,7 +25,7 @@ func (m *Match) JoinPlayer(player *Player) error {
 		return errcode.ErrCodeMatchNotPending
 	}
 
-	if len(m.Players) >= m.Config.MaxPlayers {
+	if len(m.Players) >= int(m.Config.MaxPlayers) {
 		return errcode.ErrCodeMatchPlayerFull
 	}
 

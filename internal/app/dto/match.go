@@ -6,19 +6,19 @@ import (
 	"github.com/superwhys/billiard-helper/internal/domain/match"
 )
 
-type GameConfig struct {
-	GameType    int `json:"game_type"` // 比如 1: snooker, 2: 8-ball
-	MaxPlayers  int `json:"max_players"`
-	TargetScore int `json:"target_score"`
+type MatchConfig struct {
+	MatchType   uint8 `json:"match_type"` // 比如 1: snooker, 2: 8-ball
+	MaxPlayers  uint  `json:"max_players"`
+	TargetScore uint  `json:"target_score"`
 }
 
 type Match struct {
-	ID        uint       `json:"id"`
-	OwnerID   uint       `json:"owner_id"`
-	Status    int        `json:"status"`
-	Config    GameConfig `json:"config"`
-	Players   []Player   `json:"players"`
-	CreatedAt time.Time  `json:"created_at"`
+	ID        uint        `json:"id"`
+	OwnerID   uint        `json:"owner_id"`
+	Status    int         `json:"status"`
+	Config    MatchConfig `json:"config"`
+	Players   []Player    `json:"players"`
+	CreatedAt time.Time   `json:"created_at"`
 }
 
 type Player struct {
@@ -32,7 +32,7 @@ type Player struct {
 
 type CreateMatchRequest struct {
 	Operator
-	GameType    int `json:"game_type"`
+	MatchType   int `json:"match_type"`
 	MaxPlayers  int `json:"max_players"`
 	TargetScore int `json:"target_score"`
 }

@@ -32,11 +32,10 @@ func newPlayer(db *gorm.DB, opts ...gen.DOOption) player {
 	_player.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_player.DeletedAt = field.NewField(tableName, "deleted_at")
 	_player.Code = field.NewString(tableName, "code")
-	_player.RoomID = field.NewUint(tableName, "room_id")
+	_player.MatchID = field.NewUint(tableName, "match_id")
 	_player.UserID = field.NewUint(tableName, "user_id")
 	_player.NickName = field.NewString(tableName, "nick_name")
 	_player.Type = field.NewUint8(tableName, "type")
-	_player.IsOnline = field.NewBool(tableName, "is_online")
 	_player.Scores = playerHasManyScores{
 		db: db.Session(&gorm.Session{}),
 
@@ -70,11 +69,10 @@ type player struct {
 	UpdatedAt field.Time
 	DeletedAt field.Field
 	Code      field.String // 玩家代码
-	RoomID    field.Uint   // 房间ID
+	MatchID   field.Uint   // 比赛ID
 	UserID    field.Uint   // 用户ID
 	NickName  field.String // 昵称
 	Type      field.Uint8  // 玩家类型
-	IsOnline  field.Bool   // 是否在线
 	Scores    playerHasManyScores
 
 	fieldMap map[string]field.Expr
@@ -97,11 +95,10 @@ func (p *player) updateTableName(table string) *player {
 	p.UpdatedAt = field.NewTime(table, "updated_at")
 	p.DeletedAt = field.NewField(table, "deleted_at")
 	p.Code = field.NewString(table, "code")
-	p.RoomID = field.NewUint(table, "room_id")
+	p.MatchID = field.NewUint(table, "match_id")
 	p.UserID = field.NewUint(table, "user_id")
 	p.NickName = field.NewString(table, "nick_name")
 	p.Type = field.NewUint8(table, "type")
-	p.IsOnline = field.NewBool(table, "is_online")
 
 	p.fillFieldMap()
 
@@ -126,17 +123,16 @@ func (p *player) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *player) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 11)
+	p.fieldMap = make(map[string]field.Expr, 10)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
 	p.fieldMap["deleted_at"] = p.DeletedAt
 	p.fieldMap["code"] = p.Code
-	p.fieldMap["room_id"] = p.RoomID
+	p.fieldMap["match_id"] = p.MatchID
 	p.fieldMap["user_id"] = p.UserID
 	p.fieldMap["nick_name"] = p.NickName
 	p.fieldMap["type"] = p.Type
-	p.fieldMap["is_online"] = p.IsOnline
 
 }
 

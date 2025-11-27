@@ -36,7 +36,7 @@ func NewMatchApp(
 
 // CreateMatch 创建比赛
 func (a *MatchApp) CreateMatch(ctx context.Context, req *dto.CreateMatchRequest) (*dto.Match, error) {
-	config := a.matchAssembler.ToGameConfig(req)
+	config := a.matchAssembler.ToMatchConfig(req)
 	match, err := a.matchService.CreateMatch(ctx, req.UserID, config)
 	if err != nil {
 		return nil, err

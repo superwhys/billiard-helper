@@ -18,8 +18,8 @@ import (
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:     db,
+		Match:  newMatch(db, opts...),
 		Player: newPlayer(db, opts...),
-		Room:   newRoom(db, opts...),
 		Score:  newScore(db, opts...),
 		User:   newUser(db, opts...),
 	}
@@ -28,8 +28,8 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 type Query struct {
 	db *gorm.DB
 
+	Match  match
 	Player player
-	Room   room
 	Score  score
 	User   user
 }
@@ -39,8 +39,8 @@ func (q *Query) Available() bool { return q.db != nil }
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:     db,
+		Match:  q.Match.clone(db),
 		Player: q.Player.clone(db),
-		Room:   q.Room.clone(db),
 		Score:  q.Score.clone(db),
 		User:   q.User.clone(db),
 	}
@@ -57,24 +57,24 @@ func (q *Query) WriteDB() *Query {
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:     db,
+		Match:  q.Match.replaceDB(db),
 		Player: q.Player.replaceDB(db),
-		Room:   q.Room.replaceDB(db),
 		Score:  q.Score.replaceDB(db),
 		User:   q.User.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
+	Match  IMatchDo
 	Player IPlayerDo
-	Room   IRoomDo
 	Score  IScoreDo
 	User   IUserDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
+		Match:  q.Match.WithContext(ctx),
 		Player: q.Player.WithContext(ctx),
-		Room:   q.Room.WithContext(ctx),
 		Score:  q.Score.WithContext(ctx),
 		User:   q.User.WithContext(ctx),
 	}

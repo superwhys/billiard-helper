@@ -9,7 +9,7 @@ type User struct {
 	Password string `gorm:"column:password;type:VARCHAR(255)" json:"password"`
 	Avatar   string `gorm:"column:avatar;type:VARCHAR(255)" json:"avatar"`
 
-	Rooms []*Room `json:"rooms"`
+	Matches []*Match `json:"matches"`
 }
 
 func (u *User) TableName() string {

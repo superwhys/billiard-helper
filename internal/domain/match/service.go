@@ -4,7 +4,7 @@ import "context"
 
 type IMatchService interface {
 	// CreateMatch 负责创建比赛的业务流程
-	CreateMatch(ctx context.Context, userID uint, config GameConfig) (*Match, error)
+	CreateMatch(ctx context.Context, userID uint, config MatchConfig) (*Match, error)
 	// FindMatchByID 根据ID查找比赛
 	FindMatchByID(ctx context.Context, id uint) (*Match, error)
 	// FindPlayerByCode 根据Code查找玩家

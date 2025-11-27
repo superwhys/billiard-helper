@@ -326,22 +326,7 @@ const docTemplate = `{
         "dto.CreateMatchRequest": {
             "type": "object",
             "properties": {
-                "game_type": {
-                    "type": "integer"
-                },
-                "max_players": {
-                    "type": "integer"
-                },
-                "target_score": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.GameConfig": {
-            "type": "object",
-            "properties": {
-                "game_type": {
-                    "description": "比如 1: snooker, 2: 8-ball",
+                "match_type": {
                     "type": "integer"
                 },
                 "max_players": {
@@ -392,7 +377,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "config": {
-                    "$ref": "#/definitions/dto.GameConfig"
+                    "$ref": "#/definitions/dto.MatchConfig"
                 },
                 "created_at": {
                     "type": "string"
@@ -422,6 +407,21 @@ const docTemplate = `{
                 },
                 "player_code": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.MatchConfig": {
+            "type": "object",
+            "properties": {
+                "match_type": {
+                    "description": "比如 1: snooker, 2: 8-ball",
+                    "type": "integer"
+                },
+                "max_players": {
+                    "type": "integer"
+                },
+                "target_score": {
+                    "type": "integer"
                 }
             }
         },

@@ -32,7 +32,7 @@ func newScore(db *gorm.DB, opts ...gen.DOOption) score {
 	_score.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_score.DeletedAt = field.NewField(tableName, "deleted_at")
 	_score.PlayerID = field.NewUint(tableName, "player_id")
-	_score.RoomID = field.NewUint(tableName, "room_id")
+	_score.MatchID = field.NewUint(tableName, "match_id")
 	_score.OperatorID = field.NewUint(tableName, "operator_id")
 	_score.Change = field.NewInt(tableName, "change")
 	_score.Total = field.NewInt(tableName, "total")
@@ -69,7 +69,7 @@ type score struct {
 	UpdatedAt  field.Time
 	DeletedAt  field.Field
 	PlayerID   field.Uint // 操作分数的玩家ID
-	RoomID     field.Uint // 操作分数的房间ID
+	MatchID    field.Uint // 操作分数的比赛ID
 	OperatorID field.Uint // 操作人ID
 	Change     field.Int  // 变化值
 	Total      field.Int  // 总分
@@ -95,7 +95,7 @@ func (s *score) updateTableName(table string) *score {
 	s.UpdatedAt = field.NewTime(table, "updated_at")
 	s.DeletedAt = field.NewField(table, "deleted_at")
 	s.PlayerID = field.NewUint(table, "player_id")
-	s.RoomID = field.NewUint(table, "room_id")
+	s.MatchID = field.NewUint(table, "match_id")
 	s.OperatorID = field.NewUint(table, "operator_id")
 	s.Change = field.NewInt(table, "change")
 	s.Total = field.NewInt(table, "total")
@@ -129,7 +129,7 @@ func (s *score) fillFieldMap() {
 	s.fieldMap["updated_at"] = s.UpdatedAt
 	s.fieldMap["deleted_at"] = s.DeletedAt
 	s.fieldMap["player_id"] = s.PlayerID
-	s.fieldMap["room_id"] = s.RoomID
+	s.fieldMap["match_id"] = s.MatchID
 	s.fieldMap["operator_id"] = s.OperatorID
 	s.fieldMap["change"] = s.Change
 	s.fieldMap["total"] = s.Total

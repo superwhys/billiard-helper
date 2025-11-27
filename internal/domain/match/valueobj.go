@@ -15,23 +15,23 @@ const (
 	PlayerTypeReal    PlayerType = 2
 )
 
-type GameType uint8
+type MatchType uint8
 
 const (
-	GameTypeSnooker GameType = 1
-	GameType8Ball   GameType = 2
-	GameType9Ball   GameType = 3
+	MatchTypeSnooker MatchType = 1
+	MatchType8Ball   MatchType = 2
+	MatchType9Ball   MatchType = 3
 )
 
-// GameConfig 比赛配置值对象
+// MatchConfig 比赛配置值对象
 // 仅存储配置信息，不包含计算逻辑
-type GameConfig struct {
-	GameType    GameType `json:"game_type"`    // 房间类型(台球类型)
-	MaxPlayers  int      `json:"max_players"`  // 最大玩家数量
-	TargetScore int      `json:"target_score"` // 目标分数（如抢几）
+type MatchConfig struct {
+	MatchType   MatchType `json:"match_type"`   // 比赛类型
+	MaxPlayers  uint      `json:"max_players"`  // 最大玩家数量
+	TargetScore uint      `json:"target_score"` // 目标分数（如抢几）
 }
 
-var DefaultGameConfig = GameConfig{
-	GameType:   GameTypeSnooker,
+var DefaultMatchConfig = MatchConfig{
+	MatchType:  MatchTypeSnooker,
 	MaxPlayers: 2,
 }

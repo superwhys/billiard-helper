@@ -35,10 +35,10 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.Name = field.NewString(tableName, "name")
 	_user.Password = field.NewString(tableName, "password")
 	_user.Avatar = field.NewString(tableName, "avatar")
-	_user.Rooms = userHasManyRooms{
+	_user.Matches = userHasManyMatches{
 		db: db.Session(&gorm.Session{}),
 
-		RelationField: field.NewRelation("Rooms", "models.Room"),
+		RelationField: field.NewRelation("Matches", "models.Match"),
 		Players: struct {
 			field.RelationField
 			Scores struct {
@@ -48,25 +48,25 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 				}
 			}
 		}{
-			RelationField: field.NewRelation("Rooms.Players", "models.Player"),
+			RelationField: field.NewRelation("Matches.Players", "models.Player"),
 			Scores: struct {
 				field.RelationField
 				Operator struct {
 					field.RelationField
 				}
 			}{
-				RelationField: field.NewRelation("Rooms.Players.Scores", "models.Score"),
+				RelationField: field.NewRelation("Matches.Players.Scores", "models.Score"),
 				Operator: struct {
 					field.RelationField
 				}{
-					RelationField: field.NewRelation("Rooms.Players.Scores.Operator", "models.Player"),
+					RelationField: field.NewRelation("Matches.Players.Scores.Operator", "models.Player"),
 				},
 			},
 		},
 		Scores: struct {
 			field.RelationField
 		}{
-			RelationField: field.NewRelation("Rooms.Scores", "models.Score"),
+			RelationField: field.NewRelation("Matches.Scores", "models.Score"),
 		},
 	}
 
@@ -87,7 +87,7 @@ type user struct {
 	Name      field.String
 	Password  field.String
 	Avatar    field.String
-	Rooms     userHasManyRooms
+	Matches   userHasManyMatches
 
 	fieldMap map[string]field.Expr
 }
@@ -150,18 +150,18 @@ func (u *user) fillFieldMap() {
 
 func (u user) clone(db *gorm.DB) user {
 	u.userDo.ReplaceConnPool(db.Statement.ConnPool)
-	u.Rooms.db = db.Session(&gorm.Session{Initialized: true})
-	u.Rooms.db.Statement.ConnPool = db.Statement.ConnPool
+	u.Matches.db = db.Session(&gorm.Session{Initialized: true})
+	u.Matches.db.Statement.ConnPool = db.Statement.ConnPool
 	return u
 }
 
 func (u user) replaceDB(db *gorm.DB) user {
 	u.userDo.ReplaceDB(db)
-	u.Rooms.db = db.Session(&gorm.Session{})
+	u.Matches.db = db.Session(&gorm.Session{})
 	return u
 }
 
-type userHasManyRooms struct {
+type userHasManyMatches struct {
 	db *gorm.DB
 
 	field.RelationField
@@ -180,7 +180,7 @@ type userHasManyRooms struct {
 	}
 }
 
-func (a userHasManyRooms) Where(conds ...field.Expr) *userHasManyRooms {
+func (a userHasManyMatches) Where(conds ...field.Expr) *userHasManyMatches {
 	if len(conds) == 0 {
 		return &a
 	}
@@ -193,32 +193,32 @@ func (a userHasManyRooms) Where(conds ...field.Expr) *userHasManyRooms {
 	return &a
 }
 
-func (a userHasManyRooms) WithContext(ctx context.Context) *userHasManyRooms {
+func (a userHasManyMatches) WithContext(ctx context.Context) *userHasManyMatches {
 	a.db = a.db.WithContext(ctx)
 	return &a
 }
 
-func (a userHasManyRooms) Session(session *gorm.Session) *userHasManyRooms {
+func (a userHasManyMatches) Session(session *gorm.Session) *userHasManyMatches {
 	a.db = a.db.Session(session)
 	return &a
 }
 
-func (a userHasManyRooms) Model(m *models.User) *userHasManyRoomsTx {
-	return &userHasManyRoomsTx{a.db.Model(m).Association(a.Name())}
+func (a userHasManyMatches) Model(m *models.User) *userHasManyMatchesTx {
+	return &userHasManyMatchesTx{a.db.Model(m).Association(a.Name())}
 }
 
-func (a userHasManyRooms) Unscoped() *userHasManyRooms {
+func (a userHasManyMatches) Unscoped() *userHasManyMatches {
 	a.db = a.db.Unscoped()
 	return &a
 }
 
-type userHasManyRoomsTx struct{ tx *gorm.Association }
+type userHasManyMatchesTx struct{ tx *gorm.Association }
 
-func (a userHasManyRoomsTx) Find() (result []*models.Room, err error) {
+func (a userHasManyMatchesTx) Find() (result []*models.Match, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a userHasManyRoomsTx) Append(values ...*models.Room) (err error) {
+func (a userHasManyMatchesTx) Append(values ...*models.Match) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -226,7 +226,7 @@ func (a userHasManyRoomsTx) Append(values ...*models.Room) (err error) {
 	return a.tx.Append(targetValues...)
 }
 
-func (a userHasManyRoomsTx) Replace(values ...*models.Room) (err error) {
+func (a userHasManyMatchesTx) Replace(values ...*models.Match) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -234,7 +234,7 @@ func (a userHasManyRoomsTx) Replace(values ...*models.Room) (err error) {
 	return a.tx.Replace(targetValues...)
 }
 
-func (a userHasManyRoomsTx) Delete(values ...*models.Room) (err error) {
+func (a userHasManyMatchesTx) Delete(values ...*models.Match) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -242,15 +242,15 @@ func (a userHasManyRoomsTx) Delete(values ...*models.Room) (err error) {
 	return a.tx.Delete(targetValues...)
 }
 
-func (a userHasManyRoomsTx) Clear() error {
+func (a userHasManyMatchesTx) Clear() error {
 	return a.tx.Clear()
 }
 
-func (a userHasManyRoomsTx) Count() int64 {
+func (a userHasManyMatchesTx) Count() int64 {
 	return a.tx.Count()
 }
 
-func (a userHasManyRoomsTx) Unscoped() *userHasManyRoomsTx {
+func (a userHasManyMatchesTx) Unscoped() *userHasManyMatchesTx {
 	a.tx = a.tx.Unscoped()
 	return &a
 }
