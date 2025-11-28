@@ -6,13 +6,14 @@ require (
 	github.com/gin-gonic/gin v1.10.1
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
-	github.com/miebyte/goutils v1.0.40
+	github.com/miebyte/goutils v1.0.42
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/sourcegraph/conc v0.3.0
 	github.com/sqids/sqids-go v0.4.1
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.6
 	golang.org/x/crypto v0.40.0
+	gorm.io/datatypes v1.2.4
 	gorm.io/gen v0.3.27
 	gorm.io/gorm v1.26.0
 	gorm.io/plugin/dbresolver v1.6.0
@@ -38,11 +39,14 @@ require (
 	github.com/go-openapi/spec v0.20.6 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/mold/v4 v4.5.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.25.0 // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/gosimple/slug v1.15.0 // indirect
+	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/hashicorp/consul/api v1.32.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -75,6 +79,8 @@ require (
 	github.com/prometheus/common v0.65.0 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/rs/cors v1.11.1 // indirect
+	github.com/segmentio/go-camelcase v0.0.0-20160726192923-7085f1e3c734 // indirect
+	github.com/segmentio/go-snakecase v1.2.0 // indirect
 	github.com/spf13/afero v1.12.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
@@ -95,7 +101,6 @@ require (
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/datatypes v1.2.4 // indirect
 	gorm.io/driver/mysql v1.5.7 // indirect
 	gorm.io/hints v1.1.0 // indirect
 )

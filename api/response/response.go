@@ -14,5 +14,5 @@ func ResponseWithData[T any](data T) *ginutils.Ret[T] {
 }
 
 func ErrorResponseWithCode(ec errcode.ErrCode) *ginutils.Ret[any] {
-	return ginutils.ErrorRet(ec.Code(), ec.String())
+	return ginutils.ErrorRet(ec)
 }
