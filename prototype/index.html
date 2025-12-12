@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>台球记分助手 · 原型</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <div class="bg">
+    <div class="bg__glow bg__glow--a"></div>
+    <div class="bg__glow bg__glow--b"></div>
+    <div class="bg__noise"></div>
+  </div>
+
+  <header class="topbar">
+    <div class="topbar__brand">
+      <div class="logo" aria-hidden="true">
+        <div class="logo__dot logo__dot--r"></div>
+        <div class="logo__dot logo__dot--y"></div>
+        <div class="logo__dot logo__dot--g"></div>
+      </div>
+      <div class="topbar__title">
+        <div class="topbar__name">台球记分助手</div>
+        <div class="topbar__sub">移动端原型 · Snooker / 九球追分 / 中八</div>
+      </div>
+    </div>
+
+    <nav class="topbar__tabs" aria-label="页面切换">
+      <button class="tab" data-go="welcome">欢迎</button>
+      <button class="tab" data-go="login">登录</button>
+      <button class="tab" data-go="register">注册</button>
+      <button class="tab" data-go="home">首页</button>
+      <button class="tab" data-go="create">创建房间</button>
+      <button class="tab" data-go="snooker">斯诺克记分</button>
+      <button class="tab" data-go="nineball">九球追分</button>
+      <button class="tab" data-go="history">历史记录</button>
+      <button class="tab" data-go="refs">参考图</button>
+    </nav>
+
+    <div class="topbar__actions">
+      <button class="iconBtn" id="btnHelp" title="快捷键：←/→ 切换，Esc 关闭弹层" aria-label="帮助">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M12 17h.01M12 14c0-2 3-2 3-5a3 3 0 1 0-6 0"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path
+            d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10Z"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+      <button class="iconBtn" id="btnTheme" title="主题：玻璃拟态" aria-label="主题">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 1 0 9.79 9.79Z"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="rail" aria-label="页面导航">
+      <div class="rail__group">
+        <div class="rail__label">主流程</div>
+        <button class="rail__item" data-go="welcome">
+          <span class="rail__icon">🏁</span>
+          <span class="rail__text">欢迎页</span>
+        </button>
+        <button class="rail__item" data-go="login">
+          <span class="rail__icon">🔑</span>
+          <span class="rail__text">登录</span>
+        </button>
+        <button class="rail__item" data-go="register">
+          <span class="rail__icon">🧾</span>
+          <span class="rail__text">注册</span>
+        </button>
+        <button class="rail__item" data-go="home">
+          <span class="rail__icon">🏠</span>
+          <span class="rail__text">首页</span>
+        </button>
+        <button class="rail__item" data-go="create">
+          <span class="rail__icon">➕</span>
+          <span class="rail__text">创建房间</span>
+        </button>
+      </div>
+
+      <div class="rail__group">
+        <div class="rail__label">记分界面</div>
+        <button class="rail__item" data-go="snooker">
+          <span class="rail__icon">🎱</span>
+          <span class="rail__text">斯诺克</span>
+        </button>
+        <button class="rail__item" data-go="snookerDetail">
+          <span class="rail__icon">🧩</span>
+          <span class="rail__text">斯诺克详情</span>
+        </button>
+        <button class="rail__item" data-go="nineball">
+          <span class="rail__icon">🏹</span>
+          <span class="rail__text">九球追分</span>
+        </button>
+        <button class="rail__item" data-go="eightball">
+          <span class="rail__icon">🟠</span>
+          <span class="rail__text">中式八球</span>
+        </button>
+        <button class="rail__item" data-go="history">
+          <span class="rail__icon">🗂️</span>
+          <span class="rail__text">历史记录</span>
+        </button>
+      </div>
+
+      <div class="rail__group">
+        <div class="rail__label">素材</div>
+        <button class="rail__item" data-go="refs">
+          <span class="rail__icon">🖼️</span>
+          <span class="rail__text">参考原型图</span>
+        </button>
+      </div>
+
+      <div class="rail__footer">
+        <div class="kbdhint">
+          <span class="kbd">←</span><span class="kbd">→</span>
+          <span class="kbdhint__txt">切换页面</span>
+        </div>
+      </div>
+    </aside>
+
+    <section class="stage">
+      <div class="stage__hint">
+        <div class="hintchip">提示：点击顶部 Tab 或左侧导航切换页面（支持 URL hash，例如 <code>#snooker</code>）。</div>
+      </div>
+
+      <div class="phone" role="region" aria-label="移动端原型预览">
+        <div class="phone__frame">
+          <div class="phone__status">
+            <div class="phone__time">9:41</div>
+            <div class="phone__notch" aria-hidden="true"></div>
+            <div class="phone__sys">
+              <span class="sysbar" aria-hidden="true"></span>
+              <span class="sysdot" aria-hidden="true"></span>
+              <span class="sysdot" aria-hidden="true"></span>
+            </div>
+          </div>
+
+          <div class="phone__viewport">
+            <!-- 欢迎 -->
+            <article class="screen" data-screen="welcome">
+              <div class="screen__bg">
+                <div class="orb orb--1"></div>
+                <div class="orb orb--2"></div>
+                <div class="orb orb--3"></div>
+              </div>
+
+              <div class="screen__content center">
+                <div class="brandMark" aria-hidden="true">
+                  <div class="brandMark__dots">
+                    <div class="brandMark__dot brandMark__dot--r"></div>
+                    <div class="brandMark__dot brandMark__dot--y"></div>
+                    <div class="brandMark__dot brandMark__dot--g"></div>
+                  </div>
+                </div>
+
+                <h1 class="title">台球记分助手</h1>
+                <p class="subtitle">专业的线下记分体验 · 多人同步 · 支持撤回</p>
+
+                <div class="stack">
+                  <button class="btn btn--primary" data-go="home">开始使用</button>
+                  <button class="btn btn--ghost" data-go="register">创建账户</button>
+                </div>
+
+                <div class="bottomNav" aria-label="底部导航">
+                  <button class="bottomNav__item is-active" data-go="welcome">
+                    <span class="bottomNav__icon">🏁</span>
+                    <span class="bottomNav__label">欢迎</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="home">
+                    <span class="bottomNav__icon">🏠</span>
+                    <span class="bottomNav__label">首页</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="history">
+                    <span class="bottomNav__icon">🗂️</span>
+                    <span class="bottomNav__label">历史</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="login">
+                    <span class="bottomNav__icon">👤</span>
+                    <span class="bottomNav__label">我的</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <!-- 登录 -->
+            <article class="screen" data-screen="login">
+              <div class="screen__content">
+                <div class="navTop">
+                  <button class="navTop__back" data-go="welcome" aria-label="返回">←</button>
+                  <div class="navTop__title">登录</div>
+                  <div class="navTop__right"></div>
+                </div>
+
+                <h2 class="h2">欢迎回来</h2>
+                <p class="muted">登录您的账户继续使用</p>
+
+                <div class="form">
+                  <label class="field">
+                    <span class="field__label">邮箱</span>
+                    <input class="input" type="email" placeholder="example@email.com" autocomplete="email" />
+                  </label>
+
+                  <label class="field">
+                    <span class="field__label">密码</span>
+                    <input class="input" type="password" placeholder="••••••••" autocomplete="current-password" />
+                  </label>
+
+                  <div class="row row--between">
+                    <div class="chip chip--soft">支持邮箱登录</div>
+                    <button class="link" type="button" data-toast="暂未实现：忘记密码">忘记密码？</button>
+                  </div>
+
+                  <button class="btn btn--primary" data-go="home">登录</button>
+
+                  <div class="divider"><span>或</span></div>
+
+                  <div class="oauth">
+                    <button class="oauth__btn" data-toast="暂未实现：第三方登录">G</button>
+                    <button class="oauth__btn" data-toast="暂未实现：第三方登录"></button>
+                  </div>
+
+                  <div class="centerLine">
+                    <span class="muted">还没有账户？</span>
+                    <button class="link" type="button" data-go="register">立即注册</button>
+                  </div>
+                </div>
+
+                <div class="bottomNav" aria-label="底部导航">
+                  <button class="bottomNav__item" data-go="welcome">
+                    <span class="bottomNav__icon">🏁</span>
+                    <span class="bottomNav__label">欢迎</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="home">
+                    <span class="bottomNav__icon">🏠</span>
+                    <span class="bottomNav__label">首页</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="history">
+                    <span class="bottomNav__icon">🗂️</span>
+                    <span class="bottomNav__label">历史</span>
+                  </button>
+                  <button class="bottomNav__item is-active" data-go="login">
+                    <span class="bottomNav__icon">👤</span>
+                    <span class="bottomNav__label">我的</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <!-- 注册 -->
+            <article class="screen" data-screen="register">
+              <div class="screen__content">
+                <div class="navTop">
+                  <button class="navTop__back" data-go="login" aria-label="返回">←</button>
+                  <div class="navTop__title">注册</div>
+                  <div class="navTop__right"></div>
+                </div>
+
+                <h2 class="h2">创建账户</h2>
+                <p class="muted">填写信息完成注册</p>
+
+                <div class="form">
+                  <label class="field">
+                    <span class="field__label">用户名</span>
+                    <input class="input" type="text" placeholder="输入用户名" autocomplete="nickname" />
+                  </label>
+
+                  <label class="field">
+                    <span class="field__label">邮箱</span>
+                    <input class="input" type="email" placeholder="example@email.com" autocomplete="email" />
+                  </label>
+
+                  <label class="field">
+                    <span class="field__label">密码</span>
+                    <input class="input" type="password" placeholder="••••••••" autocomplete="new-password" />
+                  </label>
+
+                  <label class="field">
+                    <span class="field__label">确认密码</span>
+                    <input class="input" type="password" placeholder="••••••••" autocomplete="new-password" />
+                  </label>
+
+                  <button class="btn btn--primary" data-go="home">注册</button>
+
+                  <div class="centerLine">
+                    <span class="muted">已有账户？</span>
+                    <button class="link" type="button" data-go="login">立即登录</button>
+                  </div>
+                </div>
+
+                <div class="bottomNav" aria-label="底部导航">
+                  <button class="bottomNav__item" data-go="welcome">
+                    <span class="bottomNav__icon">🏁</span>
+                    <span class="bottomNav__label">欢迎</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="home">
+                    <span class="bottomNav__icon">🏠</span>
+                    <span class="bottomNav__label">首页</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="history">
+                    <span class="bottomNav__icon">🗂️</span>
+                    <span class="bottomNav__label">历史</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="login">
+                    <span class="bottomNav__icon">👤</span>
+                    <span class="bottomNav__label">我的</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <!-- 首页 -->
+            <article class="screen" data-screen="home">
+              <div class="screen__content">
+                <div class="navTop">
+                  <div class="navTop__left">
+                    <div class="hello">
+                      <div class="hello__small muted">下午好</div>
+                      <div class="hello__name">张三</div>
+                    </div>
+                  </div>
+                  <div class="navTop__right">
+                    <button class="avatar" data-go="login" aria-label="账户">
+                      <span>张</span>
+                    </button>
+                  </div>
+                </div>
+
+                <h2 class="h2">选择玩法</h2>
+                <div class="grid2">
+                  <button class="card card--select is-active" data-go="snooker">
+                    <div class="card__icon">🔴</div>
+                    <div class="card__title">斯诺克</div>
+                    <div class="card__desc">147分满分制</div>
+                  </button>
+                  <button class="card card--select" data-go="nineball">
+                    <div class="card__icon">9</div>
+                    <div class="card__title">九球</div>
+                    <div class="card__desc">追分赛</div>
+                  </button>
+                  <button class="card card--select" data-go="eightball">
+                    <div class="card__icon">8</div>
+                    <div class="card__title">八球</div>
+                    <div class="card__desc">标准记分</div>
+                  </button>
+                  <button class="card card--select" data-go="create">
+                    <div class="card__icon">➕</div>
+                    <div class="card__title">创建房间</div>
+                    <div class="card__desc">快速开局</div>
+                  </button>
+                </div>
+
+                <button class="btn btn--primary" data-go="create">+ 创建新房间</button>
+
+                <div class="row row--between mt">
+                  <div class="h3">最近比赛</div>
+                  <button class="link" type="button" data-go="history">查看全部</button>
+                </div>
+
+                <div class="list">
+                  <button class="match" data-go="history">
+                    <div class="match__meta">
+                      <div class="match__time muted">今天 15:30</div>
+                      <div class="match__mode chip">斯诺克</div>
+                    </div>
+                    <div class="match__line">
+                      <div class="pill">张</div>
+                      <div class="match__name">张三</div>
+                      <div class="match__score">3 : 2</div>
+                      <div class="match__name">李四</div>
+                      <div class="pill pill--b">李</div>
+                    </div>
+                    <div class="match__foot muted">友谊赛 · 昨天</div>
+                  </button>
+
+                  <button class="match" data-go="history">
+                    <div class="match__meta">
+                      <div class="match__time muted">昨天 20:00</div>
+                      <div class="match__mode chip">九球</div>
+                    </div>
+                    <div class="match__line">
+                      <div class="pill">王</div>
+                      <div class="match__name">王五</div>
+                      <div class="match__score">5 : 4</div>
+                      <div class="match__name">张三</div>
+                      <div class="pill pill--g">张</div>
+                    </div>
+                    <div class="match__foot muted">追分赛 · 本周</div>
+                  </button>
+                </div>
+
+                <div class="bottomNav" aria-label="底部导航">
+                  <button class="bottomNav__item is-active" data-go="home">
+                    <span class="bottomNav__icon">🏠</span>
+                    <span class="bottomNav__label">首页</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="create">
+                    <span class="bottomNav__icon">➕</span>
+                    <span class="bottomNav__label">开局</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="history">
+                    <span class="bottomNav__icon">🗂️</span>
+                    <span class="bottomNav__label">历史</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="login">
+                    <span class="bottomNav__icon">👤</span>
+                    <span class="bottomNav__label">我的</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <!-- 创建房间 -->
+            <article class="screen" data-screen="create">
+              <div class="screen__content">
+                <div class="navTop">
+                  <button class="navTop__back" data-go="home" aria-label="返回">←</button>
+                  <div class="navTop__title">创建房间</div>
+                  <div class="navTop__right"></div>
+                </div>
+
+                <div class="modeCard">
+                  <div class="modeCard__icon">🔴</div>
+                  <div class="modeCard__body">
+                    <div class="modeCard__title">斯诺克</div>
+                    <div class="modeCard__sub muted">147分满分制 · 支持撤回与回合统计</div>
+                  </div>
+                  <button class="modeCard__btn" data-toast="暂未实现：切换玩法">更换</button>
+                </div>
+
+                <div class="form">
+                  <label class="field">
+                    <span class="field__label">房间名称</span>
+                    <input class="input" type="text" placeholder="周末友谊赛" value="周末友谊赛" />
+                  </label>
+
+                  <div class="field">
+                    <div class="field__label row row--between">
+                      <span>目标局数</span>
+                      <span class="muted">BO(2n-1)</span>
+                    </div>
+                    <div class="seg">
+                      <button class="seg__item">3</button>
+                      <button class="seg__item is-active">5</button>
+                      <button class="seg__item">7</button>
+                      <button class="seg__item">9</button>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <div class="field__label row row--between">
+                      <span>球员（2-4人）</span>
+                      <button class="link" type="button" data-toast="暂未实现：添加球员">+ 添加</button>
+                    </div>
+
+                    <div class="players">
+                      <div class="playerRow">
+                        <div class="playerRow__badge">玩</div>
+                        <div class="playerRow__name">玩家 1</div>
+                        <div class="playerRow__right">
+                          <button class="tiny" data-toast="暂未实现：编辑">编辑</button>
+                        </div>
+                      </div>
+                      <div class="playerRow">
+                        <div class="playerRow__badge playerRow__badge--b">玩</div>
+                        <div class="playerRow__name">玩家 2</div>
+                        <div class="playerRow__right">
+                          <button class="tiny" data-toast="暂未实现：编辑">编辑</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button class="btn btn--primary" data-go="snooker">开始比赛</button>
+                  <button class="btn btn--ghost" data-toast="暂未实现：分享房间码">复制房间码邀请同伴</button>
+                </div>
+
+                <div class="bottomNav" aria-label="底部导航">
+                  <button class="bottomNav__item" data-go="home">
+                    <span class="bottomNav__icon">🏠</span>
+                    <span class="bottomNav__label">首页</span>
+                  </button>
+                  <button class="bottomNav__item is-active" data-go="create">
+                    <span class="bottomNav__icon">➕</span>
+                    <span class="bottomNav__label">开局</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="history">
+                    <span class="bottomNav__icon">🗂️</span>
+                    <span class="bottomNav__label">历史</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="login">
+                    <span class="bottomNav__icon">👤</span>
+                    <span class="bottomNav__label">我的</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <!-- 斯诺克记分 -->
+            <article class="screen" data-screen="snooker">
+              <div class="screen__content">
+                <div class="navTop">
+                  <button class="navTop__back" data-go="home" aria-label="返回">←</button>
+                  <div class="navTop__title">周末友谊赛</div>
+                  <div class="navTop__right">
+                    <button class="gear" data-toast="暂未实现：设置" aria-label="设置">⚙︎</button>
+                  </div>
+                </div>
+
+                <div class="scoreHeader">
+                  <div class="scoreHeader__side">
+                    <div class="muted">第 2 局</div>
+                  </div>
+                  <div class="scoreHeader__center">
+                    <div class="scoreHeader__big">
+                      <span class="scoreHeader__win is-active">1</span>
+                      <span class="muted">局比分</span>
+                      <span class="scoreHeader__win">0</span>
+                    </div>
+                  </div>
+                  <div class="scoreHeader__side"></div>
+                </div>
+
+                <div class="scoreCard is-turn">
+                  <div class="scoreCard__left">
+                    <div class="avatarLg">张</div>
+                    <div>
+                      <div class="scoreCard__name">张三</div>
+                      <div class="scoreCard__sub muted">当前回合</div>
+                    </div>
+                  </div>
+                  <div class="scoreCard__right">
+                    <div class="scoreCard__score">67</div>
+                    <div class="scoreCard__meta">
+                      <span class="badge badge--warn">犯规 1 次</span>
+                    </div>
+                  </div>
+                  <div class="scoreCard__balls">
+                    <div class="ball ball--red"></div>
+                    <div class="ball ball--pink"></div>
+                    <div class="ball ball--blue"></div>
+                    <div class="ball ball--brown"></div>
+                    <div class="ball ball--green"></div>
+                    <div class="ball ball--yellow"></div>
+                    <div class="ball ball--black"></div>
+                    <div class="ballsTxt muted">剩余彩球</div>
+                  </div>
+                </div>
+
+                <div class="scoreCard">
+                  <div class="scoreCard__left">
+                    <div class="avatarLg avatarLg--b">李</div>
+                    <div>
+                      <div class="scoreCard__name">李四</div>
+                      <div class="scoreCard__sub muted">等待上场</div>
+                    </div>
+                  </div>
+                  <div class="scoreCard__right">
+                    <div class="scoreCard__score">32</div>
+                    <div class="scoreCard__meta"><span class="badge">稳住</span></div>
+                  </div>
+                  <div class="scoreCard__balls">
+                    <div class="ball ball--red"></div>
+                    <div class="ball ball--pink"></div>
+                    <div class="ball ball--blue"></div>
+                    <div class="ball ball--brown"></div>
+                    <div class="ball ball--green"></div>
+                    <div class="ball ball--yellow"></div>
+                    <div class="ball ball--black"></div>
+                    <div class="ballsTxt muted">剩余彩球</div>
+                  </div>
+                </div>
+
+                <div class="panel">
+                  <div class="panel__title">点击球记分</div>
+                  <div class="snookerPads">
+                    <button class="pad pad--r" data-toast="+1">1</button>
+                    <button class="pad pad--y" data-toast="+2">2</button>
+                    <button class="pad pad--g" data-toast="+3">3</button>
+                    <button class="pad pad--br" data-toast="+4">4</button>
+                    <button class="pad pad--b" data-toast="+5">5</button>
+                    <button class="pad pad--p" data-toast="+6">6</button>
+                    <button class="pad pad--k" data-toast="+7">7</button>
+                  </div>
+
+                  <div class="actions3">
+                    <button class="btn btn--ghost" data-toast="暂未实现：撤销">撤销</button>
+                    <button class="btn btn--danger" data-toast="暂未实现：犯规">犯规</button>
+                    <button class="btn btn--ghost" data-toast="暂未实现：换人">换人</button>
+                  </div>
+
+                  <button class="link link--block" type="button" data-go="snookerDetail">查看本局详情 →</button>
+                </div>
+
+                <div class="bottomNav" aria-label="底部导航">
+                  <button class="bottomNav__item" data-go="home">
+                    <span class="bottomNav__icon">🏠</span>
+                    <span class="bottomNav__label">首页</span>
+                  </button>
+                  <button class="bottomNav__item is-active" data-go="snooker">
+                    <span class="bottomNav__icon">🎱</span>
+                    <span class="bottomNav__label">记分</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="history">
+                    <span class="bottomNav__icon">🗂️</span>
+                    <span class="bottomNav__label">历史</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="login">
+                    <span class="bottomNav__icon">👤</span>
+                    <span class="bottomNav__label">我的</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <!-- 斯诺克详情 -->
+            <article class="screen" data-screen="snookerDetail">
+              <div class="screen__content">
+                <div class="navTop">
+                  <button class="navTop__back" data-go="snooker" aria-label="返回">←</button>
+                  <div class="navTop__title">斯诺克记分</div>
+                  <div class="navTop__right">
+                    <div class="chip">第 2 局</div>
+                  </div>
+                </div>
+
+                <div class="scoreCard is-turn">
+                  <div class="scoreCard__left">
+                    <div class="avatarLg">张</div>
+                    <div>
+                      <div class="scoreCard__name">张三</div>
+                      <div class="scoreCard__sub muted">单杆得分</div>
+                    </div>
+                  </div>
+                  <div class="scoreCard__right">
+                    <div class="scoreCard__score">67</div>
+                    <div class="scoreCard__meta"><span class="badge">本杆 43</span></div>
+                  </div>
+                </div>
+
+                <div class="scoreCard">
+                  <div class="scoreCard__left">
+                    <div class="avatarLg avatarLg--b">李</div>
+                    <div>
+                      <div class="scoreCard__name">李四</div>
+                      <div class="scoreCard__sub muted">单杆得分</div>
+                    </div>
+                  </div>
+                  <div class="scoreCard__right">
+                    <div class="scoreCard__score">32</div>
+                    <div class="scoreCard__meta"><span class="badge">本杆 0</span></div>
+                  </div>
+                </div>
+
+                <div class="panel">
+                  <div class="row row--between">
+                    <div class="panel__title">本轮击球历史</div>
+                    <div class="muted">共 8 球</div>
+                  </div>
+
+                  <div class="timeline">
+                    <div class="event">
+                      <div class="event__dot dot--red"></div>
+                      <div class="event__body">
+                        <div class="event__title">张三 · 进红球</div>
+                        <div class="event__meta muted">+1 · 09:41:12</div>
+                      </div>
+                      <button class="tiny" data-toast="暂未实现：撤回">撤回</button>
+                    </div>
+                    <div class="event">
+                      <div class="event__dot dot--black"></div>
+                      <div class="event__body">
+                        <div class="event__title">张三 · 进黑球</div>
+                        <div class="event__meta muted">+7 · 09:41:38</div>
+                      </div>
+                      <button class="tiny" data-toast="暂未实现：撤回">撤回</button>
+                    </div>
+                    <div class="event">
+                      <div class="event__dot dot--warn"></div>
+                      <div class="event__body">
+                        <div class="event__title">张三 · 犯规</div>
+                        <div class="event__meta muted">-4 · 09:42:01</div>
+                      </div>
+                      <button class="tiny" data-toast="暂未实现：撤回">撤回</button>
+                    </div>
+                  </div>
+
+                  <div class="actions2">
+                    <button class="btn btn--ghost" data-toast="暂未实现：导出">导出本局</button>
+                    <button class="btn btn--primary" data-go="snooker">返回记分</button>
+                  </div>
+                </div>
+
+                <div class="bottomNav" aria-label="底部导航">
+                  <button class="bottomNav__item" data-go="home">
+                    <span class="bottomNav__icon">🏠</span>
+                    <span class="bottomNav__label">首页</span>
+                  </button>
+                  <button class="bottomNav__item is-active" data-go="snookerDetail">
+                    <span class="bottomNav__icon">🧩</span>
+                    <span class="bottomNav__label">详情</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="history">
+                    <span class="bottomNav__icon">🗂️</span>
+                    <span class="bottomNav__label">历史</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="login">
+                    <span class="bottomNav__icon">👤</span>
+                    <span class="bottomNav__label">我的</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <!-- 九球追分 -->
+            <article class="screen" data-screen="nineball">
+              <div class="screen__content">
+                <div class="navTop">
+                  <button class="navTop__back" data-go="home" aria-label="返回">←</button>
+                  <div class="navTop__title">中式九球</div>
+                  <div class="navTop__right">
+                    <button class="gear" data-toast="暂未实现：设置" aria-label="设置">⚙︎</button>
+                  </div>
+                </div>
+
+                <div class="note">
+                  <div class="note__title">追分玩法</div>
+                  <div class="note__text">大金 +3 · 小金 +2 · 普胜 +1 · 黄金九 +5 · 犯规 -1</div>
+                </div>
+
+                <div class="duo">
+                  <div class="duoCard">
+                    <div class="duoCard__head">
+                      <div class="avatarLg">张</div>
+                      <div>
+                        <div class="duoCard__name">张三</div>
+                        <div class="duoCard__sub muted">当前回合</div>
+                      </div>
+                      <div class="duoCard__score">12</div>
+                    </div>
+                    <div class="stats">
+                      <div class="stat"><div class="stat__n">2</div><div class="stat__t muted">大金</div></div>
+                      <div class="stat"><div class="stat__n">3</div><div class="stat__t muted">小金</div></div>
+                      <div class="stat"><div class="stat__n">2</div><div class="stat__t muted">普胜</div></div>
+                      <div class="stat"><div class="stat__n">0</div><div class="stat__t muted">黄金九</div></div>
+                      <div class="stat"><div class="stat__n warn">2</div><div class="stat__t muted">犯规</div></div>
+                    </div>
+                  </div>
+
+                  <div class="duoCard">
+                    <div class="duoCard__head">
+                      <div class="avatarLg avatarLg--b">李</div>
+                      <div>
+                        <div class="duoCard__name">李四</div>
+                        <div class="duoCard__sub muted">等待上场</div>
+                      </div>
+                      <div class="duoCard__score">9</div>
+                    </div>
+                    <div class="stats">
+                      <div class="stat"><div class="stat__n">1</div><div class="stat__t muted">大金</div></div>
+                      <div class="stat"><div class="stat__n">2</div><div class="stat__t muted">小金</div></div>
+                      <div class="stat"><div class="stat__n">1</div><div class="stat__t muted">普胜</div></div>
+                      <div class="stat"><div class="stat__n">0</div><div class="stat__t muted">黄金九</div></div>
+                      <div class="stat"><div class="stat__n warn">1</div><div class="stat__t muted">犯规</div></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel">
+                  <div class="panel__title">快速记分</div>
+                  <div class="quickGrid">
+                    <button class="qbtn qbtn--gold" data-toast="+3">大金 +3</button>
+                    <button class="qbtn qbtn--amber" data-toast="+2">小金 +2</button>
+                    <button class="qbtn qbtn--green" data-toast="+1">普胜 +1</button>
+                    <button class="qbtn qbtn--purple" data-toast="+5">黄金九 +5</button>
+                    <button class="qbtn qbtn--red" data-toast="-1">犯规 -1</button>
+                  </div>
+                  <div class="actions2">
+                    <button class="btn btn--ghost" data-toast="暂未实现：撤销">撤销</button>
+                    <button class="btn btn--primary" data-toast="暂未实现：换人">换人击球</button>
+                  </div>
+                </div>
+
+                <div class="bottomNav" aria-label="底部导航">
+                  <button class="bottomNav__item" data-go="home">
+                    <span class="bottomNav__icon">🏠</span>
+                    <span class="bottomNav__label">首页</span>
+                  </button>
+                  <button class="bottomNav__item is-active" data-go="nineball">
+                    <span class="bottomNav__icon">🏹</span>
+                    <span class="bottomNav__label">记分</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="history">
+                    <span class="bottomNav__icon">🗂️</span>
+                    <span class="bottomNav__label">历史</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="login">
+                    <span class="bottomNav__icon">👤</span>
+                    <span class="bottomNav__label">我的</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <!-- 中八记分 -->
+            <article class="screen" data-screen="eightball">
+              <div class="screen__content">
+                <div class="navTop">
+                  <button class="navTop__back" data-go="home" aria-label="返回">←</button>
+                  <div class="navTop__title">中式八球</div>
+                  <div class="navTop__right"><button class="gear" data-toast="暂未实现：设置">⚙︎</button></div>
+                </div>
+
+                <div class="panel">
+                  <div class="panel__title">局况</div>
+                  <div class="row row--between">
+                    <div class="chip">BO5 · 第 1 局</div>
+                    <div class="chip chip--soft">轮到：张三</div>
+                  </div>
+
+                  <div class="eightScore">
+                    <div class="eightScore__card is-turn">
+                      <div class="eightScore__head">
+                        <div class="avatarLg">张</div>
+                        <div>
+                          <div class="eightScore__name">张三</div>
+                          <div class="eightScore__sub muted">已进球 4</div>
+                        </div>
+                        <div class="eightScore__num">4</div>
+                      </div>
+                      <div class="eightScore__rack">
+                        <div class="rackball"></div>
+                        <div class="rackball"></div>
+                        <div class="rackball"></div>
+                        <div class="rackball"></div>
+                        <div class="rackball rackball--dim"></div>
+                        <div class="rackball rackball--dim"></div>
+                        <div class="rackball rackball--dim"></div>
+                      </div>
+                    </div>
+
+                    <div class="eightScore__card">
+                      <div class="eightScore__head">
+                        <div class="avatarLg avatarLg--b">李</div>
+                        <div>
+                          <div class="eightScore__name">李四</div>
+                          <div class="eightScore__sub muted">已进球 2</div>
+                        </div>
+                        <div class="eightScore__num">2</div>
+                      </div>
+                      <div class="eightScore__rack">
+                        <div class="rackball"></div>
+                        <div class="rackball"></div>
+                        <div class="rackball rackball--dim"></div>
+                        <div class="rackball rackball--dim"></div>
+                        <div class="rackball rackball--dim"></div>
+                        <div class="rackball rackball--dim"></div>
+                        <div class="rackball rackball--dim"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel">
+                  <div class="panel__title">操作</div>
+                  <div class="actions3">
+                    <button class="btn btn--primary" data-toast="+1">进 1 球</button>
+                    <button class="btn btn--danger" data-toast="犯规">犯规</button>
+                    <button class="btn btn--ghost" data-toast="换人">换人</button>
+                  </div>
+                  <button class="btn btn--ghost" data-toast="撤销">撤销</button>
+                </div>
+
+                <div class="bottomNav" aria-label="底部导航">
+                  <button class="bottomNav__item" data-go="home">
+                    <span class="bottomNav__icon">🏠</span>
+                    <span class="bottomNav__label">首页</span>
+                  </button>
+                  <button class="bottomNav__item is-active" data-go="eightball">
+                    <span class="bottomNav__icon">🟠</span>
+                    <span class="bottomNav__label">记分</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="history">
+                    <span class="bottomNav__icon">🗂️</span>
+                    <span class="bottomNav__label">历史</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="login">
+                    <span class="bottomNav__icon">👤</span>
+                    <span class="bottomNav__label">我的</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <!-- 历史记录 -->
+            <article class="screen" data-screen="history">
+              <div class="screen__content">
+                <div class="navTop">
+                  <button class="navTop__back" data-go="home" aria-label="返回">←</button>
+                  <div class="navTop__title">历史记录</div>
+                  <div class="navTop__right"></div>
+                </div>
+
+                <div class="chips">
+                  <button class="chip is-active">全部</button>
+                  <button class="chip">斯诺克</button>
+                  <button class="chip">九球</button>
+                  <button class="chip">八球</button>
+                </div>
+
+                <div class="list">
+                  <button class="match">
+                    <div class="match__meta">
+                      <div class="match__time muted">今天 15:30</div>
+                      <div class="match__mode chip">斯诺克</div>
+                    </div>
+                    <div class="match__line">
+                      <div class="pill">张</div>
+                      <div class="match__name">张三</div>
+                      <div class="match__score"><span class="trophy">🏆</span> 3 : 2</div>
+                      <div class="match__name">李四</div>
+                      <div class="pill pill--b">李</div>
+                    </div>
+                  </button>
+
+                  <button class="match">
+                    <div class="match__meta">
+                      <div class="match__time muted">昨天 20:00</div>
+                      <div class="match__mode chip">九球</div>
+                    </div>
+                    <div class="match__line">
+                      <div class="pill">王</div>
+                      <div class="match__name">王五</div>
+                      <div class="match__score"><span class="trophy">🏆</span> 5 : 4</div>
+                      <div class="match__name">张三</div>
+                      <div class="pill pill--g">张</div>
+                    </div>
+                  </button>
+
+                  <button class="match">
+                    <div class="match__meta">
+                      <div class="match__time muted">3 天前</div>
+                      <div class="match__mode chip">八球</div>
+                    </div>
+                    <div class="match__line">
+                      <div class="pill">张</div>
+                      <div class="match__name">张三</div>
+                      <div class="match__score">3 : 3</div>
+                      <div class="match__name">赵六</div>
+                      <div class="pill pill--b">赵</div>
+                    </div>
+                  </button>
+                </div>
+
+                <div class="bottomNav" aria-label="底部导航">
+                  <button class="bottomNav__item" data-go="home">
+                    <span class="bottomNav__icon">🏠</span>
+                    <span class="bottomNav__label">首页</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="create">
+                    <span class="bottomNav__icon">➕</span>
+                    <span class="bottomNav__label">开局</span>
+                  </button>
+                  <button class="bottomNav__item is-active" data-go="history">
+                    <span class="bottomNav__icon">🗂️</span>
+                    <span class="bottomNav__label">历史</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="login">
+                    <span class="bottomNav__icon">👤</span>
+                    <span class="bottomNav__label">我的</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <!-- 参考图 -->
+            <article class="screen" data-screen="refs">
+              <div class="screen__content">
+                <div class="navTop">
+                  <button class="navTop__back" data-go="home" aria-label="返回">←</button>
+                  <div class="navTop__title">参考原型图</div>
+                  <div class="navTop__right"></div>
+                </div>
+
+                <div class="refs">
+                  <div class="refs__tip muted">下面是你提供的原型图截图（已复制到仓库 `prototype/assets/`），用于对照与复用。</div>
+                  <div class="refs__grid">
+                    <img class="refImg" src="./assets/5c57dc3566198b7d35eecb9f92e5d7ec-0ac6a06b-d8a6-4ef4-adec-835be6b7e017.png" alt="欢迎页原型" loading="lazy" />
+                    <img class="refImg" src="./assets/a4dce5480ba73a41355a483935be79f5-bfbe6dba-2c3c-41e9-bcc5-c2a63f21cf9f.png" alt="登录页原型" loading="lazy" />
+                    <img class="refImg" src="./assets/cd20561d92b12186085e44b4a2e962b6-8277a4ac-947e-426a-80d2-b2e576d0ac46.png" alt="注册页原型" loading="lazy" />
+                    <img class="refImg" src="./assets/d1a65902ec799c714b469804643f7317-48e1ea50-ea5d-4fa9-8042-b07a03ec29f0.png" alt="首页原型" loading="lazy" />
+                    <img class="refImg" src="./assets/99632f0c74b7f02f35ee320bf187d3da-ffd19c3e-5278-46b1-94e4-d557888b8976.png" alt="创建房间原型" loading="lazy" />
+                    <img class="refImg" src="./assets/b890ab584c4dca7d56dc046a25a6f703-28b05577-372d-4f40-9696-950d660c60a7.png" alt="斯诺克记分原型" loading="lazy" />
+                    <img class="refImg" src="./assets/37014eb2fb17be9abf336be43226e078-fec639c5-96dd-49fd-a77e-3bc3934279ac.png" alt="历史记录原型" loading="lazy" />
+                    <img class="refImg" src="./assets/ab5c1696b2bf5f03ee1e1c62729b4aed-ba1e05fb-b204-453f-ba66-7bb8e7efb07a.png" alt="斯诺克详情原型" loading="lazy" />
+                    <img class="refImg" src="./assets/f642c243a7cc179784a97e894ace767d-0d4b0982-b0bc-4ea4-909f-ac456e2943f1.png" alt="九球追分原型" loading="lazy" />
+                  </div>
+                </div>
+
+                <div class="bottomNav" aria-label="底部导航">
+                  <button class="bottomNav__item" data-go="home">
+                    <span class="bottomNav__icon">🏠</span>
+                    <span class="bottomNav__label">首页</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="create">
+                    <span class="bottomNav__icon">➕</span>
+                    <span class="bottomNav__label">开局</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="history">
+                    <span class="bottomNav__icon">🗂️</span>
+                    <span class="bottomNav__label">历史</span>
+                  </button>
+                  <button class="bottomNav__item" data-go="login">
+                    <span class="bottomNav__icon">👤</span>
+                    <span class="bottomNav__label">我的</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+      <dialog class="modal" id="helpModal">
+        <div class="modal__card">
+          <div class="modal__head">
+            <div class="modal__title">原型快捷操作</div>
+            <button class="iconBtn" id="btnCloseHelp" aria-label="关闭">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+          <div class="modal__body">
+            <div class="help">
+              <div class="help__row">
+                <div class="help__kbd"><span class="kbd">←</span><span class="kbd">→</span></div>
+                <div class="help__txt">在页面列表中左右切换</div>
+              </div>
+              <div class="help__row">
+                <div class="help__kbd"><span class="kbd">Esc</span></div>
+                <div class="help__txt">关闭弹层</div>
+              </div>
+              <div class="help__row">
+                <div class="help__kbd"><span class="kbd">#snooker</span></div>
+                <div class="help__txt">支持 URL hash 直达页面（例如 #history）</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </dialog>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+
+</html>
