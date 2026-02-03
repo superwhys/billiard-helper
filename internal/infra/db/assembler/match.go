@@ -15,7 +15,6 @@ func NewMatchPoAssembler() *MatchPoAssembler {
 
 func (a *MatchPoAssembler) ToMatchConfig(po match.MatchConfig) models.MatchConfig {
 	return models.MatchConfig{
-		MatchType:   uint8(po.MatchType),
 		MaxPlayers:  po.MaxPlayers,
 		TargetScore: po.TargetScore,
 	}
@@ -23,7 +22,6 @@ func (a *MatchPoAssembler) ToMatchConfig(po match.MatchConfig) models.MatchConfi
 
 func (a *MatchPoAssembler) ToMatchConfigEntity(config models.MatchConfig) match.MatchConfig {
 	return match.MatchConfig{
-		MatchType:   match.MatchType(config.MatchType),
 		MaxPlayers:  config.MaxPlayers,
 		TargetScore: config.TargetScore,
 	}

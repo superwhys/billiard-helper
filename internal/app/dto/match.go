@@ -7,9 +7,8 @@ import (
 )
 
 type MatchConfig struct {
-	MatchType   uint8 `json:"match_type"` // 比如 1: snooker, 2: 8-ball
-	MaxPlayers  uint  `json:"max_players"`
-	TargetScore uint  `json:"target_score"`
+	MaxPlayers  uint `json:"max_players"`
+	TargetScore uint `json:"target_score"`
 }
 
 type Match struct {
@@ -22,19 +21,21 @@ type Match struct {
 }
 
 type Player struct {
-	ID       uint      `json:"id"`
-	Code     string    `json:"code"`
-	UserID   *uint     `json:"user_id,omitempty"`
-	NickName string    `json:"nick_name"`
-	Type     int       `json:"type"`
-	JoinTime time.Time `json:"join_time"`
+	ID   uint   `json:"id"`
+	Code string `json:"code"`
+	// 真实用户的用户 id
+	UserID   *uint            `json:"user_id,omitempty"`
+	NickName string           `json:"nick_name"`
+	Type     match.PlayerType `json:"type"`
+	JoinTime time.Time        `json:"join_time"`
 }
 
 type CreateMatchRequest struct {
 	Operator
-	MatchType   int `json:"match_type"`
-	MaxPlayers  int `json:"max_players"`
-	TargetScore int `json:"target_score"`
+	MatchType      match.MatchType `json:"match_type"`
+	MaxPlayers     uint            `json:"max_players"`
+	TargetScore    uint            `json:"target_score"`
+	VirtualPlayers []*Player       `json:"virtual_players"`
 }
 
 type JoinMatchRequest struct {

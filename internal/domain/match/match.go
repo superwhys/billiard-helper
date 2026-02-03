@@ -14,10 +14,19 @@ type Match struct {
 	ID        uint        `json:"id"`
 	OwnerID   uint        `json:"owner_id"`
 	Status    MatchStatus `json:"status"`
+	MatchType MatchType   `json:"match_type"`
 	Config    MatchConfig `json:"config"`
 	Players   []*Player   `json:"players"`
 	CreatedAt time.Time   `json:"created_at"`
 	UpdatedAt time.Time   `json:"updated_at"`
+}
+
+func (m *Match) CheckPlayerFull() error {
+	if len(m.Players) > int(m.Config.MaxPlayers) {
+		return errcode.ErrCodeMatchPlayerFull
+	}
+
+	return nil
 }
 
 func (m *Match) JoinPlayer(player *Player) error {
@@ -25,8 +34,8 @@ func (m *Match) JoinPlayer(player *Player) error {
 		return errcode.ErrCodeMatchNotPending
 	}
 
-	if len(m.Players) >= int(m.Config.MaxPlayers) {
-		return errcode.ErrCodeMatchPlayerFull
+	if err := m.CheckPlayerFull(); err != nil {
+		return err
 	}
 
 	// 检查是否重复加入

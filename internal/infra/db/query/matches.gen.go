@@ -33,6 +33,7 @@ func newMatch(db *gorm.DB, opts ...gen.DOOption) match {
 	_match.DeletedAt = field.NewField(tableName, "deleted_at")
 	_match.UserID = field.NewUint(tableName, "user_id")
 	_match.Status = field.NewUint8(tableName, "status")
+	_match.MatchType = field.NewString(tableName, "match_type")
 	_match.Config = field.NewField(tableName, "config")
 	_match.Players = matchHasManyPlayers{
 		db: db.Session(&gorm.Session{}),
@@ -74,6 +75,7 @@ type match struct {
 	DeletedAt field.Field
 	UserID    field.Uint  // 房主ID
 	Status    field.Uint8 // 房间状态
+	MatchType field.String
 	Config    field.Field // 比赛配置
 	Players   matchHasManyPlayers
 
@@ -100,6 +102,7 @@ func (m *match) updateTableName(table string) *match {
 	m.DeletedAt = field.NewField(table, "deleted_at")
 	m.UserID = field.NewUint(table, "user_id")
 	m.Status = field.NewUint8(table, "status")
+	m.MatchType = field.NewString(table, "match_type")
 	m.Config = field.NewField(table, "config")
 
 	m.fillFieldMap()
@@ -125,13 +128,14 @@ func (m *match) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (m *match) fillFieldMap() {
-	m.fieldMap = make(map[string]field.Expr, 9)
+	m.fieldMap = make(map[string]field.Expr, 10)
 	m.fieldMap["id"] = m.ID
 	m.fieldMap["created_at"] = m.CreatedAt
 	m.fieldMap["updated_at"] = m.UpdatedAt
 	m.fieldMap["deleted_at"] = m.DeletedAt
 	m.fieldMap["user_id"] = m.UserID
 	m.fieldMap["status"] = m.Status
+	m.fieldMap["match_type"] = m.MatchType
 	m.fieldMap["config"] = m.Config
 
 }

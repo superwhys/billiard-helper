@@ -11,7 +11,29 @@ func NewMatchAssembler() *MatchAssembler {
 	return &MatchAssembler{}
 }
 
-// ToRoomDTO 将 Room 聚合根转换为 DTO
+func (a *MatchAssembler) CreateMatchReqToMatch(req *dto.CreateMatchRequest) *match.Match {
+	if req == nil {
+		return nil
+	}
+
+	m := &match.Match{
+		OwnerID:   req.UserID,
+		Status:    match.MatchStatusPending,
+		MatchType: req.MatchType,
+		Config: match.MatchConfig{
+			MaxPlayers:  match.MatchTypeMaxPlayers(req.MatchType),
+			TargetScore: uint(req.TargetScore),
+		},
+		Players: make([]*match.Player, 0, len(req.VirtualPlayers)),
+	}
+
+	for _, dtoPlayer := range req.VirtualPlayers {
+		m.Players = append(m.Players, a.DtoToPlayer(dtoPlayer))
+	}
+
+	return m
+}
+
 func (a *MatchAssembler) ToMatchDTO(r *match.Match) *dto.Match {
 	if r == nil {
 		return nil
@@ -23,7 +45,6 @@ func (a *MatchAssembler) ToMatchDTO(r *match.Match) *dto.Match {
 	}
 
 	config := dto.MatchConfig{
-		MatchType:   uint8(r.Config.MatchType),
 		MaxPlayers:  r.Config.MaxPlayers,
 		TargetScore: r.Config.TargetScore,
 	}
@@ -38,7 +59,20 @@ func (a *MatchAssembler) ToMatchDTO(r *match.Match) *dto.Match {
 	}
 }
 
-// ToPlayerDTO 将 Player 实体转换为 DTO
+func (a *MatchAssembler) DtoToPlayer(p *dto.Player) *match.Player {
+	if p == nil {
+		return nil
+	}
+
+	return &match.Player{
+		Code:     p.Code,
+		UserID:   p.UserID,
+		NickName: p.NickName,
+		Type:     p.Type,
+		JoinTime: p.JoinTime,
+	}
+}
+
 func (a *MatchAssembler) ToPlayerDTO(p *match.Player) dto.Player {
 	if p == nil {
 		return dto.Player{}
@@ -48,7 +82,7 @@ func (a *MatchAssembler) ToPlayerDTO(p *match.Player) dto.Player {
 		Code:     p.Code,
 		UserID:   p.UserID,
 		NickName: p.NickName,
-		Type:     int(p.Type),
+		Type:     p.Type,
 		JoinTime: p.JoinTime,
 	}
 }
@@ -56,7 +90,6 @@ func (a *MatchAssembler) ToPlayerDTO(p *match.Player) dto.Player {
 // ToMatchConfig 将 DTO 配置转换为领域值对象
 func (a *MatchAssembler) ToMatchConfig(req *dto.CreateMatchRequest) match.MatchConfig {
 	return match.MatchConfig{
-		MatchType:   match.MatchType(req.MatchType),
 		MaxPlayers:  uint(req.MaxPlayers),
 		TargetScore: uint(req.TargetScore),
 	}
@@ -64,7 +97,6 @@ func (a *MatchAssembler) ToMatchConfig(req *dto.CreateMatchRequest) match.MatchC
 
 func (a *MatchAssembler) ToDtoMatchConfig(config *match.MatchConfig) dto.MatchConfig {
 	return dto.MatchConfig{
-		MatchType:   uint8(config.MatchType),
 		MaxPlayers:  config.MaxPlayers,
 		TargetScore: config.TargetScore,
 	}

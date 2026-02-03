@@ -36,8 +36,12 @@ func NewMatchApp(
 
 // CreateMatch 创建比赛
 func (a *MatchApp) CreateMatch(ctx context.Context, req *dto.CreateMatchRequest) (*dto.Match, error) {
-	config := a.matchAssembler.ToMatchConfig(req)
-	match, err := a.matchService.CreateMatch(ctx, req.UserID, config)
+	match := a.matchAssembler.CreateMatchReqToMatch(req)
+	if err := match.CheckPlayerFull(); err != nil {
+		return nil, err
+	}
+
+	match, err := a.matchService.CreateMatch(ctx, req.UserID, match)
 	if err != nil {
 		return nil, err
 	}
@@ -54,11 +58,11 @@ func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*d
 	defer lock.Unlock(ctx)
 
 	// 2. 获取比赛房间
-
 	matchRoom, err := a.matchService.FindMatchByID(ctx, req.MatchID)
 	if err != nil {
 		return nil, err
 	}
+
 	// 3. 创建玩家
 	player := match.NewPlayer(req.MatchID, ptrx.Uint(req.UserID), req.NickName, req.PlayerType)
 
@@ -234,4 +238,8 @@ func (a *MatchApp) publishEvent(ctx context.Context, eventType string, payload a
 	}
 
 	return a.eventBus.Publish(ctx, constant.BilliardMessageChannel, msg)
+}
+
+func (a *MatchApp) ListMatches(ctx context.Context, matchType uint) ([]*dto.Match, error) {
+	panic("not implement")
 }
