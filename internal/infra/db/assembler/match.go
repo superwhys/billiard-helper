@@ -82,6 +82,15 @@ func (a *MatchPoAssembler) ToEntity(po *models.Match) *match.Match {
 	}
 }
 
+func (a *MatchPoAssembler) ToEntityList(pos []*models.Match) []*match.Match {
+	lst := make([]*match.Match, 0, len(pos))
+	for _, po := range pos {
+		lst = append(lst, a.ToEntity(po))
+	}
+
+	return lst
+}
+
 func (a *MatchPoAssembler) ToPO(entity *match.Match) *models.Match {
 	if entity == nil {
 		return nil

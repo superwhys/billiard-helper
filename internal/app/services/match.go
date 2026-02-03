@@ -11,9 +11,11 @@ import (
 	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/domain/shared"
 	"github.com/superwhys/billiard-helper/internal/infra/cache"
+	"github.com/superwhys/billiard-helper/internal/infra/db"
 )
 
 type MatchApp struct {
+	repoFactory    *db.RepositoryFactory
 	matchService   match.IMatchService
 	matchAssembler *assembler.MatchAssembler
 	eventBus       shared.EventBus
@@ -37,6 +39,7 @@ func NewMatchApp(
 // CreateMatch 创建比赛
 func (a *MatchApp) CreateMatch(ctx context.Context, req *dto.CreateMatchRequest) (*dto.Match, error) {
 	match := a.matchAssembler.CreateMatchReqToMatch(req)
+
 	if err := match.CheckPlayerFull(); err != nil {
 		return nil, err
 	}
@@ -72,7 +75,7 @@ func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*d
 		return nil, err
 	}
 
-	// 6. 发送事件
+	// 5. 发送事件
 	playerDTO := a.matchAssembler.ToPlayerDTO(joinedPlayer)
 	matchDTO := a.matchAssembler.ToMatchDTO(matchRoom)
 	msg := dto.JoinMatchEventMessage{
@@ -83,7 +86,6 @@ func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*d
 		Player: &playerDTO,
 	}
 	_ = a.publishEvent(ctx, constant.EventPlayerJoinRoom, msg)
-	// 7. 返回比赛
 
 	return matchDTO, nil
 }
@@ -166,11 +168,13 @@ func (a *MatchApp) LeaveMatch(ctx context.Context, req *dto.MatchActionRequest) 
 	if err != nil {
 		return err
 	}
+
 	// 3. 获取房间信息
 	matchRoom, err := a.matchService.FindMatchByID(ctx, player.MatchID)
 	if err != nil {
 		return err
 	}
+
 	// 4. 退出比赛
 	err = a.matchService.LeaveMatch(ctx, matchRoom, player)
 	if err != nil {
@@ -203,18 +207,20 @@ func (a *MatchApp) KickMatchPlayer(ctx context.Context, req *dto.KickPlayerReque
 	if err != nil {
 		return err
 	}
+
 	// 3. 获取房间信息
 	matchRoom, err := a.matchService.FindMatchByID(ctx, player.MatchID)
 	if err != nil {
 		return err
 	}
+
 	// 4. 踢出玩家
 	err = a.matchService.KickMatchPlayer(ctx, matchRoom, player)
 	if err != nil {
 		return err
 	}
 
-	// 5. 发布踢人事件 (通常复用离开事件，或者有单独的 Kick 事件)
+	// 5. 发布踢人事件 (通常复用离开事件)
 	_ = a.publishEvent(ctx, constant.EventPlayerLeaveRoom, &dto.LeaveMatchEventMessage{
 		EventMsgBase: dto.EventMsgBase{
 			UserID:  req.UserID,
@@ -241,5 +247,6 @@ func (a *MatchApp) publishEvent(ctx context.Context, eventType string, payload a
 }
 
 func (a *MatchApp) ListMatches(ctx context.Context, matchType uint) ([]*dto.Match, error) {
+
 	panic("not implement")
 }

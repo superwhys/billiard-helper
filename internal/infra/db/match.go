@@ -105,3 +105,19 @@ func (r *MatchRepo) Delete(ctx context.Context, id uint) error {
 	_, err := m.WithContext(ctx).Where(m.ID.Eq(id)).Delete()
 	return err
 }
+
+func (r *MatchRepo) ListMatches(ctx context.Context, matchType string) ([]*match.Match, error) {
+	m := r.query.Match
+
+	query := r.query.Match.WithContext(ctx)
+	if matchType != "" {
+		query = query.Where(m.MatchType.Eq(matchType))
+	}
+
+	matches, err := query.Find()
+	if err != nil {
+		return nil, err
+	}
+
+	return r.matchPoAssembler.ToEntityList(matches), nil
+}

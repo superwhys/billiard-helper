@@ -53,14 +53,15 @@ func main() {
 	verifyCodeRepo := cache.NewVerifyCodeRepository(redisClient)
 	sessionRepo := cache.NewSessionRepository(redisClient)
 	userRepo := db.NewUserRepo(mysqlDB)
+	repoFactory := db.NewRepositoryFactory(mysqlDB)
 
 	// Initialize domain services
 	userService := user.NewUserService(userRepo)
 
 	// Initialize app services
 	userApp := services.NewUserApp(userService, sessionRepo, verifyCodeRepo, emailSender, config.JwtConfig)
-	scoreApp := services.NewScoreApp(nil, nil, nil, nil)
 	matchApp := services.NewMatchApp(nil, nil, nil, nil)
+	scoreApp := services.NewScoreApp(nil, nil, nil, nil)
 
 	socketManager := socket.NewSocketManager(hook.NewSocketHook(matchApp, config.JwtConfig))
 
