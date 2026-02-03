@@ -8,6 +8,7 @@ import (
 	"github.com/superwhys/billiard-helper/config"
 	"github.com/superwhys/billiard-helper/internal/app/assembler"
 	"github.com/superwhys/billiard-helper/internal/app/dto"
+	"github.com/superwhys/billiard-helper/internal/app/factory"
 	"github.com/superwhys/billiard-helper/internal/domain/user"
 	"github.com/superwhys/billiard-helper/internal/errcode"
 	"github.com/superwhys/billiard-helper/internal/infra/email"
@@ -15,7 +16,8 @@ import (
 )
 
 type UserApp struct {
-	userService    user.IUserService
+	repoFactory    factory.IRepoFactory
+	serviceFactory *factory.DomainServiceFactory
 	userAssembler  *assembler.UserAssembler
 	sessionRepo    user.ISessionRepository
 	verifyCodeRepo user.IVerifyCodeRepository
@@ -24,14 +26,16 @@ type UserApp struct {
 }
 
 func NewUserApp(
-	userService user.IUserService,
+	serviceFactory *factory.DomainServiceFactory,
+	repoFactory factory.IRepoFactory,
 	sessionRepo user.ISessionRepository,
 	verifyCodeRepo user.IVerifyCodeRepository,
 	emailSender email.IEmailSender,
 	jwtConfig *config.JwtConfig,
 ) *UserApp {
 	return &UserApp{
-		userService:    userService,
+		serviceFactory: serviceFactory,
+		repoFactory:    repoFactory,
 		userAssembler:  assembler.NewUserAssembler(),
 		sessionRepo:    sessionRepo,
 		verifyCodeRepo: verifyCodeRepo,
@@ -64,13 +68,15 @@ func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
 	// 删除验证码，不需要关心是否失败
 	_ = a.verifyCodeRepo.DeleteCode(ctx, req.Email)
 
-	return a.userService.RegisterWithCode(ctx, req.Email, req.Password, req.Name)
+	userService := a.serviceFactory.UserService(a.repoFactory)
+	return userService.RegisterWithCode(ctx, req.Email, req.Password, req.Name)
 }
 
 // Login 用户登录
 func (a *UserApp) Login(ctx context.Context, req *dto.LoginReq) (string, *dto.User, error) {
 	// 1. 验证账号密码
-	u, err := a.userService.Login(ctx, req.Email, req.Password)
+	userService := a.serviceFactory.UserService(a.repoFactory)
+	u, err := userService.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		return "", nil, err
 	}

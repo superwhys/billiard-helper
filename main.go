@@ -8,11 +8,10 @@ import (
 	"github.com/miebyte/goutils/redisutils"
 	"github.com/superwhys/billiard-helper/api"
 	"github.com/superwhys/billiard-helper/config"
+	"github.com/superwhys/billiard-helper/internal/app/factory"
 	"github.com/superwhys/billiard-helper/internal/app/hook"
 	"github.com/superwhys/billiard-helper/internal/app/services"
-	"github.com/superwhys/billiard-helper/internal/domain/user"
 	"github.com/superwhys/billiard-helper/internal/infra/cache"
-	"github.com/superwhys/billiard-helper/internal/infra/db"
 	"github.com/superwhys/billiard-helper/internal/infra/db/models"
 	"github.com/superwhys/billiard-helper/internal/infra/email"
 	"github.com/superwhys/billiard-helper/internal/infra/socket"
@@ -52,15 +51,13 @@ func main() {
 	// Initialize Repositories
 	verifyCodeRepo := cache.NewVerifyCodeRepository(redisClient)
 	sessionRepo := cache.NewSessionRepository(redisClient)
-	userRepo := db.NewUserRepo(mysqlDB)
-	repoFactory := db.NewRepositoryFactory(mysqlDB)
 
-	// Initialize domain services
-	userService := user.NewUserService(userRepo)
+	repoFactory := factory.NewRepositoryFactory(mysqlDB)
+	serviceFactory := factory.NewDomainServiceFactory(redisClient)
 
 	// Initialize app services
-	userApp := services.NewUserApp(userService, sessionRepo, verifyCodeRepo, emailSender, config.JwtConfig)
-	matchApp := services.NewMatchApp(nil, nil, nil, nil)
+	userApp := services.NewUserApp(serviceFactory, repoFactory, sessionRepo, verifyCodeRepo, emailSender, config.JwtConfig)
+	matchApp := services.NewMatchApp(nil, nil, nil, nil, nil)
 	scoreApp := services.NewScoreApp(nil, nil, nil, nil)
 
 	socketManager := socket.NewSocketManager(hook.NewSocketHook(matchApp, config.JwtConfig))
