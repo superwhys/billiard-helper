@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +12,7 @@ import (
 )
 
 // handleRouterError 处理业务逻辑错误响应。
-func handleRouterError(ctx *gin.Context, err error, logMsg string, fallback errcode.ErrCode) bool {
+func handleRouterError(ctx *gin.Context, err error, logMsg string, fallback errcode.Error) bool {
 	if err == nil {
 		return false
 	}
@@ -20,8 +21,9 @@ func handleRouterError(ctx *gin.Context, err error, logMsg string, fallback errc
 	return true
 }
 
-func errorResponseWithCode(err error, fallback errcode.ErrCode) *ginutils.Ret[any] {
-	if ec, ok := errcode.AsErrcode(err); ok {
+func errorResponseWithCode(err error, fallback errcode.Error) *ginutils.Ret[any] {
+	var ec errcode.Error
+	if errors.As(err, &ec) {
 		return response.ErrorResponseWithCode(ec)
 	}
 	return response.ErrorResponseWithCode(fallback)

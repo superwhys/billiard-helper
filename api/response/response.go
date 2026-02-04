@@ -13,6 +13,6 @@ func ResponseWithData[T any](data T) *ginutils.Ret[T] {
 	return ginutils.SuccessRet(data)
 }
 
-func ErrorResponseWithCode(ec errcode.ErrCode) *ginutils.Ret[any] {
+func ErrorResponseWithCode(ec errcode.Error) *ginutils.Ret[any] {
 	return ginutils.ErrorRet(ec)
 }

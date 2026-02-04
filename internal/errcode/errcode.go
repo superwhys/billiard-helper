@@ -2,100 +2,112 @@ package errcode
 
 import "errors"
 
-type ErrCode uint
-
-const (
-	ErrCodeNormal ErrCode = iota + 10000
-	ErrCodeInvalidRequest
-	// Auth error codes
-	ErrCodeNoToken
-	ErrCodeInvalidToken
-	ErrCodeTokenExpired
-	ErrCodeSendEmailCodeFailed
-	ErrCodeUserRegisterFailed
-	ErrCodeUserLoginFailed
-	ErrCodeInvalidCode
-	ErrCodeUserAlreadyExists
-	ErrCodeUserNotFound
-	ErrCodeInvalidPassword
-
-	// Match error codes
-	ErrCodeCreateMatchFailed
-	ErrCodeJoinMatchFailed
-	ErrCodeStartMatchFailed
-	ErrCodeEndMatchFailed
-	ErrCodeLeaveMatchFailed
-	ErrCodeKickPlayerFailed
-	ErrCodeMatchPlayerFull
-	ErrCodeMatchNotPending
-	ErrCodeMatchPlayerAlreadyJoined
-	ErrCodeMatchNotExists
-)
-
-func (c ErrCode) Error() string {
-	return c.String()
+type Error struct {
+	ErrCode int
+	Message string
 }
 
-func (c ErrCode) Code() int {
-	return int(c)
+func (e Error) Error() string {
+	return e.Message
 }
 
-func (c ErrCode) String() string {
-	switch c {
-	case ErrCodeNormal:
-		return "服务异常"
-	case ErrCodeInvalidRequest:
-		return "无效的请求"
-	case ErrCodeNoToken:
-		return "未提供令牌"
-	case ErrCodeInvalidToken:
-		return "无效的令牌"
-	case ErrCodeTokenExpired:
-		return "令牌已过期"
-	case ErrCodeSendEmailCodeFailed:
-		return "发送邮箱验证码失败"
-	case ErrCodeUserRegisterFailed:
-		return "用户注册失败"
-	case ErrCodeUserLoginFailed:
-		return "用户登录失败"
-	case ErrCodeInvalidCode:
-		return "无效的验证码"
-	case ErrCodeUserAlreadyExists:
-		return "用户已存在"
-	case ErrCodeUserNotFound:
-		return "用户不存在"
-	case ErrCodeCreateMatchFailed:
-		return "创建比赛失败"
-	case ErrCodeJoinMatchFailed:
-		return "加入比赛失败"
-	case ErrCodeStartMatchFailed:
-		return "开始比赛失败"
-	case ErrCodeEndMatchFailed:
-		return "结束比赛失败"
-	case ErrCodeLeaveMatchFailed:
-		return "离开比赛失败"
-	case ErrCodeKickPlayerFailed:
-		return "踢出比赛失败"
-	case ErrCodeMatchPlayerFull:
-		return "比赛人员已满"
-	case ErrCodeMatchNotPending:
-		return "比赛已开始"
-	case ErrCodeMatchPlayerAlreadyJoined:
-		return "玩家已加入"
-	case ErrCodeMatchNotExists:
-		return "比赛不存在"
-	case ErrCodeInvalidPassword:
-		return "无效的密码"
+func (e Error) String() string {
+	return e.Message
+}
+
+func (e Error) Code() int {
+	return e.ErrCode
+}
+
+func (e Error) Is(target error) bool {
+	switch t := target.(type) {
+	case Error:
+		return e.ErrCode != 0 && e.ErrCode == t.ErrCode
+	case *Error:
+		if t == nil {
+			return false
+		}
+		return e.ErrCode != 0 && e.ErrCode == t.ErrCode
 	default:
-		return "未知错误"
+		return false
 	}
 }
 
-func AsErrcode(err error) (ErrCode, bool) {
-	ec := new(ErrCode)
+func (e Error) WithErrCode(code int) Error {
+	e.ErrCode = code
+	return e
+}
+
+func (e Error) WithMessage(message string) Error {
+	e.Message = message
+	return e
+}
+
+const (
+	CodeNormal = iota + 10000
+	CodeInvalidRequest
+	// Auth error codes
+	CodeNoToken
+	CodeInvalidToken
+	CodeTokenExpired
+	CodeSendEmailCodeFailed
+	CodeUserRegisterFailed
+	CodeUserLoginFailed
+	CodeInvalidCode
+	CodeUserAlreadyExists
+	CodeUserNotFound
+	CodeInvalidPassword
+
+	// Match error codes
+	CodeCreateMatchFailed
+	CodeJoinMatchFailed
+	CodeStartMatchFailed
+	CodeEndMatchFailed
+	CodeLeaveMatchFailed
+	CodeKickPlayerFailed
+	CodeMatchPlayerFull
+	CodeMatchNotPending
+	CodeMatchPlayerAlreadyJoined
+	CodeMatchNotExists
+)
+
+var (
+	ErrCodeNormal                   = Error{ErrCode: CodeNormal, Message: "服务异常"}
+	ErrCodeInvalidRequest           = Error{ErrCode: CodeInvalidRequest, Message: "无效的请求"}
+	ErrCodeNoToken                  = Error{ErrCode: CodeNoToken, Message: "未提供令牌"}
+	ErrCodeInvalidToken             = Error{ErrCode: CodeInvalidToken, Message: "无效的令牌"}
+	ErrCodeTokenExpired             = Error{ErrCode: CodeTokenExpired, Message: "令牌已过期"}
+	ErrCodeSendEmailCodeFailed      = Error{ErrCode: CodeSendEmailCodeFailed, Message: "发送邮箱验证码失败"}
+	ErrCodeUserRegisterFailed       = Error{ErrCode: CodeUserRegisterFailed, Message: "用户注册失败"}
+	ErrCodeUserLoginFailed          = Error{ErrCode: CodeUserLoginFailed, Message: "用户登录失败"}
+	ErrCodeInvalidCode              = Error{ErrCode: CodeInvalidCode, Message: "无效的验证码"}
+	ErrCodeUserAlreadyExists        = Error{ErrCode: CodeUserAlreadyExists, Message: "用户已存在"}
+	ErrCodeUserNotFound             = Error{ErrCode: CodeUserNotFound, Message: "用户不存在"}
+	ErrCodeInvalidPassword          = Error{ErrCode: CodeInvalidPassword, Message: "无效的密码"}
+	ErrCodeCreateMatchFailed        = Error{ErrCode: CodeCreateMatchFailed, Message: "创建比赛失败"}
+	ErrCodeJoinMatchFailed          = Error{ErrCode: CodeJoinMatchFailed, Message: "加入比赛失败"}
+	ErrCodeStartMatchFailed         = Error{ErrCode: CodeStartMatchFailed, Message: "开始比赛失败"}
+	ErrCodeEndMatchFailed           = Error{ErrCode: CodeEndMatchFailed, Message: "结束比赛失败"}
+	ErrCodeLeaveMatchFailed         = Error{ErrCode: CodeLeaveMatchFailed, Message: "离开比赛失败"}
+	ErrCodeKickPlayerFailed         = Error{ErrCode: CodeKickPlayerFailed, Message: "踢出比赛失败"}
+	ErrCodeMatchPlayerFull          = Error{ErrCode: CodeMatchPlayerFull, Message: "比赛人员已满"}
+	ErrCodeMatchNotPending          = Error{ErrCode: CodeMatchNotPending, Message: "比赛已开始"}
+	ErrCodeMatchPlayerAlreadyJoined = Error{
+		ErrCode: CodeMatchPlayerAlreadyJoined,
+		Message: "玩家已加入",
+	}
+	ErrCodeMatchNotExists = Error{ErrCode: CodeMatchNotExists, Message: "比赛不存在"}
+)
+
+func AsErrcode(err error) (Error, bool) {
+	if err == nil {
+		return Error{}, false
+	}
+
+	ec := new(Error)
 	if errors.As(err, ec) {
 		return *ec, true
 	}
 
-	return 0, false
+	return Error{}, false
 }
