@@ -74,7 +74,7 @@ func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
 	_ = a.verifyCodeRepo.DeleteCode(ctx, req.Account)
 
 	userService := a.serviceFactory.UserService(a.repoFactory)
-	return userService.RegisterWithCode(ctx, req.Account, req.Password, req.Name)
+	return userService.RegisterUser(ctx, req.Account, req.Password, req.Name)
 }
 
 // Login 用户登录

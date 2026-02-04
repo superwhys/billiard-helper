@@ -10,8 +10,8 @@ import (
 )
 
 type IUserService interface {
-	// RegisterWithCode 使用验证码注册
-	RegisterWithCode(ctx context.Context, email, password, name string) error
+	// RegisterUser 注册用户
+	RegisterUser(ctx context.Context, account, password, name string) error
 
 	// Login 处理登录校验
 	Login(ctx context.Context, account, password, verifyCode string) (*User, error)
@@ -39,29 +39,37 @@ func NewUserService(userRepository IUserRepository) *UserService {
 	}
 }
 
-func (s *UserService) RegisterWithCode(ctx context.Context, email, password, name string) error {
-	// 1. 校验邮箱和密码
-	emailObj, err := NewEmail(email)
+func (s *UserService) RegisterUser(ctx context.Context, acc, password, name string) (err error) {
+	user := &User{
+		Name: name,
+	}
+
+	switch {
+	case account.IsEmailAccount(acc):
+		user.Email, err = NewEmail(acc)
+		if err != nil {
+			return err
+		}
+	case account.IsPhoneAccount(acc):
+		user.Phone = acc
+	default:
+		return errcode.ErrCodeInvalidRequest
+	}
+
+	user.Password, err = NewPasswordFromPlain(password)
 	if err != nil {
 		return err
 	}
 
-	passwordObj, err := NewPasswordFromPlain(password)
+	exists, err := s.userRepository.IsExists(ctx, acc)
 	if err != nil {
 		return err
 	}
-
-	// 2. 校验邮箱是否已存在
-	user, err := s.userRepository.FindByEmail(ctx, email)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
-	}
-	if user != nil {
+	if exists {
 		return errcode.ErrCodeUserAlreadyExists
 	}
 
-	userObj := NewUser(emailObj, name, passwordObj)
-	return s.userRepository.Save(ctx, userObj)
+	return s.userRepository.Save(ctx, user)
 }
 
 func (s *UserService) Login(ctx context.Context, acc, password, verifyCode string) (*User, error) {

@@ -30,6 +30,19 @@ func (r *UserRepo) Save(ctx context.Context, user *user.User) error {
 	return u.WithContext(ctx).Create(po)
 }
 
+func (r *UserRepo) IsExists(ctx context.Context, account string) (bool, error) {
+	u := r.query.User
+
+	count, err := u.WithContext(ctx).
+		Where(u.Email.Eq(account)).
+		Or(u.Phone.Eq(account)).
+		Count()
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func (r *UserRepo) FindByEmail(ctx context.Context, email string) (*user.User, error) {
 	u := r.query.User
 
