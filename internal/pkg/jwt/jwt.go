@@ -65,7 +65,7 @@ const TokenContextKey ContextKey = "user_token_claims"
 func TokenClaimsFromContext(ctx context.Context) (*UserTokenClaims, error) {
 	claims, ok := ctx.Value(TokenContextKey).(*UserTokenClaims)
 	if !ok {
-		return nil, errcode.ErrCodeNoToken
+		return nil, errcode.ErrUnauthorized
 	}
 	return claims, nil
 }

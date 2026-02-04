@@ -37,7 +37,7 @@ func MatchGroupRouter(matchApp *services.MatchApp) ginutils.Option {
 func MatchCreateHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *dto.CreateMatchRequest) {
 		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
-		if handleRouterError(c, err, "get token claims failed", errcode.ErrCodeNoToken) {
+		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
 			return
 		}
 		req.UserID = claims.UserID
@@ -64,7 +64,7 @@ func MatchCreateHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 func MatchJoinHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *dto.JoinMatchRequest) {
 		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
-		if handleRouterError(c, err, "get token claims failed", errcode.ErrCodeNoToken) {
+		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
 			return
 		}
 		req.UserID = claims.UserID
@@ -91,7 +91,7 @@ func MatchJoinHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 func MatchStartHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *dto.MatchActionRequest) {
 		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
-		if handleRouterError(c, err, "get token claims failed", errcode.ErrCodeNoToken) {
+		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
 			return
 		}
 		req.UserID = claims.UserID
@@ -118,7 +118,7 @@ func MatchStartHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 func MatchEndHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *dto.MatchActionRequest) {
 		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
-		if handleRouterError(c, err, "get token claims failed", errcode.ErrCodeNoToken) {
+		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
 			return
 		}
 		req.UserID = claims.UserID
@@ -145,7 +145,7 @@ func MatchEndHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 func MatchLeaveHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *dto.MatchActionRequest) {
 		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
-		if handleRouterError(c, err, "get token claims failed", errcode.ErrCodeNoToken) {
+		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
 			return
 		}
 		req.UserID = claims.UserID
@@ -172,7 +172,7 @@ func MatchLeaveHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 func MatchKickHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *dto.KickPlayerRequest) {
 		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
-		if handleRouterError(c, err, "get token claims failed", errcode.ErrCodeNoToken) {
+		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
 			return
 		}
 		req.UserID = claims.UserID

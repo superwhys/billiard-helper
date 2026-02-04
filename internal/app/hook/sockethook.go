@@ -82,7 +82,7 @@ func (h *SocketHook) OnAllowRequest(r *http.Request) (*http.Request, error) {
 	ctx := logging.CloneContext(r.Context())
 	tokenStr := r.Header.Get("Authorization")
 	if tokenStr == "" {
-		return nil, errcode.ErrCodeNoToken
+		return nil, errcode.ErrUnauthorized
 	}
 
 	// Support "Bearer <token>" format
@@ -95,7 +95,7 @@ func (h *SocketHook) OnAllowRequest(r *http.Request) (*http.Request, error) {
 		if ec, ok := errcode.AsErrcode(err); ok {
 			return nil, ec
 		}
-		return nil, errcode.ErrCodeNoToken
+		return nil, errcode.ErrUnauthorized
 	}
 
 	reqCtx := jwt.SetTokenClaimsToContext(r.Context(), claims)

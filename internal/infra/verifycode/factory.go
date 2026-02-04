@@ -29,5 +29,5 @@ func (f *DefaultSenderFactory) Pick(accountValue string) (VerifyCodeSender, erro
 	if account.IsPhoneAccount(accountValue) {
 		return f.smsSender, nil
 	}
-	return nil, errcode.ErrCodeInvalidRequest
+	return nil, errcode.ErrBadRequest
 }

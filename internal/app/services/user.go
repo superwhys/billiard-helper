@@ -80,7 +80,7 @@ func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
 // Login 用户登录
 func (a *UserApp) Login(ctx context.Context, req *dto.LoginReq) (string, *dto.User, error) {
 	if req.Password == "" && req.VerifyCode == "" {
-		return "", nil, errcode.ErrCodeInvalidRequest
+		return "", nil, errcode.ErrBadRequest
 	}
 
 	// 1. 验证账号密码或者验证码

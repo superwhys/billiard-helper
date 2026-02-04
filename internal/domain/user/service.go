@@ -53,7 +53,7 @@ func (s *UserService) RegisterUser(ctx context.Context, acc, password, name stri
 	case account.IsPhoneAccount(acc):
 		user.Phone = acc
 	default:
-		return errcode.ErrCodeInvalidRequest
+		return errcode.ErrBadRequest
 	}
 
 	user.Password, err = NewPasswordFromPlain(password)
@@ -84,7 +84,7 @@ func (s *UserService) Login(ctx context.Context, acc, password, verifyCode strin
 	case account.IsPhoneAccount(acc):
 		user, err = s.userRepository.FindByPhone(ctx, acc)
 	default:
-		return nil, errcode.ErrCodeInvalidRequest
+		return nil, errcode.ErrBadRequest
 	}
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -109,7 +109,7 @@ func (s *UserService) Login(ctx context.Context, acc, password, verifyCode strin
 		}
 		_ = s.verifyCodeRepo.DeleteCode(ctx, acc)
 	default:
-		return nil, errcode.ErrCodeInvalidRequest
+		return nil, errcode.ErrBadRequest
 	}
 
 	return user, nil
