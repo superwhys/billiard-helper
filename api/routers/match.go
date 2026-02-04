@@ -29,6 +29,7 @@ func MatchGroupRouter(matchApp *services.MatchApp) ginutils.Option {
 // @Summary 创建房间
 // @Description 创建房间
 // @Tags Match
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param request body dto.CreateMatchRequest true "创建比赛请求体"
@@ -56,6 +57,7 @@ func MatchCreateHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 // @Summary 加入房间
 // @Description 加入房间
 // @Tags Match
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param request body dto.JoinMatchRequest true "加入房间请求体"
@@ -83,6 +85,7 @@ func MatchJoinHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 // @Summary 开始比赛
 // @Description 开始比赛
 // @Tags Match
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param request body dto.MatchActionRequest true "开始比赛请求体"
@@ -110,6 +113,7 @@ func MatchStartHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 // @Summary 结束比赛
 // @Description 结束比赛
 // @Tags Match
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param request body dto.MatchActionRequest true "结束比赛请求体"
@@ -137,6 +141,7 @@ func MatchEndHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 // @Summary 离开房间
 // @Description 离开房间
 // @Tags Match
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param request body dto.MatchActionRequest true "离开房间请求体"
@@ -164,6 +169,7 @@ func MatchLeaveHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 // @Summary 踢出玩家
 // @Description 踢出玩家
 // @Tags Match
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param request body dto.KickPlayerRequest true "踢出玩家请求体"

@@ -8,8 +8,9 @@ import (
 )
 
 type JwtConfig struct {
-	JwtSecret  string
-	JwtTimeout time.Duration
+	JwtSecret         string
+	JwtTimeout        time.Duration
+	JwtRefreshTimeout time.Duration
 }
 
 func (c *JwtConfig) Validate() error {
@@ -18,6 +19,9 @@ func (c *JwtConfig) Validate() error {
 	}
 	if c.JwtTimeout <= 0 {
 		return errors.New("jwt timeout is required")
+	}
+	if c.JwtRefreshTimeout <= 0 {
+		c.JwtRefreshTimeout = c.JwtTimeout * 24
 	}
 	return nil
 }

@@ -11,6 +11,6 @@ var (
 
 	MatchLockCache = genCacheWithKey("match:lock", 5*time.Second)
 
-	// AuthSessionCache stores the currently valid token for a user (Single Device Login)
+	// AuthSessionCache stores the active session by session id (Multi Device Login)
 	AuthSessionCache = genCacheWithKey("auth:session", 24*time.Hour)
 )

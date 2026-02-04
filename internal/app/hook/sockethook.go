@@ -97,6 +97,9 @@ func (h *SocketHook) OnAllowRequest(r *http.Request) (*http.Request, error) {
 		}
 		return nil, errcode.ErrUnauthorized
 	}
+	if claims.TokenType != jwt.TokenTypeAccess {
+		return nil, errcode.ErrUnauthorized
+	}
 
 	reqCtx := jwt.SetTokenClaimsToContext(r.Context(), claims)
 	return r.WithContext(reqCtx), nil

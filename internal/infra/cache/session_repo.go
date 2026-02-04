@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -21,20 +22,35 @@ func NewSessionRepository(client *redisutils.RedisClient) *SessionRepository {
 	}
 }
 
-func (r *SessionRepository) SetSession(ctx context.Context, userID uint, token string, ttl time.Duration) error {
-	key := strconv.FormatUint(uint64(userID), 10)
-	cacheKey := AuthSessionCache(key, Withexpire(ttl))
-	return cacheKey.Set(ctx, r.client, token)
+func (r *SessionRepository) SetSession(ctx context.Context, sessionID string, userID uint, ttl time.Duration) error {
+	if sessionID == "" {
+		return fmt.Errorf("session id is required")
+	}
+	cacheKey := AuthSessionCache(sessionID, Withexpire(ttl))
+	value := strconv.FormatUint(uint64(userID), 10)
+	return cacheKey.Set(ctx, r.client, value)
 }
 
-func (r *SessionRepository) GetSession(ctx context.Context, userID uint) (string, error) {
-	key := strconv.FormatUint(uint64(userID), 10)
-	cacheKey := AuthSessionCache(key)
-	return cacheKey.Get(ctx, r.client)
+func (r *SessionRepository) GetSession(ctx context.Context, sessionID string) (uint, error) {
+	if sessionID == "" {
+		return 0, fmt.Errorf("session id is required")
+	}
+	cacheKey := AuthSessionCache(sessionID)
+	value, err := cacheKey.Get(ctx, r.client)
+	if err != nil {
+		return 0, err
+	}
+	userID, err := strconv.ParseUint(value, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid session user id")
+	}
+	return uint(userID), nil
 }
 
-func (r *SessionRepository) DeleteSession(ctx context.Context, userID uint) error {
-	key := strconv.FormatUint(uint64(userID), 10)
-	cacheKey := AuthSessionCache(key)
+func (r *SessionRepository) DeleteSession(ctx context.Context, sessionID string) error {
+	if sessionID == "" {
+		return fmt.Errorf("session id is required")
+	}
+	cacheKey := AuthSessionCache(sessionID)
 	return cacheKey.Del(ctx, r.client)
 }

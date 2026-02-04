@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/login": {
+        "/account/login": {
             "post": {
                 "description": "登录",
                 "consumes": [
@@ -25,7 +25,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Account"
                 ],
                 "summary": "登录",
                 "parameters": [
@@ -49,7 +49,69 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/register": {
+        "/account/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取用户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "获取用户信息",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-dto_User"
+                        }
+                    }
+                }
+            }
+        },
+        "/account/refresh": {
+            "post": {
+                "description": "使用 refresh token 刷新 access token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "刷新 access token",
+                "parameters": [
+                    {
+                        "description": "刷新 Token 请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RefreshTokenReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-dto_TokenResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/account/register": {
             "post": {
                 "description": "注册",
                 "consumes": [
@@ -59,7 +121,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Account"
                 ],
                 "summary": "注册",
                 "parameters": [
@@ -83,7 +145,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/send-email-code": {
+        "/account/send-email-code": {
             "post": {
                 "description": "发送邮箱验证码",
                 "consumes": [
@@ -93,7 +155,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Account"
                 ],
                 "summary": "发送邮箱验证码",
                 "parameters": [
@@ -119,6 +181,11 @@ const docTemplate = `{
         },
         "/match/create": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建房间",
                 "consumes": [
                     "application/json"
@@ -153,6 +220,11 @@ const docTemplate = `{
         },
         "/match/end": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "结束比赛",
                 "consumes": [
                     "application/json"
@@ -187,6 +259,11 @@ const docTemplate = `{
         },
         "/match/join": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "加入房间",
                 "consumes": [
                     "application/json"
@@ -221,6 +298,11 @@ const docTemplate = `{
         },
         "/match/kick": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "踢出玩家",
                 "consumes": [
                     "application/json"
@@ -255,6 +337,11 @@ const docTemplate = `{
         },
         "/match/leave": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "离开房间",
                 "consumes": [
                     "application/json"
@@ -289,6 +376,11 @@ const docTemplate = `{
         },
         "/match/start": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "开始比赛",
                 "consumes": [
                     "application/json"
@@ -327,13 +419,19 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "match_type": {
-                    "type": "integer"
+                    "$ref": "#/definitions/match.MatchType"
                 },
                 "max_players": {
                     "type": "integer"
                 },
                 "target_score": {
                     "type": "integer"
+                },
+                "virtual_players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Player"
+                    }
                 }
             }
         },
@@ -365,10 +463,13 @@ const docTemplate = `{
         "dto.LoginReq": {
             "type": "object",
             "properties": {
-                "email": {
+                "account": {
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "verify_code": {
                     "type": "string"
                 }
             }
@@ -413,10 +514,6 @@ const docTemplate = `{
         "dto.MatchConfig": {
             "type": "object",
             "properties": {
-                "match_type": {
-                    "description": "比如 1: snooker, 2: 8-ball",
-                    "type": "integer"
-                },
                 "max_players": {
                     "type": "integer"
                 },
@@ -441,20 +538,29 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "type": "integer"
+                    "$ref": "#/definitions/match.PlayerType"
                 },
                 "user_id": {
+                    "description": "真实用户的用户 id",
                     "type": "integer"
+                }
+            }
+        },
+        "dto.RefreshTokenReq": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
                 }
             }
         },
         "dto.RegisterReq": {
             "type": "object",
             "properties": {
-                "code": {
+                "account": {
                     "type": "string"
                 },
-                "email": {
+                "code": {
                     "type": "string"
                 },
                 "name": {
@@ -468,7 +574,7 @@ const docTemplate = `{
         "dto.SendRegisterCodeReq": {
             "type": "object",
             "properties": {
-                "email": {
+                "account": {
                     "type": "string"
                 }
             }
@@ -476,11 +582,11 @@ const docTemplate = `{
         "dto.TokenResponse": {
             "type": "object",
             "properties": {
-                "token": {
+                "access_token": {
                     "type": "string"
                 },
-                "user": {
-                    "$ref": "#/definitions/dto.User"
+                "refresh_token": {
+                    "type": "string"
                 }
             }
         },
@@ -541,9 +647,33 @@ const docTemplate = `{
                 "message": {}
             }
         },
+        "ginutils.Ret-dto_User": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/dto.User"
+                },
+                "message": {}
+            }
+        },
+        "match.MatchType": {
+            "type": "string",
+            "enum": [
+                "snooker",
+                "8ball",
+                "9ball"
+            ],
+            "x-enum-varnames": [
+                "MatchTypeSnooker",
+                "MatchType8Ball",
+                "MatchType9Ball"
+            ]
+        },
         "match.PlayerType": {
             "type": "integer",
-            "format": "int32",
             "enum": [
                 1,
                 2

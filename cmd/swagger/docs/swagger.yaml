@@ -3,11 +3,15 @@ definitions:
   dto.CreateMatchRequest:
     properties:
       match_type:
-        type: integer
+        $ref: '#/definitions/match.MatchType'
       max_players:
         type: integer
       target_score:
         type: integer
+      virtual_players:
+        items:
+          $ref: '#/definitions/dto.Player'
+        type: array
     type: object
   dto.JoinMatchRequest:
     properties:
@@ -27,9 +31,11 @@ definitions:
     type: object
   dto.LoginReq:
     properties:
-      email:
+      account:
         type: string
       password:
+        type: string
+      verify_code:
         type: string
     type: object
   dto.Match:
@@ -58,9 +64,6 @@ definitions:
     type: object
   dto.MatchConfig:
     properties:
-      match_type:
-        description: '比如 1: snooker, 2: 8-ball'
-        type: integer
       max_players:
         type: integer
       target_score:
@@ -77,15 +80,21 @@ definitions:
       nick_name:
         type: string
       type:
-        type: integer
+        $ref: '#/definitions/match.PlayerType'
       user_id:
+        description: 真实用户的用户 id
         type: integer
+    type: object
+  dto.RefreshTokenReq:
+    properties:
+      refresh_token:
+        type: string
     type: object
   dto.RegisterReq:
     properties:
-      code:
+      account:
         type: string
-      email:
+      code:
         type: string
       name:
         type: string
@@ -94,15 +103,15 @@ definitions:
     type: object
   dto.SendRegisterCodeReq:
     properties:
-      email:
+      account:
         type: string
     type: object
   dto.TokenResponse:
     properties:
-      token:
+      access_token:
         type: string
-      user:
-        $ref: '#/definitions/dto.User'
+      refresh_token:
+        type: string
     type: object
   dto.User:
     properties:
@@ -142,11 +151,28 @@ definitions:
         $ref: '#/definitions/dto.TokenResponse'
       message: {}
     type: object
+  ginutils.Ret-dto_User:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/dto.User'
+      message: {}
+    type: object
+  match.MatchType:
+    enum:
+    - snooker
+    - 8ball
+    - 9ball
+    type: string
+    x-enum-varnames:
+    - MatchTypeSnooker
+    - MatchType8Ball
+    - MatchType9Ball
   match.PlayerType:
     enum:
     - 1
     - 2
-    format: int32
     type: integer
     x-enum-varnames:
     - PlayerTypeVirtual
@@ -157,7 +183,7 @@ info:
   title: Billiard Helper API
   version: "1.0"
 paths:
-  /auth/login:
+  /account/login:
     post:
       consumes:
       - application/json
@@ -178,8 +204,47 @@ paths:
             $ref: '#/definitions/ginutils.Ret-dto_TokenResponse'
       summary: 登录
       tags:
-      - Auth
-  /auth/register:
+      - Account
+  /account/me:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-dto_User'
+      security:
+      - BearerAuth: []
+      summary: 获取用户信息
+      tags:
+      - Account
+  /account/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 使用 refresh token 刷新 access token
+      parameters:
+      - description: 刷新 Token 请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshTokenReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-dto_TokenResponse'
+      summary: 刷新 access token
+      tags:
+      - Account
+  /account/register:
     post:
       consumes:
       - application/json
@@ -200,8 +265,8 @@ paths:
             $ref: '#/definitions/ginutils.Ret-any'
       summary: 注册
       tags:
-      - Auth
-  /auth/send-email-code:
+      - Account
+  /account/send-email-code:
     post:
       consumes:
       - application/json
@@ -222,7 +287,7 @@ paths:
             $ref: '#/definitions/ginutils.Ret-any'
       summary: 发送邮箱验证码
       tags:
-      - Auth
+      - Account
   /match/create:
     post:
       consumes:
@@ -242,6 +307,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-dto_Match'
+      security:
+      - BearerAuth: []
       summary: 创建房间
       tags:
       - Match
@@ -264,6 +331,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 结束比赛
       tags:
       - Match
@@ -286,6 +355,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-dto_Match'
+      security:
+      - BearerAuth: []
       summary: 加入房间
       tags:
       - Match
@@ -308,6 +379,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 踢出玩家
       tags:
       - Match
@@ -330,6 +403,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 离开房间
       tags:
       - Match
@@ -352,6 +427,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
       summary: 开始比赛
       tags:
       - Match

@@ -40,7 +40,7 @@ func SetupApi(
 	engine := ginutils.NewServerHandler(
 		ginutils.WithMiddleware(ginutils.WithLoggingRequest(true)),
 		socketManager.Handler(),
-		routers.AuthGroupRouter(userApp),
+		routers.AccountGroupRouter(userApp),
 		ginutils.WithGroupHandlers(
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(userApp)),
 			ginutils.WithGroupHandlers(

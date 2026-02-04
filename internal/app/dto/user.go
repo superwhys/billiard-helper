@@ -23,12 +23,16 @@ type RegisterReq struct {
 }
 
 type LoginReq struct {
-	Account    string `json:"email"`
+	Account    string `json:"account"`
 	Password   string `json:"password"`
 	VerifyCode string `json:"verify_code"`
 }
 
+type RefreshTokenReq struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
 type TokenResponse struct {
-	Token string `json:"token"`
-	User  *User  `json:"user"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }

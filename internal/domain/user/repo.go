@@ -21,7 +21,7 @@ type IUserRepository interface {
 }
 
 type ISessionRepository interface {
-	SetSession(ctx context.Context, userID uint, token string, ttl time.Duration) error
-	GetSession(ctx context.Context, userID uint) (string, error)
-	DeleteSession(ctx context.Context, userID uint) error
+	SetSession(ctx context.Context, sessionID string, userID uint, ttl time.Duration) error
+	GetSession(ctx context.Context, sessionID string) (uint, error)
+	DeleteSession(ctx context.Context, sessionID string) error
 }

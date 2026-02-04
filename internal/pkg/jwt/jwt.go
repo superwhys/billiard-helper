@@ -14,29 +14,84 @@ var ErrTokenExpired = jwt.ErrTokenExpired
 
 type UserTokenClaims struct {
 	jwt.RegisteredClaims
-	UserID uint `json:"user_id"`
+	UserID    uint   `json:"user_id"`
+	TokenType string `json:"token_type"`
 }
 
-func GenerateToken(signingKey []byte, timeout time.Duration, userID uint) (string, error) {
+const (
+	TokenTypeAccess  = "access"
+	TokenTypeRefresh = "refresh"
+)
+
+func GenerateTokenPair(signingKey []byte, accessTimeout, refreshTimeout time.Duration, userID uint) (string, string, string, error) {
+	if len(signingKey) == 0 {
+		return "", "", "", fmt.Errorf("signing key is required")
+	}
+
+	sessionID := uuid.NewString()
+	now := time.Now()
+	accessExpiresAt := now.Add(accessTimeout)
+	refreshExpiresAt := now.Add(refreshTimeout)
+
+	accessClaims := &UserTokenClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   sessionID,
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(accessExpiresAt),
+		},
+		UserID:    userID,
+		TokenType: TokenTypeAccess,
+	}
+
+	refreshClaims := &UserTokenClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   sessionID,
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(refreshExpiresAt),
+		},
+		UserID:    userID,
+		TokenType: TokenTypeRefresh,
+	}
+
+	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString(signingKey)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString(signingKey)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	return accessToken, refreshToken, sessionID, nil
+}
+
+func GenerateAccessToken(signingKey []byte, timeout time.Duration, userID uint, sessionID string) (string, error) {
 	if len(signingKey) == 0 {
 		return "", fmt.Errorf("signing key is required")
 	}
-
-	expiresAt := time.Now().Add(timeout)
-	claims := &UserTokenClaims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expiresAt),
-			ID:        uuid.NewString(), // JTI
-		},
-		UserID: userID,
+	if sessionID == "" {
+		return "", fmt.Errorf("session id is required")
 	}
 
-	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(signingKey)
+	now := time.Now()
+	expiresAt := now.Add(timeout)
+	claims := &UserTokenClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   sessionID,
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+		},
+		UserID:    userID,
+		TokenType: TokenTypeAccess,
+	}
+
+	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(signingKey)
 	if err != nil {
 		return "", err
 	}
 
-	return token, nil
+	return accessToken, nil
 }
 
 func ParseToken(tokenStr string, signingKey []byte) (*UserTokenClaims, error) {

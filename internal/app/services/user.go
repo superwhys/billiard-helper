@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -78,35 +79,38 @@ func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
 }
 
 // Login 用户登录
-func (a *UserApp) Login(ctx context.Context, req *dto.LoginReq) (string, *dto.User, error) {
+func (a *UserApp) Login(ctx context.Context, req *dto.LoginReq) (*dto.TokenResponse, error) {
 	if req.Password == "" && req.VerifyCode == "" {
-		return "", nil, errcode.ErrBadRequest
+		return nil, errcode.ErrBadRequest
 	}
 
 	// 1. 验证账号密码或者验证码
 	userService := a.serviceFactory.UserService(a.repoFactory)
 	u, err := userService.Login(ctx, req.Account, req.Password, req.VerifyCode)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
-	// 2. 生成 Access Token
-	token, err := jwt.GenerateToken(
+	// 2. 生成 Access Token / Refresh Token
+	accessToken, refreshToken, sessionID, err := jwt.GenerateTokenPair(
 		[]byte(a.jwtConfig.JwtSecret),
 		a.jwtConfig.JwtTimeout,
+		a.jwtConfig.JwtRefreshTimeout,
 		u.ID,
 	)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	// 3. 存储 Session
-	if err := a.sessionRepo.SetSession(ctx, u.ID, token, a.jwtConfig.JwtTimeout); err != nil {
-		return "", nil, err
+	if err := a.sessionRepo.SetSession(ctx, sessionID, u.ID, a.jwtConfig.JwtRefreshTimeout); err != nil {
+		return nil, err
 	}
 
-	userDTO := a.userAssembler.ToDTO(u)
-	return token, userDTO, nil
+	return &dto.TokenResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
 
 func (a *UserApp) GetUserTokenClaims(ctx context.Context, tokenStr string) (*jwt.UserTokenClaims, error) {
@@ -116,14 +120,21 @@ func (a *UserApp) GetUserTokenClaims(ctx context.Context, tokenStr string) (*jwt
 		return nil, err
 	}
 
+	if claims.TokenType != jwt.TokenTypeAccess {
+		return nil, errcode.ErrUnauthorized
+	}
+	if claims.Subject == "" {
+		return nil, errcode.ErrUnauthorized
+	}
+
 	// 2. 验证 Session (检查是否被踢出或失效)
-	cachedToken, err := a.sessionRepo.GetSession(ctx, claims.UserID)
+	cachedUserID, err := a.sessionRepo.GetSession(ctx, claims.Subject)
 	if err != nil {
 		return nil, fmt.Errorf("session expired or invalid")
 	}
 
-	if cachedToken != tokenStr {
-		return nil, fmt.Errorf("account logged in on another device")
+	if cachedUserID != claims.UserID {
+		return nil, fmt.Errorf("session user not match")
 	}
 
 	return claims, nil
@@ -135,5 +146,67 @@ func (a *UserApp) Logout(ctx context.Context, tokenStr string) error {
 		return err
 	}
 
-	return a.sessionRepo.DeleteSession(ctx, claims.UserID)
+	return a.sessionRepo.DeleteSession(ctx, claims.Subject)
+}
+
+func (a *UserApp) ForceLogoutByRefreshToken(ctx context.Context, refreshToken string) error {
+	claims, err := jwt.ParseToken(refreshToken, []byte(a.jwtConfig.JwtSecret))
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return errcode.ErrCodeTokenExpired
+		}
+		return errcode.ErrCodeInvalidToken
+	}
+	if claims.TokenType != jwt.TokenTypeRefresh {
+		return errcode.ErrUnauthorized
+	}
+	if claims.Subject == "" {
+		return errcode.ErrUnauthorized
+	}
+	return a.sessionRepo.DeleteSession(ctx, claims.Subject)
+}
+
+func (a *UserApp) RefreshAccessToken(ctx context.Context, refreshToken string) (*dto.TokenResponse, error) {
+	claims, err := jwt.ParseToken(refreshToken, []byte(a.jwtConfig.JwtSecret))
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, errcode.ErrCodeTokenExpired
+		}
+		return nil, errcode.ErrCodeInvalidToken
+	}
+	if claims.TokenType != jwt.TokenTypeRefresh || claims.Subject == "" {
+		return nil, errcode.ErrUnauthorized
+	}
+
+	cachedUserID, err := a.sessionRepo.GetSession(ctx, claims.Subject)
+	if err != nil {
+		return nil, errcode.ErrUnauthorized
+	}
+	if cachedUserID != claims.UserID {
+		return nil, errcode.ErrUnauthorized
+	}
+
+	accessToken, err := jwt.GenerateAccessToken(
+		[]byte(a.jwtConfig.JwtSecret),
+		a.jwtConfig.JwtTimeout,
+		claims.UserID,
+		claims.Subject,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.TokenResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (a *UserApp) GetUserInfo(ctx context.Context, userID uint) (*dto.User, error) {
+	userService := a.serviceFactory.UserService(a.repoFactory)
+	u, err := userService.GetUserInfo(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return a.userAssembler.ToDTO(u), nil
 }

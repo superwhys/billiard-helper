@@ -224,6 +224,8 @@ github.com/microsoft/go-mssqldb v0.17.0 h1:Fto83dMZPnYv1Zwx5vHHxpNraeEaUlQ/hhHLg
 github.com/microsoft/go-mssqldb v0.17.0/go.mod h1:OkoNGhGEs8EZqchVTtochlXruEhEOaO4S0d2sB5aeGQ=
 github.com/miebyte/goutils v1.0.42 h1:JbMnn+RrtgSgRqpjkRL2ZdkFCHeaAZmppShrQwGLGX8=
 github.com/miebyte/goutils v1.0.42/go.mod h1:qduNxYBkSzLeaSDsNayM57SYfSH8K736Qa8vUu0NYVo=
+github.com/miebyte/goutils v1.0.53 h1:KcKjF56/c7mGXU8o6NjxVPBsYDLpWoj1Ab/4i3b77/E=
+github.com/miebyte/goutils v1.0.53/go.mod h1:qduNxYBkSzLeaSDsNayM57SYfSH8K736Qa8vUu0NYVo=
 github.com/miekg/dns v1.1.56 h1:5imZaSeoRNvpM9SzWNhEcP9QliKiz20/dA2QabIGVnE=
 github.com/miekg/dns v1.1.56/go.mod h1:cRm6Oo2C8TY9ZS/TqsSrseAcncm74lfK5G+ikN2SWWY=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
