@@ -79,9 +79,13 @@ func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
 
 // Login 用户登录
 func (a *UserApp) Login(ctx context.Context, req *dto.LoginReq) (string, *dto.User, error) {
-	// 1. 验证账号密码
+	if req.Password == "" && req.VerifyCode == "" {
+		return "", nil, errcode.ErrCodeInvalidRequest
+	}
+
+	// 1. 验证账号密码或者验证码
 	userService := a.serviceFactory.UserService(a.repoFactory)
-	u, err := userService.Login(ctx, req.Email, req.Password)
+	u, err := userService.Login(ctx, req.Account, req.Password, req.VerifyCode)
 	if err != nil {
 		return "", nil, err
 	}

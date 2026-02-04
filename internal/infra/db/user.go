@@ -41,6 +41,17 @@ func (r *UserRepo) FindByEmail(ctx context.Context, email string) (*user.User, e
 	return r.userPoAssembler.ToEntity(po), nil
 }
 
+func (r *UserRepo) FindByPhone(ctx context.Context, phone string) (*user.User, error) {
+	u := r.query.User
+
+	po, err := u.WithContext(ctx).Where(u.Phone.Eq(phone)).First()
+	if err != nil {
+		return nil, err
+	}
+
+	return r.userPoAssembler.ToEntity(po), nil
+}
+
 func (r *UserRepo) FindByID(ctx context.Context, id uint) (*user.User, error) {
 	u := r.query.User
 

@@ -23,8 +23,9 @@ type RegisterReq struct {
 }
 
 type LoginReq struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Account    string `json:"email"`
+	Password   string `json:"password"`
+	VerifyCode string `json:"verify_code"`
 }
 
 type TokenResponse struct {

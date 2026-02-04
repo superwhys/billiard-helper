@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/superwhys/billiard-helper/internal/errcode"
+	"github.com/superwhys/billiard-helper/internal/pkg/account"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +14,7 @@ type IUserService interface {
 	RegisterWithCode(ctx context.Context, email, password, name string) error
 
 	// Login 处理登录校验
-	Login(ctx context.Context, email, password string) (*User, error)
+	Login(ctx context.Context, account, password, verifyCode string) (*User, error)
 
 	// UpdateProfile 更新用户资料
 	UpdateProfile(ctx context.Context, userID uint, name, avatar string) error
@@ -29,6 +30,7 @@ var _ IUserService = (*UserService)(nil)
 
 type UserService struct {
 	userRepository IUserRepository
+	verifyCodeRepo IVerifyCodeRepository
 }
 
 func NewUserService(userRepository IUserRepository) *UserService {
@@ -62,9 +64,20 @@ func (s *UserService) RegisterWithCode(ctx context.Context, email, password, nam
 	return s.userRepository.Save(ctx, userObj)
 }
 
-func (s *UserService) Login(ctx context.Context, email, password string) (*User, error) {
+func (s *UserService) Login(ctx context.Context, acc, password, verifyCode string) (*User, error) {
 	// 1. 查询用户
-	user, err := s.userRepository.FindByEmail(ctx, email)
+	var (
+		user *User
+		err  error
+	)
+	switch {
+	case account.IsEmailAccount(acc):
+		user, err = s.userRepository.FindByEmail(ctx, acc)
+	case account.IsPhoneAccount(acc):
+		user, err = s.userRepository.FindByPhone(ctx, acc)
+	default:
+		return nil, errcode.ErrCodeInvalidRequest
+	}
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
@@ -72,9 +85,23 @@ func (s *UserService) Login(ctx context.Context, email, password string) (*User,
 		return nil, errcode.ErrCodeUserNotFound
 	}
 
-	// 2. 校验密码
-	if !user.Password.Compare(password) {
-		return nil, errcode.ErrCodeInvalidPassword
+	// 2. 校验密码/验证码
+	switch {
+	case password != "":
+		if !user.Password.Compare(password) {
+			return nil, errcode.ErrCodeInvalidPassword
+		}
+	case verifyCode != "":
+		storedCode, err := s.verifyCodeRepo.GetCode(ctx, acc)
+		if err != nil {
+			return nil, err
+		}
+		if verifyCode != storedCode {
+			return nil, errcode.ErrCodeInvalidCode
+		}
+		_ = s.verifyCodeRepo.DeleteCode(ctx, acc)
+	default:
+		return nil, errcode.ErrCodeInvalidRequest
 	}
 
 	return user, nil

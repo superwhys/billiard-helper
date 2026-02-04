@@ -14,6 +14,7 @@ type IVerifyCodeRepository interface {
 type IUserRepository interface {
 	Save(ctx context.Context, user *User) error
 	FindByEmail(ctx context.Context, email string) (*User, error)
+	FindByPhone(ctx context.Context, phone string) (*User, error)
 	FindByID(ctx context.Context, id uint) (*User, error)
 	Update(ctx context.Context, user *User) error
 }
