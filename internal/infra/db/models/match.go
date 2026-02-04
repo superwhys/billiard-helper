@@ -14,7 +14,7 @@ type Match struct {
 	gorm.Model
 	UserID    uint                            `gorm:"column:user_id;index;not null;comment:房主ID" json:"user_id"`
 	Status    uint8                           `gorm:"column:status;type:tinyint(1);default:1;not null;comment:房间状态" json:"status"`
-	MatchType string                          `json:"match_type"` // 房间类型(台球类型)
+	MatchType string                          `gorm:"column:match_type;type:varchar(255);not null;comment:比赛类型" json:"match_type"`
 	Config    datatypes.JSONType[MatchConfig] `gorm:"column:config;type:json;comment:比赛配置" json:"config"`
 
 	Players []*Player `json:"players"`

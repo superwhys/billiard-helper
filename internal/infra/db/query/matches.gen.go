@@ -73,10 +73,10 @@ type match struct {
 	CreatedAt field.Time
 	UpdatedAt field.Time
 	DeletedAt field.Field
-	UserID    field.Uint  // 房主ID
-	Status    field.Uint8 // 房间状态
-	MatchType field.String
-	Config    field.Field // 比赛配置
+	UserID    field.Uint   // 房主ID
+	Status    field.Uint8  // 房间状态
+	MatchType field.String // 比赛类型
+	Config    field.Field  // 比赛配置
 	Players   matchHasManyPlayers
 
 	Scores matchHasManyScores

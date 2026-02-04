@@ -10,7 +10,7 @@ type Score struct {
 	Change     int  `gorm:"column:change;not null;comment:变化值" json:"change"`
 	Total      int  `gorm:"column:total;not null;comment:总分" json:"total"`
 
-	Operator *Player `gorm:"foreignKey:PlayerID" json:"operator"`
+	Operator *Player `gorm:"foreignKey:OperatorID" json:"operator"`
 }
 
 func (s *Score) TableName() string {
