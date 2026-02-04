@@ -60,7 +60,14 @@ func main() {
 	serviceFactory := factory.NewDomainServiceFactory(redisClient)
 
 	// Initialize app services
-	userApp := services.NewUserApp(serviceFactory, repoFactory, sessionRepo, verifyCodeRepo, senderFactory, config.JwtConfig)
+	userApp := services.NewUserApp(
+		serviceFactory,
+		repoFactory,
+		sessionRepo,
+		verifyCodeRepo,
+		senderFactory,
+		config.JwtConfig,
+	)
 	matchApp := services.NewMatchApp(serviceFactory, repoFactory, nil, nil)
 	scoreApp := services.NewScoreApp(serviceFactory, repoFactory, nil)
 
