@@ -36,13 +36,13 @@ func (r *VerifyCodeRepository) generateDigitCode(length int) (string, error) {
 }
 
 // GenerateCode 生成并缓存验证码
-func (r *VerifyCodeRepository) GenerateCode(ctx context.Context, email string, ttl time.Duration) (string, error) {
+func (r *VerifyCodeRepository) GenerateCode(ctx context.Context, account string, ttl time.Duration) (string, error) {
 	code, err := r.generateDigitCode(6)
 	if err != nil {
 		return "", err
 	}
 
-	cacheKey := EmailCodeCache(email, Withexpire(ttl))
+	cacheKey := VerifyCodeCache(account, Withexpire(ttl))
 	err = cacheKey.Set(ctx, r.client, code)
 	if err != nil {
 		return "", err
@@ -52,13 +52,13 @@ func (r *VerifyCodeRepository) GenerateCode(ctx context.Context, email string, t
 }
 
 // GetCode 获取验证码
-func (r *VerifyCodeRepository) GetCode(ctx context.Context, email string) (string, error) {
-	cacheKey := EmailCodeCache(email)
+func (r *VerifyCodeRepository) GetCode(ctx context.Context, account string) (string, error) {
+	cacheKey := VerifyCodeCache(account)
 	return cacheKey.Get(ctx, r.client)
 }
 
 // DeleteCode 删除验证码 (验证成功后)
-func (r *VerifyCodeRepository) DeleteCode(ctx context.Context, email string) error {
-	cacheKey := EmailCodeCache(email)
+func (r *VerifyCodeRepository) DeleteCode(ctx context.Context, account string) error {
+	cacheKey := VerifyCodeCache(account)
 	return cacheKey.Del(ctx, r.client)
 }

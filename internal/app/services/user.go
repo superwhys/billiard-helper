@@ -11,18 +11,18 @@ import (
 	"github.com/superwhys/billiard-helper/internal/app/factory"
 	"github.com/superwhys/billiard-helper/internal/domain/user"
 	"github.com/superwhys/billiard-helper/internal/errcode"
-	"github.com/superwhys/billiard-helper/internal/infra/email"
+	"github.com/superwhys/billiard-helper/internal/infra/verifycode"
 	"github.com/superwhys/billiard-helper/internal/pkg/jwt"
 )
 
 type UserApp struct {
-	repoFactory    factory.IRepoFactory
-	serviceFactory *factory.DomainServiceFactory
-	userAssembler  *assembler.UserAssembler
-	sessionRepo    user.ISessionRepository
-	verifyCodeRepo user.IVerifyCodeRepository
-	emailSender    email.IEmailSender
-	jwtConfig      *config.JwtConfig
+	repoFactory             factory.IRepoFactory
+	serviceFactory          *factory.DomainServiceFactory
+	userAssembler           *assembler.UserAssembler
+	sessionRepo             user.ISessionRepository
+	verifyCodeRepo          user.IVerifyCodeRepository
+	verifyCodeSenderFactory verifycode.SenderFactory
+	jwtConfig               *config.JwtConfig
 }
 
 func NewUserApp(
@@ -30,34 +30,39 @@ func NewUserApp(
 	repoFactory factory.IRepoFactory,
 	sessionRepo user.ISessionRepository,
 	verifyCodeRepo user.IVerifyCodeRepository,
-	emailSender email.IEmailSender,
+	senderFactory verifycode.SenderFactory,
 	jwtConfig *config.JwtConfig,
 ) *UserApp {
 	return &UserApp{
-		serviceFactory: serviceFactory,
-		repoFactory:    repoFactory,
-		userAssembler:  assembler.NewUserAssembler(),
-		sessionRepo:    sessionRepo,
-		verifyCodeRepo: verifyCodeRepo,
-		emailSender:    emailSender,
-		jwtConfig:      jwtConfig,
+		serviceFactory:          serviceFactory,
+		repoFactory:             repoFactory,
+		userAssembler:           assembler.NewUserAssembler(),
+		sessionRepo:             sessionRepo,
+		verifyCodeRepo:          verifyCodeRepo,
+		verifyCodeSenderFactory: senderFactory,
+		jwtConfig:               jwtConfig,
 	}
 }
 
 // SendRegisterCode 发送注册验证码
 func (a *UserApp) SendRegisterCode(ctx context.Context, req *dto.SendRegisterCodeReq) error {
-	code, err := a.verifyCodeRepo.GenerateCode(ctx, req.Email, time.Minute*10)
+	code, err := a.verifyCodeRepo.GenerateCode(ctx, req.Account, time.Minute*10)
 	if err != nil {
 		return err
 	}
 
-	return a.emailSender.SendVerifyCode(ctx, req.Email, code)
+	sender, err := a.verifyCodeSenderFactory.Pick(req.Account)
+	if err != nil {
+		return err
+	}
+
+	return sender.SendVerifyCode(ctx, req.Account, code)
 }
 
 // Register 注册用户
 func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
 	// 1. 校验验证码
-	storedCode, err := a.verifyCodeRepo.GetCode(ctx, req.Email)
+	storedCode, err := a.verifyCodeRepo.GetCode(ctx, req.Account)
 	if err != nil {
 		return err
 	}
@@ -66,10 +71,10 @@ func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
 	}
 
 	// 删除验证码，不需要关心是否失败
-	_ = a.verifyCodeRepo.DeleteCode(ctx, req.Email)
+	_ = a.verifyCodeRepo.DeleteCode(ctx, req.Account)
 
 	userService := a.serviceFactory.UserService(a.repoFactory)
-	return userService.RegisterWithCode(ctx, req.Email, req.Password, req.Name)
+	return userService.RegisterWithCode(ctx, req.Account, req.Password, req.Name)
 }
 
 // Login 用户登录

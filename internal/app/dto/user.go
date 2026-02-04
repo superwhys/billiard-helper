@@ -12,11 +12,11 @@ type User struct {
 }
 
 type SendRegisterCodeReq struct {
-	Email string `json:"email"`
+	Account string `json:"account"`
 }
 
 type RegisterReq struct {
-	Email    string `json:"email"`
+	Account  string `json:"account"`
 	Code     string `json:"code"`
 	Password string `json:"password"`
 	Name     string `json:"name"`

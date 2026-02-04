@@ -13,8 +13,10 @@ import (
 	"github.com/superwhys/billiard-helper/internal/app/services"
 	"github.com/superwhys/billiard-helper/internal/infra/cache"
 	"github.com/superwhys/billiard-helper/internal/infra/db/models"
-	"github.com/superwhys/billiard-helper/internal/infra/email"
 	"github.com/superwhys/billiard-helper/internal/infra/socket"
+	"github.com/superwhys/billiard-helper/internal/infra/verifycode"
+	"github.com/superwhys/billiard-helper/internal/infra/verifycode/email"
+	"github.com/superwhys/billiard-helper/internal/infra/verifycode/sms"
 )
 
 var (
@@ -47,6 +49,8 @@ func main() {
 	logging.PanicError(err)
 
 	emailSender := email.NewEmailSender(config.EmailConfig)
+	smsSender := sms.NewSMSSender()
+	senderFactory := verifycode.NewSenderFactory(emailSender, smsSender)
 
 	// Initialize Repositories
 	verifyCodeRepo := cache.NewVerifyCodeRepository(redisClient)
@@ -56,7 +60,7 @@ func main() {
 	serviceFactory := factory.NewDomainServiceFactory(redisClient)
 
 	// Initialize app services
-	userApp := services.NewUserApp(serviceFactory, repoFactory, sessionRepo, verifyCodeRepo, emailSender, config.JwtConfig)
+	userApp := services.NewUserApp(serviceFactory, repoFactory, sessionRepo, verifyCodeRepo, senderFactory, config.JwtConfig)
 	matchApp := services.NewMatchApp(nil, nil, nil, nil, nil)
 	scoreApp := services.NewScoreApp(nil, nil, nil, nil)
 
