@@ -60,6 +60,17 @@ func newMatch(db *gorm.DB, opts ...gen.DOOption) match {
 		RelationField: field.NewRelation("Scores", "models.Score"),
 	}
 
+	_match.MatchGames = matchHasManyMatchGames{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("MatchGames", "models.MatchGame"),
+		Winner: struct {
+			field.RelationField
+		}{
+			RelationField: field.NewRelation("MatchGames.Winner", "models.Player"),
+		},
+	}
+
 	_match.fillFieldMap()
 
 	return _match
@@ -80,6 +91,8 @@ type match struct {
 	Players   matchHasManyPlayers
 
 	Scores matchHasManyScores
+
+	MatchGames matchHasManyMatchGames
 
 	fieldMap map[string]field.Expr
 }
@@ -128,7 +141,7 @@ func (m *match) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (m *match) fillFieldMap() {
-	m.fieldMap = make(map[string]field.Expr, 10)
+	m.fieldMap = make(map[string]field.Expr, 11)
 	m.fieldMap["id"] = m.ID
 	m.fieldMap["created_at"] = m.CreatedAt
 	m.fieldMap["updated_at"] = m.UpdatedAt
@@ -146,6 +159,8 @@ func (m match) clone(db *gorm.DB) match {
 	m.Players.db.Statement.ConnPool = db.Statement.ConnPool
 	m.Scores.db = db.Session(&gorm.Session{Initialized: true})
 	m.Scores.db.Statement.ConnPool = db.Statement.ConnPool
+	m.MatchGames.db = db.Session(&gorm.Session{Initialized: true})
+	m.MatchGames.db.Statement.ConnPool = db.Statement.ConnPool
 	return m
 }
 
@@ -153,6 +168,7 @@ func (m match) replaceDB(db *gorm.DB) match {
 	m.matchDo.ReplaceDB(db)
 	m.Players.db = db.Session(&gorm.Session{})
 	m.Scores.db = db.Session(&gorm.Session{})
+	m.MatchGames.db = db.Session(&gorm.Session{})
 	return m
 }
 
@@ -321,6 +337,91 @@ func (a matchHasManyScoresTx) Count() int64 {
 }
 
 func (a matchHasManyScoresTx) Unscoped() *matchHasManyScoresTx {
+	a.tx = a.tx.Unscoped()
+	return &a
+}
+
+type matchHasManyMatchGames struct {
+	db *gorm.DB
+
+	field.RelationField
+
+	Winner struct {
+		field.RelationField
+	}
+}
+
+func (a matchHasManyMatchGames) Where(conds ...field.Expr) *matchHasManyMatchGames {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a matchHasManyMatchGames) WithContext(ctx context.Context) *matchHasManyMatchGames {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a matchHasManyMatchGames) Session(session *gorm.Session) *matchHasManyMatchGames {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a matchHasManyMatchGames) Model(m *models.Match) *matchHasManyMatchGamesTx {
+	return &matchHasManyMatchGamesTx{a.db.Model(m).Association(a.Name())}
+}
+
+func (a matchHasManyMatchGames) Unscoped() *matchHasManyMatchGames {
+	a.db = a.db.Unscoped()
+	return &a
+}
+
+type matchHasManyMatchGamesTx struct{ tx *gorm.Association }
+
+func (a matchHasManyMatchGamesTx) Find() (result []*models.MatchGame, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a matchHasManyMatchGamesTx) Append(values ...*models.MatchGame) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a matchHasManyMatchGamesTx) Replace(values ...*models.MatchGame) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a matchHasManyMatchGamesTx) Delete(values ...*models.MatchGame) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a matchHasManyMatchGamesTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a matchHasManyMatchGamesTx) Count() int64 {
+	return a.tx.Count()
+}
+
+func (a matchHasManyMatchGamesTx) Unscoped() *matchHasManyMatchGamesTx {
 	a.tx = a.tx.Unscoped()
 	return &a
 }

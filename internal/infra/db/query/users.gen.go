@@ -69,6 +69,19 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 		}{
 			RelationField: field.NewRelation("Matches.Scores", "models.Score"),
 		},
+		MatchGames: struct {
+			field.RelationField
+			Winner struct {
+				field.RelationField
+			}
+		}{
+			RelationField: field.NewRelation("Matches.MatchGames", "models.MatchGame"),
+			Winner: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("Matches.MatchGames.Winner", "models.Player"),
+			},
+		},
 	}
 
 	_user.fillFieldMap()
@@ -181,6 +194,12 @@ type userHasManyMatches struct {
 	}
 	Scores struct {
 		field.RelationField
+	}
+	MatchGames struct {
+		field.RelationField
+		Winner struct {
+			field.RelationField
+		}
 	}
 }
 
