@@ -23,17 +23,17 @@ type MatchApp struct {
 }
 
 func NewMatchApp(
-	repoFactory factory.IRepoFactory,
 	serviceFactory *factory.DomainServiceFactory,
-	matchAssembler *assembler.MatchAssembler,
+	repoFactory factory.IRepoFactory,
 	eventBus shared.EventBus,
 	lockManager *cache.LockManager,
 ) *MatchApp {
 	return &MatchApp{
 		repoFactory:    repoFactory,
-		matchAssembler: matchAssembler,
+		serviceFactory: serviceFactory,
 		eventBus:       eventBus,
 		lockManager:    lockManager,
+		matchAssembler: assembler.NewMatchAssembler(),
 	}
 }
 

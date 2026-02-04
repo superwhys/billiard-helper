@@ -5,28 +5,26 @@ import (
 
 	"github.com/superwhys/billiard-helper/internal/app/assembler"
 	"github.com/superwhys/billiard-helper/internal/app/dto"
-	"github.com/superwhys/billiard-helper/internal/domain/match"
-	"github.com/superwhys/billiard-helper/internal/domain/scoring"
+	"github.com/superwhys/billiard-helper/internal/app/factory"
 	"github.com/superwhys/billiard-helper/internal/domain/shared"
 )
 
 type ScoreApp struct {
-	scoringService scoring.IScoringService
-	matchRepo      match.IMatchRepository
+	serviceFactory *factory.DomainServiceFactory
+	repoFactory    factory.IRepoFactory
 	scoreAssembler *assembler.ScoreAssembler
 	eventBus       shared.EventBus
 }
 
 func NewScoreApp(
-	scoringService scoring.IScoringService,
-	matchRepo match.IMatchRepository,
-	scoreAssembler *assembler.ScoreAssembler,
+	serviceFactory *factory.DomainServiceFactory,
+	repoFactory factory.IRepoFactory,
 	eventBus shared.EventBus,
 ) *ScoreApp {
 	return &ScoreApp{
-		scoringService: scoringService,
-		matchRepo:      matchRepo,
-		scoreAssembler: scoreAssembler,
+		serviceFactory: serviceFactory,
+		repoFactory:    repoFactory,
+		scoreAssembler: assembler.NewScoreAssembler(),
 		eventBus:       eventBus,
 	}
 }

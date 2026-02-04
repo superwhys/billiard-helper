@@ -61,8 +61,8 @@ func main() {
 
 	// Initialize app services
 	userApp := services.NewUserApp(serviceFactory, repoFactory, sessionRepo, verifyCodeRepo, senderFactory, config.JwtConfig)
-	matchApp := services.NewMatchApp(nil, nil, nil, nil, nil)
-	scoreApp := services.NewScoreApp(nil, nil, nil, nil)
+	matchApp := services.NewMatchApp(serviceFactory, repoFactory, nil, nil)
+	scoreApp := services.NewScoreApp(serviceFactory, repoFactory, nil)
 
 	socketManager := socket.NewSocketManager(hook.NewSocketHook(matchApp, config.JwtConfig))
 
