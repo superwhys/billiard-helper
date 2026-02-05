@@ -23,7 +23,8 @@ func (h *Handlers) handlePlayerLeaveRoom(ctx context.Context, data []byte) {
 		logging.Errorc(ctx, "broadcast room failed: %v", err)
 	}
 
-	player, err := h.matchService.FindPlayerByCode(ctx, msg.PlayerCode)
+	playerRepo := h.repoFactory.PlayerRepo()
+	player, err := playerRepo.FindByCode(ctx, msg.PlayerCode)
 	if err != nil {
 		logging.Errorc(ctx, "find player by code failed: %v", err)
 		return

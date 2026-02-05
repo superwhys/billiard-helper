@@ -43,10 +43,7 @@ func SetupApi(
 		routers.AccountGroupRouter(userApp),
 		ginutils.WithGroupHandlers(
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(userApp)),
-			ginutils.WithGroupHandlers(
-				routers.MatchGroupRouter(matchApp),
-			// router.ScoresGroupRouter(services.ScoresService),
-			),
+			routers.MatchGroupRouter(matchApp),
 		),
 	)
 

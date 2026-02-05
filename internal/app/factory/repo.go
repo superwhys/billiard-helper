@@ -12,21 +12,24 @@ import (
 type IRepoFactory interface {
 	UserRepo() user.IUserRepository
 	MatchRepo() match.IMatchRepository
+	PlayerRepo() match.PlayerRepository
 }
 
 type repositoryFactory struct {
 	db *gorm.DB
 
-	matchRepo match.IMatchRepository
-	userRepo  user.IUserRepository
+	matchRepo  match.IMatchRepository
+	userRepo   user.IUserRepository
+	playerRepo match.PlayerRepository
 }
 
 func NewRepositoryFactory(gormDB *gorm.DB) *repositoryFactory {
 	return &repositoryFactory{
 		db: gormDB,
 
-		matchRepo: db.NewMatchRepo(gormDB),
-		userRepo:  db.NewUserRepo(gormDB),
+		matchRepo:  db.NewMatchRepo(gormDB),
+		userRepo:   db.NewUserRepo(gormDB),
+		playerRepo: nil,
 	}
 }
 
@@ -42,4 +45,8 @@ func (f *repositoryFactory) UserRepo() user.IUserRepository {
 
 func (f *repositoryFactory) MatchRepo() match.IMatchRepository {
 	return f.matchRepo
+}
+
+func (f *repositoryFactory) PlayerRepo() match.PlayerRepository {
+	return f.playerRepo
 }

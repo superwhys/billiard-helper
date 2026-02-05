@@ -6,6 +6,7 @@ import (
 
 	"github.com/miebyte/goutils/logging"
 	"github.com/sourcegraph/conc/pool"
+	"github.com/superwhys/billiard-helper/internal/app/factory"
 	"github.com/superwhys/billiard-helper/internal/app/worker/subscribe/handler"
 	"github.com/superwhys/billiard-helper/internal/constant"
 	"github.com/superwhys/billiard-helper/internal/domain/shared"
@@ -15,14 +16,16 @@ import (
 type Subscriber struct {
 	eventBus      shared.EventBus
 	socketManager *socket.SocketManager
+	repoFactory   factory.IRepoFactory
 	handlers      *handler.Handlers
 }
 
-func NewSubscriber(eventBus shared.EventBus, socketManager *socket.SocketManager) *Subscriber {
+func NewSubscriber(eventBus shared.EventBus, socketManager *socket.SocketManager, repoFactory factory.IRepoFactory) *Subscriber {
 	return &Subscriber{
 		eventBus:      eventBus,
 		socketManager: socketManager,
-		handlers:      handler.NewHandlers(socketManager),
+		repoFactory:   repoFactory,
+		handlers:      handler.NewHandlers(socketManager, repoFactory),
 	}
 }
 

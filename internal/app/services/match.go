@@ -55,6 +55,7 @@ func (a *MatchApp) CreateMatch(ctx context.Context, req *dto.CreateMatchRequest)
 
 // JoinRoom 加入房间
 func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*dto.Match, error) {
+	matchRepo := a.repoFactory.MatchRepo()
 	matchService := a.serviceFactory.MatchService(a.repoFactory)
 
 	// 1. 获取比赛锁
@@ -65,7 +66,7 @@ func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*d
 	defer lock.Unlock(ctx)
 
 	// 2. 获取比赛房间
-	matchRoom, err := matchService.FindMatchByID(ctx, req.MatchID)
+	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID)
 	if err != nil {
 		return nil, err
 	}
@@ -96,6 +97,7 @@ func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*d
 
 // StartRoom 开始比赛
 func (a *MatchApp) StartMatch(ctx context.Context, req *dto.MatchActionRequest) error {
+	matchRepo := a.repoFactory.MatchRepo()
 	matchService := a.serviceFactory.MatchService(a.repoFactory)
 
 	// 1. 获取比赛锁
@@ -106,7 +108,7 @@ func (a *MatchApp) StartMatch(ctx context.Context, req *dto.MatchActionRequest) 
 	defer lock.Unlock(ctx)
 
 	// 2. 检查比赛是否存在
-	matchRoom, err := matchService.FindMatchByID(ctx, req.MatchID)
+	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID)
 	if err != nil {
 		return err
 	}
@@ -130,6 +132,7 @@ func (a *MatchApp) StartMatch(ctx context.Context, req *dto.MatchActionRequest) 
 
 // EndRoom 结束比赛
 func (a *MatchApp) EndMatch(ctx context.Context, req *dto.MatchActionRequest) error {
+	matchRepo := a.repoFactory.MatchRepo()
 	matchService := a.serviceFactory.MatchService(a.repoFactory)
 
 	// 1. 获取比赛锁
@@ -140,7 +143,7 @@ func (a *MatchApp) EndMatch(ctx context.Context, req *dto.MatchActionRequest) er
 	defer lock.Unlock(ctx)
 
 	// 2. 检查比赛是否存在
-	matchRoom, err := matchService.FindMatchByID(ctx, req.MatchID)
+	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID)
 	if err != nil {
 		return err
 	}
@@ -164,6 +167,8 @@ func (a *MatchApp) EndMatch(ctx context.Context, req *dto.MatchActionRequest) er
 
 // LeaveMatch 离开比赛房间
 func (a *MatchApp) LeaveMatch(ctx context.Context, req *dto.MatchActionRequest) error {
+	matchRepo := a.repoFactory.MatchRepo()
+	playerRepo := a.repoFactory.PlayerRepo()
 	matchService := a.serviceFactory.MatchService(a.repoFactory)
 
 	// 1. 获取比赛锁
@@ -174,13 +179,13 @@ func (a *MatchApp) LeaveMatch(ctx context.Context, req *dto.MatchActionRequest) 
 	defer lock.Unlock(ctx)
 
 	// 2. 获取玩家信息
-	player, err := matchService.FindPlayerByCode(ctx, req.PlayerCode)
+	player, err := playerRepo.FindByCode(ctx, req.PlayerCode)
 	if err != nil {
 		return err
 	}
 
 	// 3. 获取房间信息
-	matchRoom, err := matchService.FindMatchByID(ctx, player.MatchID)
+	matchRoom, err := matchRepo.FindByID(ctx, player.MatchID)
 	if err != nil {
 		return err
 	}
@@ -206,6 +211,8 @@ func (a *MatchApp) LeaveMatch(ctx context.Context, req *dto.MatchActionRequest) 
 // KickPlayer 踢人
 func (a *MatchApp) KickMatchPlayer(ctx context.Context, req *dto.KickPlayerRequest) error {
 	matchService := a.serviceFactory.MatchService(a.repoFactory)
+	playerRepo := a.repoFactory.PlayerRepo()
+	matchRepo := a.repoFactory.MatchRepo()
 
 	// 1. 获取比赛锁
 	lock := a.lockManager.MatchLock(req.MatchID)
@@ -215,13 +222,13 @@ func (a *MatchApp) KickMatchPlayer(ctx context.Context, req *dto.KickPlayerReque
 	defer lock.Unlock(ctx)
 
 	// 2. 获取玩家信息
-	player, err := matchService.FindPlayerByCode(ctx, req.PlayerCode)
+	player, err := playerRepo.FindByCode(ctx, req.PlayerCode)
 	if err != nil {
 		return err
 	}
 
 	// 3. 获取房间信息
-	matchRoom, err := matchService.FindMatchByID(ctx, player.MatchID)
+	matchRoom, err := matchRepo.FindByID(ctx, player.MatchID)
 	if err != nil {
 		return err
 	}

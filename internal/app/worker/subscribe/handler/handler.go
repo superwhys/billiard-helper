@@ -6,22 +6,23 @@ import (
 
 	"github.com/miebyte/goutils/logging"
 	"github.com/superwhys/billiard-helper/internal/app/dto"
+	"github.com/superwhys/billiard-helper/internal/app/factory"
 	"github.com/superwhys/billiard-helper/internal/constant"
-	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/infra/socket"
 )
 
 type EventHandler func(ctx context.Context, data []byte)
 
 type Handlers struct {
-	matchService  match.IMatchService
+	repoFactory   factory.IRepoFactory
 	socketManager *socket.SocketManager
 	handlers      map[string]EventHandler
 }
 
-func NewHandlers(socketManager *socket.SocketManager) *Handlers {
+func NewHandlers(socketManager *socket.SocketManager, repoFactory factory.IRepoFactory) *Handlers {
 	h := &Handlers{
 		socketManager: socketManager,
+		repoFactory:   repoFactory,
 		handlers:      make(map[string]EventHandler),
 	}
 	h.register()

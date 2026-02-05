@@ -10,3 +10,7 @@ type IMatchRepository interface {
 	ListMatches(ctx context.Context, matchType string) ([]*Match, error)
 	Delete(ctx context.Context, id uint) error
 }
+
+type PlayerRepository interface {
+	FindByCode(ctx context.Context, code string) (*Player, error)
+}
