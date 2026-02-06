@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/miebyte/goutils/utils/ptrx"
 	"github.com/superwhys/billiard-helper/internal/app/assembler"
@@ -12,6 +13,7 @@ import (
 	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/domain/shared"
 	"github.com/superwhys/billiard-helper/internal/infra/cache"
+	"github.com/superwhys/billiard-helper/internal/pkg/codegen"
 )
 
 type MatchApp struct {
@@ -40,6 +42,10 @@ func NewMatchApp(
 // CreateMatch 创建比赛
 func (a *MatchApp) CreateMatch(ctx context.Context, req *dto.CreateMatchRequest) (*dto.Match, error) {
 	matchEntity := a.matchAssembler.CreateMatchReqToMatch(req)
+
+	for _, player := range matchEntity.Players {
+		player.Code = codegen.GeneratePlayerCode(matchEntity.ID, uint8(player.Type), fmt.Sprintf("%d", ptrx.UintValue(player.UserID)))
+	}
 
 	matchService := a.serviceFactory.MatchService(a.repoFactory)
 	match, err := matchService.CreateMatch(ctx, req.UserID, matchEntity)

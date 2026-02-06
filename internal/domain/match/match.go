@@ -76,21 +76,25 @@ type Player struct {
 }
 
 func NewPlayer(matchID uint, userID *uint, nickName string, pType PlayerType) *Player {
-	// 领域层负责生成 Code 和初始化时间
-	var payload string
-	if pType == PlayerTypeReal {
-		payload = fmt.Sprintf("%d", ptrx.UintValue(userID))
-	} else {
-		payload = nickName
-	}
-
-	code := codegen.GeneratePlayerCode(matchID, uint8(pType), payload)
-	return &Player{
-		Code:     code,
+	p := &Player{
 		MatchID:  matchID,
 		UserID:   userID,
 		NickName: nickName,
 		Type:     pType,
 		JoinTime: time.Now(),
 	}
+
+	p.GenerateCode(matchID, userID, nickName)
+	return p
+}
+
+func (p *Player) GenerateCode(matchID uint, userID *uint, nickName string) {
+	var payload string
+	if p.Type == PlayerTypeReal {
+		payload = fmt.Sprintf("%d", ptrx.UintValue(p.UserID))
+	} else {
+		payload = p.NickName
+	}
+
+	p.Code = codegen.GeneratePlayerCode(matchID, uint8(p.Type), payload)
 }
