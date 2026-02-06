@@ -106,10 +106,11 @@ func (a *MatchPoAssembler) ToPO(entity *match.Match) *models.Match {
 		Model: gorm.Model{
 			ID: entity.ID,
 		},
-		UserID:  entity.OwnerID,
-		Status:  uint8(entity.Status),
-		Config:  datatypes.NewJSONType(config),
-		Players: players,
+		UserID:    entity.OwnerID,
+		Status:    uint8(entity.Status),
+		Config:    datatypes.NewJSONType(config),
+		Players:   players,
+		MatchType: string(entity.MatchType),
 	}
 
 	return m

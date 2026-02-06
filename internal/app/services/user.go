@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/miebyte/goutils/logging"
 	"github.com/superwhys/billiard-helper/config"
 	"github.com/superwhys/billiard-helper/internal/app/assembler"
 	"github.com/superwhys/billiard-helper/internal/app/dto"
@@ -56,6 +57,7 @@ func (a *UserApp) SendRegisterCode(ctx context.Context, req *dto.SendRegisterCod
 	if err != nil {
 		return err
 	}
+	logging.Debugc(ctx, "verify coder sender: %s", sender.Channel())
 
 	return sender.SendVerifyCode(ctx, req.Account, code)
 }

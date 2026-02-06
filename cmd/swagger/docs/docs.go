@@ -674,6 +674,7 @@ const docTemplate = `{
         },
         "match.PlayerType": {
             "type": "integer",
+            "format": "int32",
             "enum": [
                 1,
                 2
