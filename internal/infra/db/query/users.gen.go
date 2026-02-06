@@ -42,7 +42,7 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 		RelationField: field.NewRelation("Matches", "models.Match"),
 		Players: struct {
 			field.RelationField
-			Scores struct {
+			Events struct {
 				field.RelationField
 				Operator struct {
 					field.RelationField
@@ -50,24 +50,24 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 			}
 		}{
 			RelationField: field.NewRelation("Matches.Players", "models.Player"),
-			Scores: struct {
+			Events: struct {
 				field.RelationField
 				Operator struct {
 					field.RelationField
 				}
 			}{
-				RelationField: field.NewRelation("Matches.Players.Scores", "models.Score"),
+				RelationField: field.NewRelation("Matches.Players.Events", "models.Event"),
 				Operator: struct {
 					field.RelationField
 				}{
-					RelationField: field.NewRelation("Matches.Players.Scores.Operator", "models.Player"),
+					RelationField: field.NewRelation("Matches.Players.Events.Operator", "models.Player"),
 				},
 			},
 		},
-		Scores: struct {
+		Events: struct {
 			field.RelationField
 		}{
-			RelationField: field.NewRelation("Matches.Scores", "models.Score"),
+			RelationField: field.NewRelation("Matches.Events", "models.Event"),
 		},
 		MatchGames: struct {
 			field.RelationField
@@ -185,14 +185,14 @@ type userHasManyMatches struct {
 
 	Players struct {
 		field.RelationField
-		Scores struct {
+		Events struct {
 			field.RelationField
 			Operator struct {
 				field.RelationField
 			}
 		}
 	}
-	Scores struct {
+	Events struct {
 		field.RelationField
 	}
 	MatchGames struct {

@@ -18,10 +18,10 @@ import (
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:        db,
+		Event:     newEvent(db, opts...),
 		Match:     newMatch(db, opts...),
 		MatchGame: newMatchGame(db, opts...),
 		Player:    newPlayer(db, opts...),
-		Score:     newScore(db, opts...),
 		User:      newUser(db, opts...),
 	}
 }
@@ -29,10 +29,10 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 type Query struct {
 	db *gorm.DB
 
+	Event     event
 	Match     match
 	MatchGame matchGame
 	Player    player
-	Score     score
 	User      user
 }
 
@@ -41,10 +41,10 @@ func (q *Query) Available() bool { return q.db != nil }
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:        db,
+		Event:     q.Event.clone(db),
 		Match:     q.Match.clone(db),
 		MatchGame: q.MatchGame.clone(db),
 		Player:    q.Player.clone(db),
-		Score:     q.Score.clone(db),
 		User:      q.User.clone(db),
 	}
 }
@@ -60,28 +60,28 @@ func (q *Query) WriteDB() *Query {
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:        db,
+		Event:     q.Event.replaceDB(db),
 		Match:     q.Match.replaceDB(db),
 		MatchGame: q.MatchGame.replaceDB(db),
 		Player:    q.Player.replaceDB(db),
-		Score:     q.Score.replaceDB(db),
 		User:      q.User.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
+	Event     IEventDo
 	Match     IMatchDo
 	MatchGame IMatchGameDo
 	Player    IPlayerDo
-	Score     IScoreDo
 	User      IUserDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
+		Event:     q.Event.WithContext(ctx),
 		Match:     q.Match.WithContext(ctx),
 		MatchGame: q.MatchGame.WithContext(ctx),
 		Player:    q.Player.WithContext(ctx),
-		Score:     q.Score.WithContext(ctx),
 		User:      q.User.WithContext(ctx),
 	}
 }

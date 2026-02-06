@@ -6,6 +6,6 @@ func Tables() []any {
 		&Match{},
 		&MatchGame{},
 		&Player{},
-		&Score{},
+		&Event{},
 	}
 }

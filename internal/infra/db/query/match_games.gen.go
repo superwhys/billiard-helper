@@ -40,17 +40,17 @@ func newMatchGame(db *gorm.DB, opts ...gen.DOOption) matchGame {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Winner", "models.Player"),
-		Scores: struct {
+		Events: struct {
 			field.RelationField
 			Operator struct {
 				field.RelationField
 			}
 		}{
-			RelationField: field.NewRelation("Winner.Scores", "models.Score"),
+			RelationField: field.NewRelation("Winner.Events", "models.Event"),
 			Operator: struct {
 				field.RelationField
 			}{
-				RelationField: field.NewRelation("Winner.Scores.Operator", "models.Player"),
+				RelationField: field.NewRelation("Winner.Events.Operator", "models.Player"),
 			},
 		},
 	}
@@ -156,7 +156,7 @@ type matchGameBelongsToWinner struct {
 
 	field.RelationField
 
-	Scores struct {
+	Events struct {
 		field.RelationField
 		Operator struct {
 			field.RelationField

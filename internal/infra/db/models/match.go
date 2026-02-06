@@ -18,7 +18,7 @@ type Match struct {
 	Config    datatypes.JSONType[MatchConfig] `gorm:"column:config;type:json;comment:比赛配置" json:"config"`
 
 	Players    []*Player    `json:"players"`
-	Scores     []*Score     `json:"scores"`
+	Events     []*Event     `json:"events"`
 	MatchGames []*MatchGame `json:"match_games"`
 }
 

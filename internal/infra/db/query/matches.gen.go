@@ -39,25 +39,25 @@ func newMatch(db *gorm.DB, opts ...gen.DOOption) match {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Players", "models.Player"),
-		Scores: struct {
+		Events: struct {
 			field.RelationField
 			Operator struct {
 				field.RelationField
 			}
 		}{
-			RelationField: field.NewRelation("Players.Scores", "models.Score"),
+			RelationField: field.NewRelation("Players.Events", "models.Event"),
 			Operator: struct {
 				field.RelationField
 			}{
-				RelationField: field.NewRelation("Players.Scores.Operator", "models.Player"),
+				RelationField: field.NewRelation("Players.Events.Operator", "models.Player"),
 			},
 		},
 	}
 
-	_match.Scores = matchHasManyScores{
+	_match.Events = matchHasManyEvents{
 		db: db.Session(&gorm.Session{}),
 
-		RelationField: field.NewRelation("Scores", "models.Score"),
+		RelationField: field.NewRelation("Events", "models.Event"),
 	}
 
 	_match.MatchGames = matchHasManyMatchGames{
@@ -90,7 +90,7 @@ type match struct {
 	Config    field.Field  // 比赛配置
 	Players   matchHasManyPlayers
 
-	Scores matchHasManyScores
+	Events matchHasManyEvents
 
 	MatchGames matchHasManyMatchGames
 
@@ -157,8 +157,8 @@ func (m match) clone(db *gorm.DB) match {
 	m.matchDo.ReplaceConnPool(db.Statement.ConnPool)
 	m.Players.db = db.Session(&gorm.Session{Initialized: true})
 	m.Players.db.Statement.ConnPool = db.Statement.ConnPool
-	m.Scores.db = db.Session(&gorm.Session{Initialized: true})
-	m.Scores.db.Statement.ConnPool = db.Statement.ConnPool
+	m.Events.db = db.Session(&gorm.Session{Initialized: true})
+	m.Events.db.Statement.ConnPool = db.Statement.ConnPool
 	m.MatchGames.db = db.Session(&gorm.Session{Initialized: true})
 	m.MatchGames.db.Statement.ConnPool = db.Statement.ConnPool
 	return m
@@ -167,7 +167,7 @@ func (m match) clone(db *gorm.DB) match {
 func (m match) replaceDB(db *gorm.DB) match {
 	m.matchDo.ReplaceDB(db)
 	m.Players.db = db.Session(&gorm.Session{})
-	m.Scores.db = db.Session(&gorm.Session{})
+	m.Events.db = db.Session(&gorm.Session{})
 	m.MatchGames.db = db.Session(&gorm.Session{})
 	return m
 }
@@ -177,7 +177,7 @@ type matchHasManyPlayers struct {
 
 	field.RelationField
 
-	Scores struct {
+	Events struct {
 		field.RelationField
 		Operator struct {
 			field.RelationField
@@ -260,13 +260,13 @@ func (a matchHasManyPlayersTx) Unscoped() *matchHasManyPlayersTx {
 	return &a
 }
 
-type matchHasManyScores struct {
+type matchHasManyEvents struct {
 	db *gorm.DB
 
 	field.RelationField
 }
 
-func (a matchHasManyScores) Where(conds ...field.Expr) *matchHasManyScores {
+func (a matchHasManyEvents) Where(conds ...field.Expr) *matchHasManyEvents {
 	if len(conds) == 0 {
 		return &a
 	}
@@ -279,32 +279,32 @@ func (a matchHasManyScores) Where(conds ...field.Expr) *matchHasManyScores {
 	return &a
 }
 
-func (a matchHasManyScores) WithContext(ctx context.Context) *matchHasManyScores {
+func (a matchHasManyEvents) WithContext(ctx context.Context) *matchHasManyEvents {
 	a.db = a.db.WithContext(ctx)
 	return &a
 }
 
-func (a matchHasManyScores) Session(session *gorm.Session) *matchHasManyScores {
+func (a matchHasManyEvents) Session(session *gorm.Session) *matchHasManyEvents {
 	a.db = a.db.Session(session)
 	return &a
 }
 
-func (a matchHasManyScores) Model(m *models.Match) *matchHasManyScoresTx {
-	return &matchHasManyScoresTx{a.db.Model(m).Association(a.Name())}
+func (a matchHasManyEvents) Model(m *models.Match) *matchHasManyEventsTx {
+	return &matchHasManyEventsTx{a.db.Model(m).Association(a.Name())}
 }
 
-func (a matchHasManyScores) Unscoped() *matchHasManyScores {
+func (a matchHasManyEvents) Unscoped() *matchHasManyEvents {
 	a.db = a.db.Unscoped()
 	return &a
 }
 
-type matchHasManyScoresTx struct{ tx *gorm.Association }
+type matchHasManyEventsTx struct{ tx *gorm.Association }
 
-func (a matchHasManyScoresTx) Find() (result []*models.Score, err error) {
+func (a matchHasManyEventsTx) Find() (result []*models.Event, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a matchHasManyScoresTx) Append(values ...*models.Score) (err error) {
+func (a matchHasManyEventsTx) Append(values ...*models.Event) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -312,7 +312,7 @@ func (a matchHasManyScoresTx) Append(values ...*models.Score) (err error) {
 	return a.tx.Append(targetValues...)
 }
 
-func (a matchHasManyScoresTx) Replace(values ...*models.Score) (err error) {
+func (a matchHasManyEventsTx) Replace(values ...*models.Event) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -320,7 +320,7 @@ func (a matchHasManyScoresTx) Replace(values ...*models.Score) (err error) {
 	return a.tx.Replace(targetValues...)
 }
 
-func (a matchHasManyScoresTx) Delete(values ...*models.Score) (err error) {
+func (a matchHasManyEventsTx) Delete(values ...*models.Event) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -328,15 +328,15 @@ func (a matchHasManyScoresTx) Delete(values ...*models.Score) (err error) {
 	return a.tx.Delete(targetValues...)
 }
 
-func (a matchHasManyScoresTx) Clear() error {
+func (a matchHasManyEventsTx) Clear() error {
 	return a.tx.Clear()
 }
 
-func (a matchHasManyScoresTx) Count() int64 {
+func (a matchHasManyEventsTx) Count() int64 {
 	return a.tx.Count()
 }
 
-func (a matchHasManyScoresTx) Unscoped() *matchHasManyScoresTx {
+func (a matchHasManyEventsTx) Unscoped() *matchHasManyEventsTx {
 	a.tx = a.tx.Unscoped()
 	return &a
 }

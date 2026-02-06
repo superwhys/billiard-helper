@@ -36,21 +36,21 @@ func newPlayer(db *gorm.DB, opts ...gen.DOOption) player {
 	_player.UserID = field.NewUint(tableName, "user_id")
 	_player.NickName = field.NewString(tableName, "nick_name")
 	_player.Type = field.NewUint8(tableName, "type")
-	_player.Scores = playerHasManyScores{
+	_player.Events = playerHasManyEvents{
 		db: db.Session(&gorm.Session{}),
 
-		RelationField: field.NewRelation("Scores", "models.Score"),
+		RelationField: field.NewRelation("Events", "models.Event"),
 		Operator: struct {
 			field.RelationField
-			Scores struct {
+			Events struct {
 				field.RelationField
 			}
 		}{
-			RelationField: field.NewRelation("Scores.Operator", "models.Player"),
-			Scores: struct {
+			RelationField: field.NewRelation("Events.Operator", "models.Player"),
+			Events: struct {
 				field.RelationField
 			}{
-				RelationField: field.NewRelation("Scores.Operator.Scores", "models.Score"),
+				RelationField: field.NewRelation("Events.Operator.Events", "models.Event"),
 			},
 		},
 	}
@@ -73,7 +73,7 @@ type player struct {
 	UserID    field.Uint   // 用户ID
 	NickName  field.String // 昵称
 	Type      field.Uint8  // 玩家类型
-	Scores    playerHasManyScores
+	Events    playerHasManyEvents
 
 	fieldMap map[string]field.Expr
 }
@@ -138,31 +138,31 @@ func (p *player) fillFieldMap() {
 
 func (p player) clone(db *gorm.DB) player {
 	p.playerDo.ReplaceConnPool(db.Statement.ConnPool)
-	p.Scores.db = db.Session(&gorm.Session{Initialized: true})
-	p.Scores.db.Statement.ConnPool = db.Statement.ConnPool
+	p.Events.db = db.Session(&gorm.Session{Initialized: true})
+	p.Events.db.Statement.ConnPool = db.Statement.ConnPool
 	return p
 }
 
 func (p player) replaceDB(db *gorm.DB) player {
 	p.playerDo.ReplaceDB(db)
-	p.Scores.db = db.Session(&gorm.Session{})
+	p.Events.db = db.Session(&gorm.Session{})
 	return p
 }
 
-type playerHasManyScores struct {
+type playerHasManyEvents struct {
 	db *gorm.DB
 
 	field.RelationField
 
 	Operator struct {
 		field.RelationField
-		Scores struct {
+		Events struct {
 			field.RelationField
 		}
 	}
 }
 
-func (a playerHasManyScores) Where(conds ...field.Expr) *playerHasManyScores {
+func (a playerHasManyEvents) Where(conds ...field.Expr) *playerHasManyEvents {
 	if len(conds) == 0 {
 		return &a
 	}
@@ -175,32 +175,32 @@ func (a playerHasManyScores) Where(conds ...field.Expr) *playerHasManyScores {
 	return &a
 }
 
-func (a playerHasManyScores) WithContext(ctx context.Context) *playerHasManyScores {
+func (a playerHasManyEvents) WithContext(ctx context.Context) *playerHasManyEvents {
 	a.db = a.db.WithContext(ctx)
 	return &a
 }
 
-func (a playerHasManyScores) Session(session *gorm.Session) *playerHasManyScores {
+func (a playerHasManyEvents) Session(session *gorm.Session) *playerHasManyEvents {
 	a.db = a.db.Session(session)
 	return &a
 }
 
-func (a playerHasManyScores) Model(m *models.Player) *playerHasManyScoresTx {
-	return &playerHasManyScoresTx{a.db.Model(m).Association(a.Name())}
+func (a playerHasManyEvents) Model(m *models.Player) *playerHasManyEventsTx {
+	return &playerHasManyEventsTx{a.db.Model(m).Association(a.Name())}
 }
 
-func (a playerHasManyScores) Unscoped() *playerHasManyScores {
+func (a playerHasManyEvents) Unscoped() *playerHasManyEvents {
 	a.db = a.db.Unscoped()
 	return &a
 }
 
-type playerHasManyScoresTx struct{ tx *gorm.Association }
+type playerHasManyEventsTx struct{ tx *gorm.Association }
 
-func (a playerHasManyScoresTx) Find() (result []*models.Score, err error) {
+func (a playerHasManyEventsTx) Find() (result []*models.Event, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a playerHasManyScoresTx) Append(values ...*models.Score) (err error) {
+func (a playerHasManyEventsTx) Append(values ...*models.Event) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -208,7 +208,7 @@ func (a playerHasManyScoresTx) Append(values ...*models.Score) (err error) {
 	return a.tx.Append(targetValues...)
 }
 
-func (a playerHasManyScoresTx) Replace(values ...*models.Score) (err error) {
+func (a playerHasManyEventsTx) Replace(values ...*models.Event) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -216,7 +216,7 @@ func (a playerHasManyScoresTx) Replace(values ...*models.Score) (err error) {
 	return a.tx.Replace(targetValues...)
 }
 
-func (a playerHasManyScoresTx) Delete(values ...*models.Score) (err error) {
+func (a playerHasManyEventsTx) Delete(values ...*models.Event) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -224,15 +224,15 @@ func (a playerHasManyScoresTx) Delete(values ...*models.Score) (err error) {
 	return a.tx.Delete(targetValues...)
 }
 
-func (a playerHasManyScoresTx) Clear() error {
+func (a playerHasManyEventsTx) Clear() error {
 	return a.tx.Clear()
 }
 
-func (a playerHasManyScoresTx) Count() int64 {
+func (a playerHasManyEventsTx) Count() int64 {
 	return a.tx.Count()
 }
 
-func (a playerHasManyScoresTx) Unscoped() *playerHasManyScoresTx {
+func (a playerHasManyEventsTx) Unscoped() *playerHasManyEventsTx {
 	a.tx = a.tx.Unscoped()
 	return &a
 }
