@@ -56,7 +56,7 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 					field.RelationField
 				}
 			}{
-				RelationField: field.NewRelation("Matches.Players.Events", "models.Event"),
+				RelationField: field.NewRelation("Matches.Players.Events", "models.MatchEvent"),
 				Operator: struct {
 					field.RelationField
 				}{
@@ -67,7 +67,7 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 		Events: struct {
 			field.RelationField
 		}{
-			RelationField: field.NewRelation("Matches.Events", "models.Event"),
+			RelationField: field.NewRelation("Matches.Events", "models.MatchEvent"),
 		},
 		MatchGames: struct {
 			field.RelationField

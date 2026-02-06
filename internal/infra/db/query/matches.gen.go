@@ -45,7 +45,7 @@ func newMatch(db *gorm.DB, opts ...gen.DOOption) match {
 				field.RelationField
 			}
 		}{
-			RelationField: field.NewRelation("Players.Events", "models.Event"),
+			RelationField: field.NewRelation("Players.Events", "models.MatchEvent"),
 			Operator: struct {
 				field.RelationField
 			}{
@@ -57,7 +57,7 @@ func newMatch(db *gorm.DB, opts ...gen.DOOption) match {
 	_match.Events = matchHasManyEvents{
 		db: db.Session(&gorm.Session{}),
 
-		RelationField: field.NewRelation("Events", "models.Event"),
+		RelationField: field.NewRelation("Events", "models.MatchEvent"),
 	}
 
 	_match.MatchGames = matchHasManyMatchGames{
@@ -300,11 +300,11 @@ func (a matchHasManyEvents) Unscoped() *matchHasManyEvents {
 
 type matchHasManyEventsTx struct{ tx *gorm.Association }
 
-func (a matchHasManyEventsTx) Find() (result []*models.Event, err error) {
+func (a matchHasManyEventsTx) Find() (result []*models.MatchEvent, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a matchHasManyEventsTx) Append(values ...*models.Event) (err error) {
+func (a matchHasManyEventsTx) Append(values ...*models.MatchEvent) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -312,7 +312,7 @@ func (a matchHasManyEventsTx) Append(values ...*models.Event) (err error) {
 	return a.tx.Append(targetValues...)
 }
 
-func (a matchHasManyEventsTx) Replace(values ...*models.Event) (err error) {
+func (a matchHasManyEventsTx) Replace(values ...*models.MatchEvent) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -320,7 +320,7 @@ func (a matchHasManyEventsTx) Replace(values ...*models.Event) (err error) {
 	return a.tx.Replace(targetValues...)
 }
 
-func (a matchHasManyEventsTx) Delete(values ...*models.Event) (err error) {
+func (a matchHasManyEventsTx) Delete(values ...*models.MatchEvent) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v

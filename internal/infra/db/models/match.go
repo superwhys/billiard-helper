@@ -17,9 +17,9 @@ type Match struct {
 	MatchType string                          `gorm:"column:match_type;type:varchar(255);not null;comment:比赛类型" json:"match_type"`
 	Config    datatypes.JSONType[MatchConfig] `gorm:"column:config;type:json;comment:比赛配置" json:"config"`
 
-	Players    []*Player    `json:"players"`
-	Events     []*Event     `json:"events"`
-	MatchGames []*MatchGame `json:"match_games"`
+	Players    []*Player     `json:"players"`
+	Events     []*MatchEvent `json:"events"`
+	MatchGames []*MatchGame  `json:"match_games"`
 }
 
 func (r *Match) TableName() string {

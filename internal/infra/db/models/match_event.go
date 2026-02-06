@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Event struct {
+type MatchEvent struct {
 	gorm.Model
 	MatchID    uint              `gorm:"column:match_id;index;not null;comment:时间所属比赛 ID" json:"match_id"`
 	PlayerID   uint              `gorm:"column:player_id;index;comment:事件涉及的玩家 ID" json:"player_id"`
@@ -15,6 +15,6 @@ type Event struct {
 	Operator *Player `gorm:"foreignKey:OperatorID" json:"operator"`
 }
 
-func (e *Event) TableName() string {
-	return "events"
+func (e *MatchEvent) TableName() string {
+	return "match_events"
 }

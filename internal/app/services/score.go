@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 
-	"github.com/superwhys/billiard-helper/internal/app/assembler"
 	"github.com/superwhys/billiard-helper/internal/app/dto"
 	"github.com/superwhys/billiard-helper/internal/app/factory"
 	"github.com/superwhys/billiard-helper/internal/domain/shared"
@@ -12,7 +11,6 @@ import (
 type ScoreApp struct {
 	serviceFactory *factory.DomainServiceFactory
 	repoFactory    factory.IRepoFactory
-	scoreAssembler *assembler.ScoreAssembler
 	eventBus       shared.EventBus
 }
 
@@ -24,7 +22,6 @@ func NewScoreApp(
 	return &ScoreApp{
 		serviceFactory: serviceFactory,
 		repoFactory:    repoFactory,
-		scoreAssembler: assembler.NewScoreAssembler(),
 		eventBus:       eventBus,
 	}
 }

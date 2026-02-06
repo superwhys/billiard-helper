@@ -46,7 +46,7 @@ func newMatchGame(db *gorm.DB, opts ...gen.DOOption) matchGame {
 				field.RelationField
 			}
 		}{
-			RelationField: field.NewRelation("Winner.Events", "models.Event"),
+			RelationField: field.NewRelation("Winner.Events", "models.MatchEvent"),
 			Operator: struct {
 				field.RelationField
 			}{

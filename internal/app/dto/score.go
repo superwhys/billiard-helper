@@ -12,12 +12,10 @@ type Score struct {
 
 // AddScoreRequest 加分请求
 type AddScoreRequest struct {
-	RoomID     uint                   `json:"room_id"`
-	PlayerID   uint                   `json:"player_id"`
-	OperatorID uint                   `json:"operator_id"`
-	Value      int                    `json:"value"`
-	Type       string                 `json:"type"`
-	Context    map[string]interface{} `json:"context"`
+	RoomID     uint           `json:"room_id"`
+	PlayerID   uint           `json:"player_id"`
+	OperatorID uint           `json:"operator_id"`
+	Context    map[string]any `json:"context"`
 }
 
 // UndoRequest 撤回请求

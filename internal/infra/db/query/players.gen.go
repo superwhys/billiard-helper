@@ -39,7 +39,7 @@ func newPlayer(db *gorm.DB, opts ...gen.DOOption) player {
 	_player.Events = playerHasManyEvents{
 		db: db.Session(&gorm.Session{}),
 
-		RelationField: field.NewRelation("Events", "models.Event"),
+		RelationField: field.NewRelation("Events", "models.MatchEvent"),
 		Operator: struct {
 			field.RelationField
 			Events struct {
@@ -50,7 +50,7 @@ func newPlayer(db *gorm.DB, opts ...gen.DOOption) player {
 			Events: struct {
 				field.RelationField
 			}{
-				RelationField: field.NewRelation("Events.Operator.Events", "models.Event"),
+				RelationField: field.NewRelation("Events.Operator.Events", "models.MatchEvent"),
 			},
 		},
 	}
@@ -196,11 +196,11 @@ func (a playerHasManyEvents) Unscoped() *playerHasManyEvents {
 
 type playerHasManyEventsTx struct{ tx *gorm.Association }
 
-func (a playerHasManyEventsTx) Find() (result []*models.Event, err error) {
+func (a playerHasManyEventsTx) Find() (result []*models.MatchEvent, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a playerHasManyEventsTx) Append(values ...*models.Event) (err error) {
+func (a playerHasManyEventsTx) Append(values ...*models.MatchEvent) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -208,7 +208,7 @@ func (a playerHasManyEventsTx) Append(values ...*models.Event) (err error) {
 	return a.tx.Append(targetValues...)
 }
 
-func (a playerHasManyEventsTx) Replace(values ...*models.Event) (err error) {
+func (a playerHasManyEventsTx) Replace(values ...*models.MatchEvent) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -216,7 +216,7 @@ func (a playerHasManyEventsTx) Replace(values ...*models.Event) (err error) {
 	return a.tx.Replace(targetValues...)
 }
 
-func (a playerHasManyEventsTx) Delete(values ...*models.Event) (err error) {
+func (a playerHasManyEventsTx) Delete(values ...*models.MatchEvent) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
