@@ -76,27 +76,13 @@ func (r *MatchRepo) Update(ctx context.Context, match *match.Match) error {
 	m := r.query.Match
 	po := r.matchPoAssembler.ToPO(match)
 
-	// 使用 Save 更新整个聚合根，包括关联的 Players
-	// 注意：GORM 的 Save 会更新所有字段，包括零值。对于关联关系，如果配置了 FullSaveAssociations，会保存关联。
-	// 在 gen 中，Save 对应的是 gorm.Save
-	err := m.WithContext(ctx).Save(po)
+	_, err := m.WithContext(ctx).Updates(po)
 	if err != nil {
 		return err
 	}
 
 	// 更新时间
 	match.UpdatedAt = po.UpdatedAt
-
-	// 回写可能新增的 Player IDs
-	if len(match.Players) > 0 && len(po.Players) == len(match.Players) {
-		for i, p := range match.Players {
-			if p.ID == 0 {
-				p.ID = po.Players[i].ID
-				p.JoinTime = po.Players[i].CreatedAt
-			}
-		}
-	}
-
 	return nil
 }
 

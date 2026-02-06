@@ -21,12 +21,20 @@ type Match struct {
 	UpdatedAt time.Time   `json:"updated_at"`
 }
 
-func (m *Match) CheckPlayerFull() error {
-	if len(m.Players) > int(m.Config.MaxPlayers) {
-		return errcode.ErrCodeMatchPlayerFull
+func (m *Match) IsPlayerFull() bool {
+	if len(m.Players) >= int(m.Config.MaxPlayers) {
+		return true
 	}
 
-	return nil
+	return false
+}
+
+func (m *Match) IsPlayerOutOfLimit() bool {
+	if len(m.Players) > int(m.Config.MaxPlayers) {
+		return true
+	}
+
+	return false
 }
 
 func (m *Match) JoinPlayer(player *Player) error {
@@ -34,8 +42,8 @@ func (m *Match) JoinPlayer(player *Player) error {
 		return errcode.ErrCodeMatchNotPending
 	}
 
-	if err := m.CheckPlayerFull(); err != nil {
-		return err
+	if m.IsPlayerFull() {
+		return errcode.ErrCodeMatchPlayerFull
 	}
 
 	// 检查是否重复加入

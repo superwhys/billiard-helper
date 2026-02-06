@@ -41,10 +41,6 @@ func NewMatchApp(
 func (a *MatchApp) CreateMatch(ctx context.Context, req *dto.CreateMatchRequest) (*dto.Match, error) {
 	matchEntity := a.matchAssembler.CreateMatchReqToMatch(req)
 
-	if err := matchEntity.CheckPlayerFull(); err != nil {
-		return nil, err
-	}
-
 	matchService := a.serviceFactory.MatchService(a.repoFactory)
 	match, err := matchService.CreateMatch(ctx, req.UserID, matchEntity)
 	if err != nil {
@@ -265,7 +261,16 @@ func (a *MatchApp) publishEvent(ctx context.Context, eventType string, payload a
 	return a.eventBus.Publish(ctx, constant.BilliardMessageChannel, msg)
 }
 
-func (a *MatchApp) ListMatches(ctx context.Context, matchType uint) ([]*dto.Match, error) {
+func (a *MatchApp) ListMatches(ctx context.Context, matchType match.MatchType) ([]*dto.Match, error) {
+	matchRepo := a.repoFactory.MatchRepo()
+	matches, err := matchRepo.ListMatches(ctx, string(matchType))
+	if err != nil {
+		return nil, err
+	}
 
-	panic("not implement")
+	matchDTOs := make([]*dto.Match, 0, len(matches))
+	for _, match := range matches {
+		matchDTOs = append(matchDTOs, a.matchAssembler.ToMatchDTO(match))
+	}
+	return matchDTOs, nil
 }

@@ -11,6 +11,8 @@ type IMatchRepository interface {
 	Delete(ctx context.Context, id uint) error
 }
 
-type PlayerRepository interface {
+type IPlayerRepository interface {
 	FindByCode(ctx context.Context, code string) (*Player, error)
+	Create(ctx context.Context, player *Player) error
+	Delete(ctx context.Context, id uint) error
 }
