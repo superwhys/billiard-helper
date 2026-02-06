@@ -12,6 +12,7 @@ import (
 	"github.com/superwhys/billiard-helper/internal/constant"
 	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/domain/shared"
+	"github.com/superwhys/billiard-helper/internal/errcode"
 	"github.com/superwhys/billiard-helper/internal/infra/cache"
 	"github.com/superwhys/billiard-helper/internal/pkg/codegen"
 )
@@ -267,7 +268,7 @@ func (a *MatchApp) publishEvent(ctx context.Context, eventType string, payload a
 	return a.eventBus.Publish(ctx, constant.BilliardEventChannel, msg)
 }
 
-func (a *MatchApp) ListMatches(ctx context.Context, matchType match.MatchType) ([]*dto.Match, error) {
+func (a *MatchApp) ListMatches(ctx context.Context, userId uint, matchType match.MatchType) ([]*dto.Match, error) {
 	matchRepo := a.repoFactory.MatchRepo()
 	matches, err := matchRepo.ListMatches(ctx, string(matchType))
 	if err != nil {
@@ -279,4 +280,18 @@ func (a *MatchApp) ListMatches(ctx context.Context, matchType match.MatchType) (
 		matchDTOs = append(matchDTOs, a.matchAssembler.ToMatchDTO(match))
 	}
 	return matchDTOs, nil
+}
+
+func (a *MatchApp) GetMatchDetail(ctx context.Context, userId uint, matchID uint) (*dto.Match, error) {
+	matchRepo := a.repoFactory.MatchRepo()
+	match, err := matchRepo.FindByID(ctx, matchID)
+	if err != nil {
+		return nil, err
+	}
+
+	if match.OwnerID != userId {
+		return nil, errcode.ErrCodeMatchNotFound
+	}
+
+	return a.matchAssembler.ToMatchDTO(match), nil
 }

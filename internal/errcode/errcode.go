@@ -101,6 +101,9 @@ var (
 	ErrCodeMatchNotInProgress       = ErrBadRequest.WithMessage("比赛未开始")
 	ErrCodeMatchPlayerAlreadyJoined = ErrBadRequest.WithMessage("玩家已加入")
 	ErrCodeMatchNotExists           = ErrNotFound.WithMessage("比赛不存在")
+	ErrCodeListMatchesFailed        = ErrSysInternal.WithMessage("获取比赛列表失败")
+	ErrCodeMatchDetailFailed        = ErrSysInternal.WithMessage("获取比赛详情失败")
+	ErrCodeMatchNotFound            = ErrNotFound.WithMessage("比赛不存在")
 )
 
 func AsErrcode(err error) (Error, bool) {

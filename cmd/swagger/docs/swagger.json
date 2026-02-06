@@ -211,6 +211,45 @@
                 }
             }
         },
+        "/match/detail": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取比赛详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Match"
+                ],
+                "summary": "获取比赛详情",
+                "parameters": [
+                    {
+                        "description": "获取比赛详情请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.MatchDetailRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-dto_Match"
+                        }
+                    }
+                }
+            }
+        },
         "/match/end": {
             "post": {
                 "security": [
@@ -367,6 +406,45 @@
                 }
             }
         },
+        "/match/list": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取比赛列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Match"
+                ],
+                "summary": "获取比赛列表",
+                "parameters": [
+                    {
+                        "description": "获取比赛列表请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.MatchListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_dto_Match"
+                        }
+                    }
+                }
+            }
+        },
         "/match/start": {
             "post": {
                 "security": [
@@ -515,6 +593,22 @@
                 }
             }
         },
+        "dto.MatchDetailRequest": {
+            "type": "object",
+            "properties": {
+                "match_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.MatchListRequest": {
+            "type": "object",
+            "properties": {
+                "match_type": {
+                    "$ref": "#/definitions/match.MatchType"
+                }
+            }
+        },
         "dto.Player": {
             "type": "object",
             "properties": {
@@ -613,6 +707,21 @@
                     "type": "integer"
                 },
                 "data": {},
+                "message": {}
+            }
+        },
+        "ginutils.Ret-array_dto_Match": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Match"
+                    }
+                },
                 "message": {}
             }
         },

@@ -69,6 +69,16 @@ definitions:
       target_score:
         type: integer
     type: object
+  dto.MatchDetailRequest:
+    properties:
+      match_id:
+        type: integer
+    type: object
+  dto.MatchListRequest:
+    properties:
+      match_type:
+        $ref: '#/definitions/match.MatchType'
+    type: object
   dto.Player:
     properties:
       code:
@@ -133,6 +143,16 @@ definitions:
       code:
         type: integer
       data: {}
+      message: {}
+    type: object
+  ginutils.Ret-array_dto_Match:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/dto.Match'
+        type: array
       message: {}
     type: object
   ginutils.Ret-dto_Match:
@@ -313,6 +333,30 @@ paths:
       summary: 创建房间
       tags:
       - Match
+  /match/detail:
+    get:
+      consumes:
+      - application/json
+      description: 获取比赛详情
+      parameters:
+      - description: 获取比赛详情请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MatchDetailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-dto_Match'
+      security:
+      - BearerAuth: []
+      summary: 获取比赛详情
+      tags:
+      - Match
   /match/end:
     post:
       consumes:
@@ -407,6 +451,30 @@ paths:
       security:
       - BearerAuth: []
       summary: 离开房间
+      tags:
+      - Match
+  /match/list:
+    get:
+      consumes:
+      - application/json
+      description: 获取比赛列表
+      parameters:
+      - description: 获取比赛列表请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MatchListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_dto_Match'
+      security:
+      - BearerAuth: []
+      summary: 获取比赛列表
       tags:
       - Match
   /match/start:

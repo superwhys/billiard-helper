@@ -56,3 +56,11 @@ type KickPlayerRequest struct {
 	MatchID    uint   `json:"match_id"`
 	PlayerCode string `json:"player_code"`
 }
+
+type MatchListRequest struct {
+	MatchType match.MatchType `json:"match_type"`
+}
+
+type MatchDetailRequest struct {
+	MatchID uint `form:"match_id"`
+}

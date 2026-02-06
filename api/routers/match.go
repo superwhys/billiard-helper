@@ -16,6 +16,8 @@ import (
 func MatchGroupRouter(matchApp *services.MatchApp) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithPrefix("/match"),
+		ginutils.WithHandler(http.MethodGet, "/list", MatchListHandler(matchApp)),
+		ginutils.WithHandler(http.MethodGet, "/detail", MatchDetailHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/create", MatchCreateHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/join", MatchJoinHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/start", MatchStartHandler(matchApp)),
@@ -23,6 +25,58 @@ func MatchGroupRouter(matchApp *services.MatchApp) ginutils.Option {
 		ginutils.WithHandler(http.MethodPost, "/leave", MatchLeaveHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/kick", MatchKickHandler(matchApp)),
 	)
+}
+
+// MatchListHandler 获取比赛列表
+// @Summary 获取比赛列表
+// @Description 获取比赛列表
+// @Tags Match
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.MatchListRequest true "获取比赛列表请求体"
+// @Success 200 {object} ginutils.Ret[[]dto.Match]
+// @Router /match/list [get]
+func MatchListHandler(matchApp *services.MatchApp) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *dto.MatchListRequest) {
+		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
+		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
+			return
+		}
+
+		matches, err := matchApp.ListMatches(c.Request.Context(), claims.UserID, req.MatchType)
+		if handleRouterError(c, err, "list matches failed", errcode.ErrCodeListMatchesFailed) {
+			return
+		}
+
+		c.JSON(http.StatusOK, response.ResponseWithData(matches))
+	})
+}
+
+// MatchDetailHandler 获取比赛详情
+// @Summary 获取比赛详情
+// @Description 获取比赛详情
+// @Tags Match
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.MatchDetailRequest true "获取比赛详情请求体"
+// @Success 200 {object} ginutils.Ret[dto.Match]
+// @Router /match/detail [get]
+func MatchDetailHandler(matchApp *services.MatchApp) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *dto.MatchDetailRequest) {
+		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
+		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
+			return
+		}
+
+		match, err := matchApp.GetMatchDetail(c.Request.Context(), claims.UserID, req.MatchID)
+		if handleRouterError(c, err, "get match detail failed", errcode.ErrCodeMatchDetailFailed) {
+			return
+		}
+
+		c.JSON(http.StatusOK, response.ResponseWithData(match))
+	})
 }
 
 // MatchCreateHandler 创建房间
