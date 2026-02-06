@@ -30,7 +30,7 @@ func NewSubscriber(eventBus shared.EventBus, socketManager *socket.SocketManager
 }
 
 func (s *Subscriber) Subscribe(ctx context.Context) error {
-	ch := s.eventBus.Subscribe(ctx, constant.BilliardMessageChannel)
+	ch := s.eventBus.Subscribe(ctx, constant.BilliardEventChannel)
 
 	worker := pool.New().WithMaxGoroutines(10)
 	defer worker.Wait()

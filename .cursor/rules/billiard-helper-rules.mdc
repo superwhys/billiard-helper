@@ -52,11 +52,12 @@ alwaysApply: true
   - name
   - avatar
   - password (hash 存储的密码密文)
-- Room
+- Match 一个完整的比赛
   - id (自增 id)
   - created_at, updated_at
   - user_id (FK -> User)
   - room_code
+- MatchGame 比赛内的一局比赛
 - Player
   - id (自增 id)
   - created_at, updated_at
@@ -65,18 +66,17 @@ alwaysApply: true
   - type (球员类型)
   - nick_name
   - avatar
-- Scores
+- MatchEvent 比赛事件
   - id (自增 id)
   - created_at, updated_at
-  - room_id (FK -> Room)
+  - match_id (FK -> Match)
   - player_id (FK -> Player)
   - operator_id
-  - change (分值变化)
-  - total (总分)
+  - data
 
 
 六、状态机与约束
-- Room 状态
+- Match 状态
   - pending -> in_progress -> finished
   - 约束：
     - 仅 owner 能 start/finish
@@ -86,7 +86,7 @@ alwaysApply: true
   - 加入房间后创建 Player 记录
   - 虚拟玩家 type=virtual 且 user_id=null
   - 玩家状态 left 时可以保留历史分数
-- Scores 约束
+- MatchEvent 约束
   - 只有加入该房间的用户（或房主/授权成员）能提交事件
   - change 可为负（犯规）
   - 撤回默认只能撤回最新未撤回事件（栈式 LIFO），以避免复杂的回滚依赖

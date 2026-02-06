@@ -11,8 +11,10 @@ import (
 	"github.com/superwhys/billiard-helper/internal/app/factory"
 	"github.com/superwhys/billiard-helper/internal/app/hook"
 	"github.com/superwhys/billiard-helper/internal/app/services"
+	"github.com/superwhys/billiard-helper/internal/app/worker/subscribe"
 	"github.com/superwhys/billiard-helper/internal/infra/cache"
 	"github.com/superwhys/billiard-helper/internal/infra/db/models"
+	"github.com/superwhys/billiard-helper/internal/infra/eventbus"
 	"github.com/superwhys/billiard-helper/internal/infra/socket"
 	"github.com/superwhys/billiard-helper/internal/infra/verifycode"
 	"github.com/superwhys/billiard-helper/internal/infra/verifycode/email"
@@ -58,6 +60,8 @@ func main() {
 
 	repoFactory := factory.NewRepositoryFactory(mysqlDB)
 	serviceFactory := factory.NewDomainServiceFactory(redisClient)
+	eventBus := eventbus.NewRedisEventBus(redisClient)
+	lockManager := cache.NewLockManager(redisClient)
 
 	// Initialize app services
 	userApp := services.NewUserApp(
@@ -68,18 +72,20 @@ func main() {
 		senderFactory,
 		config.JwtConfig,
 	)
-	matchApp := services.NewMatchApp(serviceFactory, repoFactory, nil, nil)
-	scoreApp := services.NewScoreApp(serviceFactory, repoFactory, nil)
+	matchApp := services.NewMatchApp(serviceFactory, repoFactory, eventBus, lockManager)
+	scoreApp := services.NewScoreApp(serviceFactory, repoFactory, eventBus)
 
 	socketManager := socket.NewSocketManager(hook.NewSocketHook(matchApp, config.JwtConfig))
 
 	apiApp := api.SetupApi(isDev(), socketManager, userApp, scoreApp, matchApp)
+	subscriber := subscribe.NewSubscriber(eventBus, socketManager, repoFactory)
 
 	srv := cores.NewCores(
 		cores.WithHttpCORS(),
 		cores.WithRegisterService(),
 		cores.WithHttpHandler("/api", apiApp),
 		cores.WithHttpHandler("/swagger", apiApp.SwaggerRouter()),
+		cores.WithNameWorker("subscriber", subscriber.Subscribe),
 	)
 
 	logging.PanicError(cores.Start(srv, port()))

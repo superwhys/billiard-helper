@@ -21,7 +21,7 @@ const (
 )
 
 const (
-	BilliardMessageChannel = "billiard_message"
+	BilliardEventChannel = "match_event"
 )
 
 func SocketRoomID(matchID uint) string {

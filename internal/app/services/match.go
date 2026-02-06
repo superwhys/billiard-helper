@@ -258,7 +258,7 @@ func (a *MatchApp) publishEvent(ctx context.Context, eventType string, payload a
 		Data:  data,
 	}
 
-	return a.eventBus.Publish(ctx, constant.BilliardMessageChannel, msg)
+	return a.eventBus.Publish(ctx, constant.BilliardEventChannel, msg)
 }
 
 func (a *MatchApp) ListMatches(ctx context.Context, matchType match.MatchType) ([]*dto.Match, error) {
