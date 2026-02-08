@@ -25,6 +25,7 @@ func AccountGroupRouter(userApp *services.UserApp) ginutils.Option {
 		ginutils.WithGroupHandlers(
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(userApp)),
 			ginutils.WithHandler(http.MethodGet, "/me", SelfInfoHandler(userApp)),
+			ginutils.WithHandler(http.MethodPost, "/me/update", UpdateSelfInfoHandler(userApp)),
 		),
 	)
 }
@@ -51,6 +52,31 @@ func SelfInfoHandler(userApp *services.UserApp) gin.HandlerFunc {
 		}
 		c.JSON(http.StatusOK, response.ResponseWithData(user))
 	}
+}
+
+// UpdateSelfInfoHandler 处理更新用户信息
+// @Summary 更新用户信息
+// @Description 更新用户信息
+// @Tags Account
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.UpdateSelfInfoReq true "更新用户信息请求体"
+// @Success 200 {object} ginutils.Ret[any]
+// @Router /account/me/update [post]
+func UpdateSelfInfoHandler(userApp *services.UserApp) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *dto.UpdateSelfInfoReq) {
+		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
+		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
+			return
+		}
+
+		err = userApp.UpdateSelfInfo(c.Request.Context(), claims.UserID, req)
+		if handleRouterError(c, err, "auth update self info handler error", errcode.ErrCodeUserUpdateSelfInfoFailed) {
+			return
+		}
+		c.JSON(http.StatusOK, response.ResponseSuccess())
+	})
 }
 
 // SendEmailCodeHandler 处理发送邮箱验证码

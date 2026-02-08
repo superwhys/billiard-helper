@@ -85,6 +85,7 @@ var (
 
 	ErrCodeSendEmailCodeFailed      = ErrSysInternal.WithMessage("发送邮箱验证码失败")
 	ErrCodeUserGetInfoFailed        = ErrSysInternal.WithMessage("获取用户信息失败")
+	ErrCodeUserUpdateSelfInfoFailed = ErrSysInternal.WithMessage("更新用户信息失败")
 	ErrCodeUserRegisterFailed       = ErrSysInternal.WithMessage("用户注册失败")
 	ErrCodeUserLoginFailed          = ErrSysInternal.WithMessage("用户登录失败")
 	ErrCodeInvalidCode              = ErrBadRequest.WithMessage("无效的验证码")

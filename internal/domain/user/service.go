@@ -17,7 +17,7 @@ type IUserService interface {
 	Login(ctx context.Context, account, password, verifyCode string) (*User, error)
 
 	// UpdateProfile 更新用户资料
-	UpdateProfile(ctx context.Context, userID uint, name, avatar string) error
+	UpdateProfile(ctx context.Context, userID uint, name string) error
 
 	// ChangePassword 修改密码
 	ChangePassword(ctx context.Context, userID uint, oldPassword, newPassword string) error
@@ -115,7 +115,7 @@ func (s *UserService) Login(ctx context.Context, acc, password, verifyCode strin
 	return user, nil
 }
 
-func (s *UserService) UpdateProfile(ctx context.Context, userID uint, name, avatar string) error {
+func (s *UserService) UpdateProfile(ctx context.Context, userID uint, name string) error {
 	// 1. 查询用户
 	user, err := s.userRepository.FindByID(ctx, userID)
 	if err != nil {
@@ -123,7 +123,7 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID uint, name, avat
 	}
 
 	// 2. 更新用户
-	user.UpdateProfile(name, avatar)
+	user.UpdateProfile(name)
 	return s.userRepository.Update(ctx, user)
 }
 

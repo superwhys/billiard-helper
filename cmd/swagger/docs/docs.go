@@ -77,6 +77,45 @@ const docTemplate = `{
                 }
             }
         },
+        "/account/me/update": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "更新用户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "更新用户信息",
+                "parameters": [
+                    {
+                        "description": "更新用户信息请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateSelfInfoReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
         "/account/refresh": {
             "post": {
                 "description": "使用 refresh token 刷新 access token",
@@ -567,6 +606,9 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "match_type": {
+                    "$ref": "#/definitions/match.MatchType"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -692,6 +734,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateSelfInfoReq": {
+            "type": "object",
+            "properties": {
+                "name": {
                     "type": "string"
                 }
             }

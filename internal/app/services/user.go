@@ -212,3 +212,8 @@ func (a *UserApp) GetUserInfo(ctx context.Context, userID uint) (*dto.User, erro
 	}
 	return a.userAssembler.ToDTO(u), nil
 }
+
+func (a *UserApp) UpdateSelfInfo(ctx context.Context, userID uint, req *dto.UpdateSelfInfoReq) error {
+	userService := a.serviceFactory.UserService(a.repoFactory)
+	return userService.UpdateProfile(ctx, userID, req.Name)
+}

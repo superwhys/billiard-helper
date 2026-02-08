@@ -15,6 +15,10 @@ type SendRegisterCodeReq struct {
 	Account string `json:"account"`
 }
 
+type UpdateSelfInfoReq struct {
+	Name string `json:"name"`
+}
+
 type RegisterReq struct {
 	Account  string `json:"account"`
 	Code     string `json:"code"`

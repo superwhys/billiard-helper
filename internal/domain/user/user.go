@@ -18,11 +18,8 @@ func NewUser(phone string, email Email, name string, password Password) *User {
 	}
 }
 
-func (u *User) UpdateProfile(name, avatar string) {
+func (u *User) UpdateProfile(name string) {
 	if name != "" {
 		u.Name = name
-	}
-	if avatar != "" {
-		u.Avatar = avatar
 	}
 }
