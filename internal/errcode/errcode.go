@@ -79,8 +79,10 @@ var (
 	ErrForbidden       = Error{ErrCode: 100403, Message: "禁止访问"}
 	ErrTooManyRequests = Error{ErrCode: 100429, Message: "请求过多"}
 
-	ErrCodeInvalidToken             = ErrUnauthorized.WithMessage("无效的令牌")
-	ErrCodeTokenExpired             = ErrUnauthorized.WithMessage("登录已过期,请重新登录")
+	ErrNoToken      = Error{ErrCode: 400001, Message: "No Token"}
+	ErrTokenExpired = Error{ErrCode: 400002, Message: "Token Expired"}
+	ErrInvalidToken = Error{ErrCode: 400003, Message: "Invalid Token"}
+
 	ErrCodeSendEmailCodeFailed      = ErrSysInternal.WithMessage("发送邮箱验证码失败")
 	ErrCodeUserGetInfoFailed        = ErrSysInternal.WithMessage("获取用户信息失败")
 	ErrCodeUserRegisterFailed       = ErrSysInternal.WithMessage("用户注册失败")

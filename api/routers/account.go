@@ -124,7 +124,7 @@ func AccountLoginHandler(userApp *services.UserApp) gin.HandlerFunc {
 func AccountRefreshHandler(userApp *services.UserApp) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *dto.RefreshTokenReq) {
 		token, err := userApp.RefreshAccessToken(c.Request.Context(), req.RefreshToken)
-		if handleRouterError(c, err, "auth refresh handler error", errcode.ErrCodeInvalidToken) {
+		if handleRouterError(c, err, "auth refresh handler error", errcode.ErrInvalidToken) {
 			return
 		}
 		c.JSON(http.StatusOK, response.ResponseWithData(token))

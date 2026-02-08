@@ -155,9 +155,9 @@ func (a *UserApp) ForceLogoutByRefreshToken(ctx context.Context, refreshToken st
 	claims, err := jwt.ParseToken(refreshToken, []byte(a.jwtConfig.JwtSecret))
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			return errcode.ErrCodeTokenExpired
+			return errcode.ErrTokenExpired
 		}
-		return errcode.ErrCodeInvalidToken
+		return errcode.ErrInvalidToken
 	}
 	if claims.TokenType != jwt.TokenTypeRefresh {
 		return errcode.ErrUnauthorized
@@ -172,9 +172,9 @@ func (a *UserApp) RefreshAccessToken(ctx context.Context, refreshToken string) (
 	claims, err := jwt.ParseToken(refreshToken, []byte(a.jwtConfig.JwtSecret))
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			return nil, errcode.ErrCodeTokenExpired
+			return nil, errcode.ErrTokenExpired
 		}
-		return nil, errcode.ErrCodeInvalidToken
+		return nil, errcode.ErrInvalidToken
 	}
 	if claims.TokenType != jwt.TokenTypeRefresh || claims.Subject == "" {
 		return nil, errcode.ErrUnauthorized

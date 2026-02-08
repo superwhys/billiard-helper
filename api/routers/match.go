@@ -44,7 +44,7 @@ func MatchListHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 			return
 		}
 
-		matches, err := matchApp.ListMatches(c.Request.Context(), claims.UserID, req.MatchType)
+		matches, err := matchApp.ListMatches(c.Request.Context(), claims.UserID, req)
 		if handleRouterError(c, err, "list matches failed", errcode.ErrCodeListMatchesFailed) {
 			return
 		}

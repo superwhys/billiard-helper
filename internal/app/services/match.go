@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/miebyte/goutils/utils/ptrx"
 	"github.com/superwhys/billiard-helper/internal/app/assembler"
@@ -14,7 +13,6 @@ import (
 	"github.com/superwhys/billiard-helper/internal/domain/shared"
 	"github.com/superwhys/billiard-helper/internal/errcode"
 	"github.com/superwhys/billiard-helper/internal/infra/cache"
-	"github.com/superwhys/billiard-helper/internal/pkg/codegen"
 )
 
 type MatchApp struct {
@@ -44,16 +42,20 @@ func NewMatchApp(
 func (a *MatchApp) CreateMatch(ctx context.Context, req *dto.CreateMatchRequest) (*dto.Match, error) {
 	matchEntity := a.matchAssembler.CreateMatchReqToMatch(req)
 
-	for _, player := range matchEntity.Players {
-		player.Code = codegen.GeneratePlayerCode(matchEntity.ID, uint8(player.Type), fmt.Sprintf("%d", ptrx.UintValue(player.UserID)))
-	}
+	err := a.repoFactory.WithTransaction(ctx, func(repoFactory factory.IRepoFactory) error {
+		matchService := a.serviceFactory.MatchService(repoFactory)
+		err := matchService.CreateMatch(ctx, req.UserID, matchEntity)
+		if err != nil {
+			return err
+		}
 
-	matchService := a.serviceFactory.MatchService(a.repoFactory)
-	match, err := matchService.CreateMatch(ctx, req.UserID, matchEntity)
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	return a.matchAssembler.ToMatchDTO(match), nil
+
+	return a.matchAssembler.ToMatchDTO(matchEntity), nil
 }
 
 // JoinRoom 加入房间
@@ -268,9 +270,9 @@ func (a *MatchApp) publishEvent(ctx context.Context, eventType string, payload a
 	return a.eventBus.Publish(ctx, constant.BilliardEventChannel, msg)
 }
 
-func (a *MatchApp) ListMatches(ctx context.Context, userId uint, matchType match.MatchType) ([]*dto.Match, error) {
+func (a *MatchApp) ListMatches(ctx context.Context, userId uint, req *dto.MatchListRequest) ([]*dto.Match, error) {
 	matchRepo := a.repoFactory.MatchRepo()
-	matches, err := matchRepo.ListMatches(ctx, string(matchType))
+	matches, err := matchRepo.ListMatches(ctx, string(req.MatchType), req.Limit, req.Cursor)
 	if err != nil {
 		return nil, err
 	}

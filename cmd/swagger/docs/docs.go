@@ -502,6 +502,9 @@ const docTemplate = `{
                 "max_players": {
                     "type": "integer"
                 },
+                "name": {
+                    "type": "string"
+                },
                 "target_score": {
                     "type": "integer"
                 },
@@ -564,6 +567,9 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "name": {
+                    "type": "string"
+                },
                 "owner_id": {
                     "type": "integer"
                 },
@@ -611,6 +617,12 @@ const docTemplate = `{
         "dto.MatchListRequest": {
             "type": "object",
             "properties": {
+                "cursor": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
                 "match_type": {
                     "$ref": "#/definitions/match.MatchType"
                 }
@@ -783,7 +795,6 @@ const docTemplate = `{
         },
         "match.PlayerType": {
             "type": "integer",
-            "format": "int32",
             "enum": [
                 1,
                 2

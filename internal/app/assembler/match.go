@@ -18,6 +18,7 @@ func (a *MatchAssembler) CreateMatchReqToMatch(req *dto.CreateMatchRequest) *mat
 
 	m := &match.Match{
 		OwnerID:   req.UserID,
+		Name:      req.Name,
 		Status:    match.MatchStatusPending,
 		MatchType: req.MatchType,
 		Config: match.MatchConfig{
@@ -52,7 +53,9 @@ func (a *MatchAssembler) ToMatchDTO(r *match.Match) *dto.Match {
 	return &dto.Match{
 		ID:        r.ID,
 		OwnerID:   r.OwnerID,
+		Name:      r.Name,
 		Status:    int(r.Status),
+		MatchType: r.MatchType,
 		Config:    config,
 		Players:   players,
 		CreatedAt: r.CreatedAt,

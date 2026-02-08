@@ -18,7 +18,8 @@ func TokenVerifyMiddleware(userApp *services.UserApp) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
-			ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrUnauthorized))
+
+			ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrNoToken))
 			ctx.Abort()
 			return
 		}
@@ -33,11 +34,11 @@ func TokenVerifyMiddleware(userApp *services.UserApp) gin.HandlerFunc {
 
 			// Handle token expiration specifically
 			if errors.Is(err, jwt.ErrTokenExpired) {
-				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrCodeTokenExpired))
+				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrTokenExpired))
 			} else if ec, ok := errcode.AsErrcode(err); ok {
 				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(ec))
 			} else {
-				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrCodeInvalidToken))
+				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrInvalidToken))
 			}
 			ctx.Abort()
 			return

@@ -31,8 +31,8 @@ func newPlayer(db *gorm.DB, opts ...gen.DOOption) player {
 	_player.CreatedAt = field.NewTime(tableName, "created_at")
 	_player.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_player.DeletedAt = field.NewField(tableName, "deleted_at")
-	_player.Code = field.NewString(tableName, "code")
 	_player.MatchID = field.NewUint(tableName, "match_id")
+	_player.Code = field.NewString(tableName, "code")
 	_player.UserID = field.NewUint(tableName, "user_id")
 	_player.NickName = field.NewString(tableName, "nick_name")
 	_player.Type = field.NewUint8(tableName, "type")
@@ -68,9 +68,9 @@ type player struct {
 	CreatedAt field.Time
 	UpdatedAt field.Time
 	DeletedAt field.Field
-	Code      field.String // 玩家代码
 	MatchID   field.Uint   // 比赛ID
-	UserID    field.Uint   // 用户ID
+	Code      field.String // 玩家代码
+	UserID    field.Uint   // 真实玩家的用户ID
 	NickName  field.String // 昵称
 	Type      field.Uint8  // 玩家类型
 	Events    playerHasManyEvents
@@ -94,8 +94,8 @@ func (p *player) updateTableName(table string) *player {
 	p.CreatedAt = field.NewTime(table, "created_at")
 	p.UpdatedAt = field.NewTime(table, "updated_at")
 	p.DeletedAt = field.NewField(table, "deleted_at")
-	p.Code = field.NewString(table, "code")
 	p.MatchID = field.NewUint(table, "match_id")
+	p.Code = field.NewString(table, "code")
 	p.UserID = field.NewUint(table, "user_id")
 	p.NickName = field.NewString(table, "nick_name")
 	p.Type = field.NewUint8(table, "type")
@@ -128,8 +128,8 @@ func (p *player) fillFieldMap() {
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
 	p.fieldMap["deleted_at"] = p.DeletedAt
-	p.fieldMap["code"] = p.Code
 	p.fieldMap["match_id"] = p.MatchID
+	p.fieldMap["code"] = p.Code
 	p.fieldMap["user_id"] = p.UserID
 	p.fieldMap["nick_name"] = p.NickName
 	p.fieldMap["type"] = p.Type

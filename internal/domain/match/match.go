@@ -12,6 +12,7 @@ import (
 // Match 聚合根
 type Match struct {
 	ID        uint        `json:"id"`
+	Name      string      `json:"name"`
 	OwnerID   uint        `json:"owner_id"`
 	Status    MatchStatus `json:"status"`
 	MatchType MatchType   `json:"match_type"`

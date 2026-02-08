@@ -13,6 +13,7 @@ type IRepoFactory interface {
 	UserRepo() user.IUserRepository
 	MatchRepo() match.IMatchRepository
 	PlayerRepo() match.IPlayerRepository
+	WithTransaction(ctx context.Context, fn func(factory IRepoFactory) error) error
 }
 
 type repositoryFactory struct {

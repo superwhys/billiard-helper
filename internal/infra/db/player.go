@@ -5,6 +5,7 @@ import (
 
 	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/infra/db/assembler"
+	"github.com/superwhys/billiard-helper/internal/infra/db/models"
 	"github.com/superwhys/billiard-helper/internal/infra/db/query"
 	"gorm.io/gorm"
 )
@@ -34,6 +35,25 @@ func (r *PlayerRepo) Create(ctx context.Context, player *match.Player) error {
 	err := r.query.Player.WithContext(ctx).Create(po)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (r *PlayerRepo) CreateInBatches(ctx context.Context, players []*match.Player) error {
+	pos := make([]*models.Player, 0, len(players))
+	for _, player := range players {
+		pos = append(pos, r.playerPoAssembler.ToPO(player))
+	}
+
+	batchSize := min(len(players), 30)
+	err := r.query.Player.WithContext(ctx).CreateInBatches(pos, batchSize)
+	if err != nil {
+		return err
+	}
+
+	// 回填 playerID
+	for i, player := range players {
+		player.ID = pos[i].ID
 	}
 	return nil
 }

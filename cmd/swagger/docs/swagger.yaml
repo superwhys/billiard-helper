@@ -6,6 +6,8 @@ definitions:
         $ref: '#/definitions/match.MatchType'
       max_players:
         type: integer
+      name:
+        type: string
       target_score:
         type: integer
       virtual_players:
@@ -46,6 +48,8 @@ definitions:
         type: string
       id:
         type: integer
+      name:
+        type: string
       owner_id:
         type: integer
       players:
@@ -76,6 +80,10 @@ definitions:
     type: object
   dto.MatchListRequest:
     properties:
+      cursor:
+        type: integer
+      limit:
+        type: integer
       match_type:
         $ref: '#/definitions/match.MatchType'
     type: object
@@ -193,7 +201,6 @@ definitions:
     enum:
     - 1
     - 2
-    format: int32
     type: integer
     x-enum-varnames:
     - PlayerTypeVirtual

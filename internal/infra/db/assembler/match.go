@@ -74,8 +74,10 @@ func (a *MatchPoAssembler) ToEntity(po *models.Match) *match.Match {
 	return &match.Match{
 		ID:        po.ID,
 		OwnerID:   po.UserID,
+		Name:      po.Name,
 		Status:    match.MatchStatus(po.Status),
 		Config:    config,
+		MatchType: match.MatchType(po.MatchType),
 		Players:   players,
 		CreatedAt: po.CreatedAt,
 		UpdatedAt: po.UpdatedAt,
@@ -96,11 +98,6 @@ func (a *MatchPoAssembler) ToPO(entity *match.Match) *models.Match {
 		return nil
 	}
 
-	players := make([]*models.Player, 0, len(entity.Players))
-	for _, p := range entity.Players {
-		players = append(players, a.ToPlayerPO(p))
-	}
-
 	config := a.ToMatchConfig(entity.Config)
 	m := &models.Match{
 		Model: gorm.Model{
@@ -109,7 +106,6 @@ func (a *MatchPoAssembler) ToPO(entity *match.Match) *models.Match {
 		UserID:    entity.OwnerID,
 		Status:    uint8(entity.Status),
 		Config:    datatypes.NewJSONType(config),
-		Players:   players,
 		MatchType: string(entity.MatchType),
 	}
 

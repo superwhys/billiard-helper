@@ -2,13 +2,17 @@ package match
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/miebyte/goutils/logging"
+	"github.com/miebyte/goutils/utils/ptrx"
 	"github.com/superwhys/billiard-helper/internal/errcode"
+	"github.com/superwhys/billiard-helper/internal/pkg/codegen"
 )
 
 type IMatchService interface {
 	// CreateMatch 负责创建比赛的业务流程
-	CreateMatch(ctx context.Context, userID uint, match *Match) (*Match, error)
+	CreateMatch(ctx context.Context, userID uint, match *Match) error
 	// JoinMatch 处理加入比赛，包括各种校验
 	JoinMatch(ctx context.Context, match *Match, player *Player) (*Player, error)
 	// StartMatch 开始比赛
@@ -35,17 +39,39 @@ func NewMatchService(matchRepository IMatchRepository, playerRepository IPlayerR
 	}
 }
 
-func (s *MatchService) CreateMatch(ctx context.Context, userID uint, match *Match) (*Match, error) {
+func (s *MatchService) CreateMatch(ctx context.Context, userID uint, match *Match) error {
 	if match.IsPlayerOutOfLimit() {
-		return nil, errcode.ErrCodeMatchPlayerOutOfLimit
+		return errcode.ErrCodeMatchPlayerOutOfLimit
 	}
 
+	// 创建比赛
 	err := s.matchRepository.Create(ctx, match)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return match, nil
+	logging.Infoc(ctx, "create match success, matchID: %d", match.ID)
+	// 给玩家赋值比赛ID并生成玩家代码
+	for _, player := range match.Players {
+		player.MatchID = match.ID
+
+		var payload string
+		if player.Type == PlayerTypeReal {
+			payload = fmt.Sprintf("%d", ptrx.UintValue(player.UserID))
+		} else {
+			payload = player.NickName
+		}
+
+		player.Code = codegen.GeneratePlayerCode(match.ID, uint8(player.Type), payload)
+	}
+
+	// 创建玩家
+	err = s.playerRepository.CreateInBatches(ctx, match.Players)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *MatchService) JoinMatch(ctx context.Context, match *Match, player *Player) (*Player, error) {

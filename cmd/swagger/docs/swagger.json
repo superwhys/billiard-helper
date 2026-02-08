@@ -495,6 +495,9 @@
                 "max_players": {
                     "type": "integer"
                 },
+                "name": {
+                    "type": "string"
+                },
                 "target_score": {
                     "type": "integer"
                 },
@@ -557,6 +560,9 @@
                 "id": {
                     "type": "integer"
                 },
+                "name": {
+                    "type": "string"
+                },
                 "owner_id": {
                     "type": "integer"
                 },
@@ -604,6 +610,12 @@
         "dto.MatchListRequest": {
             "type": "object",
             "properties": {
+                "cursor": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
                 "match_type": {
                     "$ref": "#/definitions/match.MatchType"
                 }
@@ -776,7 +788,6 @@
         },
         "match.PlayerType": {
             "type": "integer",
-            "format": "int32",
             "enum": [
                 1,
                 2
