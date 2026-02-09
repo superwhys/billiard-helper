@@ -72,15 +72,16 @@ func (a *MatchPoAssembler) ToEntity(po *models.Match) *match.Match {
 	config := a.ToMatchConfigEntity(po.Config.Data())
 
 	return &match.Match{
-		ID:        po.ID,
-		OwnerID:   po.UserID,
-		Name:      po.Name,
-		Status:    match.MatchStatus(po.Status),
-		Config:    config,
-		MatchType: match.MatchType(po.MatchType),
-		Players:   players,
-		CreatedAt: po.CreatedAt,
-		UpdatedAt: po.UpdatedAt,
+		ID:         po.ID,
+		OwnerID:    po.UserID,
+		Name:       po.Name,
+		Status:     match.MatchStatus(po.Status),
+		Config:     config,
+		MatchType:  match.MatchType(po.MatchType),
+		MatchRound: po.MatchRound,
+		Players:    players,
+		CreatedAt:  po.CreatedAt,
+		UpdatedAt:  po.UpdatedAt,
 	}
 }
 
@@ -103,10 +104,12 @@ func (a *MatchPoAssembler) ToPO(entity *match.Match) *models.Match {
 		Model: gorm.Model{
 			ID: entity.ID,
 		},
-		UserID:    entity.OwnerID,
-		Status:    uint8(entity.Status),
-		Config:    datatypes.NewJSONType(config),
-		MatchType: string(entity.MatchType),
+		UserID:     entity.OwnerID,
+		Status:     uint8(entity.Status),
+		MatchRound: entity.MatchRound,
+		Name:       entity.Name,
+		Config:     datatypes.NewJSONType(config),
+		MatchType:  string(entity.MatchType),
 	}
 
 	return m

@@ -48,14 +48,16 @@ func (r *MatchRepo) Create(ctx context.Context, match *match.Match) error {
 	return nil
 }
 
-func (r *MatchRepo) FindByID(ctx context.Context, id uint) (*match.Match, error) {
+func (r *MatchRepo) FindByID(ctx context.Context, id uint, withPlayers bool) (*match.Match, error) {
 	m := r.query.Match
 
+	query := m.WithContext(ctx).Where(m.ID.Eq(id))
+	if withPlayers {
+		query = query.Preload(m.Players)
+	}
+
 	// 需要预加载 Players
-	po, err := m.WithContext(ctx).
-		Preload(m.Players).
-		Where(m.ID.Eq(id)).
-		First()
+	po, err := query.First()
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +78,9 @@ func (r *MatchRepo) Update(ctx context.Context, match *match.Match) error {
 	m := r.query.Match
 	po := r.matchPoAssembler.ToPO(match)
 
-	_, err := m.WithContext(ctx).Updates(po)
+	_, err := m.WithContext(ctx).
+		Where(m.ID.Eq(match.ID)).
+		Updates(po)
 	if err != nil {
 		return err
 	}

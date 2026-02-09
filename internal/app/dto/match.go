@@ -12,14 +12,15 @@ type MatchConfig struct {
 }
 
 type Match struct {
-	ID        uint            `json:"id"`
-	OwnerID   uint            `json:"owner_id"`
-	Name      string          `json:"name"`
-	Status    int             `json:"status"`
-	MatchType match.MatchType `json:"match_type"`
-	Config    MatchConfig     `json:"config"`
-	Players   []Player        `json:"players"`
-	CreatedAt time.Time       `json:"created_at"`
+	ID         uint            `json:"id"`
+	OwnerID    uint            `json:"owner_id"`
+	Name       string          `json:"name"`
+	Status     int             `json:"status"`
+	MatchType  match.MatchType `json:"match_type"`
+	MatchRound uint            `json:"match_round"`
+	Config     MatchConfig     `json:"config"`
+	Players    []Player        `json:"players"`
+	CreatedAt  time.Time       `json:"created_at"`
 }
 
 type Player struct {
@@ -39,6 +40,13 @@ type CreateMatchRequest struct {
 	MaxPlayers     uint            `json:"max_players"`
 	TargetScore    uint            `json:"target_score"`
 	VirtualPlayers []*Player       `json:"virtual_players"`
+}
+
+type UpdateMatchRequest struct {
+	Operator
+	MatchID     uint   `json:"match_id"`
+	Name        string `json:"name"`
+	TargetScore uint   `json:"target_score"`
 }
 
 type JoinMatchRequest struct {

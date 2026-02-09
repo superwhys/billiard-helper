@@ -19,9 +19,10 @@ func MatchGroupRouter(matchApp *services.MatchApp) ginutils.Option {
 		ginutils.WithHandler(http.MethodGet, "/list", MatchListHandler(matchApp)),
 		ginutils.WithHandler(http.MethodGet, "/detail", MatchDetailHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/create", MatchCreateHandler(matchApp)),
-		ginutils.WithHandler(http.MethodPost, "/join", MatchJoinHandler(matchApp)),
+		ginutils.WithHandler(http.MethodPost, "/update", MatchUpdateHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/start", MatchStartHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/end", MatchEndHandler(matchApp)),
+		ginutils.WithHandler(http.MethodPost, "/join", MatchJoinHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/leave", MatchLeaveHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/kick", MatchKickHandler(matchApp)),
 	)
@@ -100,6 +101,34 @@ func MatchCreateHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
 		Match, err := matchApp.CreateMatch(ctx, req)
 		if handleRouterError(c, err, "create Match failed", errcode.ErrCodeCreateMatchFailed) {
+			return
+		}
+
+		c.JSON(http.StatusOK, response.ResponseWithData(Match))
+	})
+}
+
+// MatchUpdateHandler 更新比赛
+// @Summary 更新比赛
+// @Description 更新比赛
+// @Tags Match
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.UpdateMatchRequest true "更新比赛请求体"
+// @Success 200 {object} ginutils.Ret[dto.Match]
+// @Router /match/update [post]
+func MatchUpdateHandler(matchApp *services.MatchApp) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *dto.UpdateMatchRequest) {
+		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
+		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
+			return
+		}
+		req.UserID = claims.UserID
+
+		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
+		Match, err := matchApp.UpdateMatch(ctx, req)
+		if handleRouterError(c, err, "update Match failed", errcode.ErrCodeUpdateMatchFailed) {
 			return
 		}
 

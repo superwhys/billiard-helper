@@ -48,6 +48,8 @@ definitions:
         type: string
       id:
         type: integer
+      match_round:
+        type: integer
       match_type:
         $ref: '#/definitions/match.MatchType'
       name:
@@ -133,6 +135,15 @@ definitions:
       refresh_token:
         type: string
     type: object
+  dto.UpdateMatchRequest:
+    properties:
+      match_id:
+        type: integer
+      name:
+        type: string
+      target_score:
+        type: integer
+    type: object
   dto.UpdateSelfInfoReq:
     properties:
       name:
@@ -208,6 +219,7 @@ definitions:
     enum:
     - 1
     - 2
+    format: int32
     type: integer
     x-enum-varnames:
     - PlayerTypeVirtual
@@ -537,6 +549,30 @@ paths:
       security:
       - BearerAuth: []
       summary: 开始比赛
+      tags:
+      - Match
+  /match/update:
+    post:
+      consumes:
+      - application/json
+      description: 更新比赛
+      parameters:
+      - description: 更新比赛请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMatchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-dto_Match'
+      security:
+      - BearerAuth: []
+      summary: 更新比赛
       tags:
       - Match
 securityDefinitions:

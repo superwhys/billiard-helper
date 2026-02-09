@@ -35,6 +35,7 @@ func newMatch(db *gorm.DB, opts ...gen.DOOption) match {
 	_match.Name = field.NewString(tableName, "name")
 	_match.Status = field.NewUint8(tableName, "status")
 	_match.MatchType = field.NewString(tableName, "match_type")
+	_match.MatchRound = field.NewUint(tableName, "match_round")
 	_match.Config = field.NewField(tableName, "config")
 	_match.Players = matchHasManyPlayers{
 		db: db.Session(&gorm.Session{}),
@@ -80,17 +81,18 @@ func newMatch(db *gorm.DB, opts ...gen.DOOption) match {
 type match struct {
 	matchDo matchDo
 
-	ALL       field.Asterisk
-	ID        field.Uint
-	CreatedAt field.Time
-	UpdatedAt field.Time
-	DeletedAt field.Field
-	UserID    field.Uint   // 房主ID
-	Name      field.String // 比赛名称
-	Status    field.Uint8  // 房间状态
-	MatchType field.String // 比赛类型
-	Config    field.Field  // 比赛配置
-	Players   matchHasManyPlayers
+	ALL        field.Asterisk
+	ID         field.Uint
+	CreatedAt  field.Time
+	UpdatedAt  field.Time
+	DeletedAt  field.Field
+	UserID     field.Uint   // 房主ID
+	Name       field.String // 比赛名称
+	Status     field.Uint8  // 房间状态
+	MatchType  field.String // 比赛类型
+	MatchRound field.Uint   // 比赛轮数(正在进行第几轮)
+	Config     field.Field  // 比赛配置
+	Players    matchHasManyPlayers
 
 	Events matchHasManyEvents
 
@@ -119,6 +121,7 @@ func (m *match) updateTableName(table string) *match {
 	m.Name = field.NewString(table, "name")
 	m.Status = field.NewUint8(table, "status")
 	m.MatchType = field.NewString(table, "match_type")
+	m.MatchRound = field.NewUint(table, "match_round")
 	m.Config = field.NewField(table, "config")
 
 	m.fillFieldMap()
@@ -144,7 +147,7 @@ func (m *match) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (m *match) fillFieldMap() {
-	m.fieldMap = make(map[string]field.Expr, 12)
+	m.fieldMap = make(map[string]field.Expr, 13)
 	m.fieldMap["id"] = m.ID
 	m.fieldMap["created_at"] = m.CreatedAt
 	m.fieldMap["updated_at"] = m.UpdatedAt
@@ -153,6 +156,7 @@ func (m *match) fillFieldMap() {
 	m.fieldMap["name"] = m.Name
 	m.fieldMap["status"] = m.Status
 	m.fieldMap["match_type"] = m.MatchType
+	m.fieldMap["match_round"] = m.MatchRound
 	m.fieldMap["config"] = m.Config
 
 }

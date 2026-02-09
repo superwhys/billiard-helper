@@ -58,6 +58,32 @@ func (a *MatchApp) CreateMatch(ctx context.Context, req *dto.CreateMatchRequest)
 	return a.matchAssembler.ToMatchDTO(matchEntity), nil
 }
 
+func (a *MatchApp) UpdateMatch(ctx context.Context, req *dto.UpdateMatchRequest) (*dto.Match, error) {
+	matchRepo := a.repoFactory.MatchRepo()
+
+	m, err := matchRepo.FindByID(ctx, req.MatchID, false)
+	if err != nil {
+		return nil, err
+	}
+	if m.OwnerID != req.UserID {
+		return nil, errcode.ErrCodeMatchNotFound
+	}
+
+	if m.Status != match.MatchStatusPending {
+		return nil, errcode.ErrCodeMatchNotPending
+	}
+
+	m.Name = req.Name
+	m.Config.TargetScore = req.TargetScore
+
+	err = matchRepo.Update(ctx, m)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.matchAssembler.ToMatchDTO(m), nil
+}
+
 // JoinRoom 加入房间
 func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*dto.Match, error) {
 	matchRepo := a.repoFactory.MatchRepo()
@@ -71,7 +97,7 @@ func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*d
 	defer lock.Unlock(ctx)
 
 	// 2. 获取比赛房间
-	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID)
+	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +139,7 @@ func (a *MatchApp) StartMatch(ctx context.Context, req *dto.MatchActionRequest) 
 	defer lock.Unlock(ctx)
 
 	// 2. 检查比赛是否存在
-	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID)
+	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID, false)
 	if err != nil {
 		return err
 	}
@@ -148,7 +174,7 @@ func (a *MatchApp) EndMatch(ctx context.Context, req *dto.MatchActionRequest) er
 	defer lock.Unlock(ctx)
 
 	// 2. 检查比赛是否存在
-	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID)
+	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID, false)
 	if err != nil {
 		return err
 	}
@@ -190,7 +216,7 @@ func (a *MatchApp) LeaveMatch(ctx context.Context, req *dto.MatchActionRequest) 
 	}
 
 	// 3. 获取房间信息
-	matchRoom, err := matchRepo.FindByID(ctx, player.MatchID)
+	matchRoom, err := matchRepo.FindByID(ctx, player.MatchID, false)
 	if err != nil {
 		return err
 	}
@@ -233,7 +259,7 @@ func (a *MatchApp) KickMatchPlayer(ctx context.Context, req *dto.KickPlayerReque
 	}
 
 	// 3. 获取房间信息
-	matchRoom, err := matchRepo.FindByID(ctx, player.MatchID)
+	matchRoom, err := matchRepo.FindByID(ctx, player.MatchID, false)
 	if err != nil {
 		return err
 	}
@@ -286,7 +312,7 @@ func (a *MatchApp) ListMatches(ctx context.Context, userId uint, req *dto.MatchL
 
 func (a *MatchApp) GetMatchDetail(ctx context.Context, userId uint, matchID uint) (*dto.Match, error) {
 	matchRepo := a.repoFactory.MatchRepo()
-	match, err := matchRepo.FindByID(ctx, matchID)
+	match, err := matchRepo.FindByID(ctx, matchID, true)
 	if err != nil {
 		return nil, err
 	}

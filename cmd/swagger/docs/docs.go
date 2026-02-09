@@ -529,6 +529,45 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/match/update": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "更新比赛",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Match"
+                ],
+                "summary": "更新比赛",
+                "parameters": [
+                    {
+                        "description": "更新比赛请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateMatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-dto_Match"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -604,6 +643,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "integer"
+                },
+                "match_round": {
                     "type": "integer"
                 },
                 "match_type": {
@@ -738,6 +780,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdateMatchRequest": {
+            "type": "object",
+            "properties": {
+                "match_id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "target_score": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.UpdateSelfInfoReq": {
             "type": "object",
             "properties": {
@@ -845,6 +901,7 @@ const docTemplate = `{
         },
         "match.PlayerType": {
             "type": "integer",
+            "format": "int32",
             "enum": [
                 1,
                 2
