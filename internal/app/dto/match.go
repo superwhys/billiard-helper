@@ -82,3 +82,8 @@ type MatchListRequest struct {
 type MatchDetailRequest struct {
 	MatchID uint `form:"match_id"`
 }
+
+type MatchRoundNextRequest struct {
+	Operator
+	MatchID uint `json:"match_id"`
+}

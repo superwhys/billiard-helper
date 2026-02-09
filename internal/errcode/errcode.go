@@ -51,34 +51,6 @@ func (e Error) AddMessage(message string) Error {
 	return e
 }
 
-const (
-	CodeNormal = iota + 10000
-	CodeInvalidRequest
-	// Auth error codes
-	CodeNoToken
-	CodeInvalidToken
-	CodeTokenExpired
-	CodeSendEmailCodeFailed
-	CodeUserRegisterFailed
-	CodeUserLoginFailed
-	CodeInvalidCode
-	CodeUserAlreadyExists
-	CodeUserNotFound
-	CodeInvalidPassword
-
-	// Match error codes
-	CodeCreateMatchFailed
-	CodeJoinMatchFailed
-	CodeStartMatchFailed
-	CodeEndMatchFailed
-	CodeLeaveMatchFailed
-	CodeKickPlayerFailed
-	CodeMatchPlayerFull
-	CodeMatchNotPending
-	CodeMatchPlayerAlreadyJoined
-	CodeMatchNotExists
-)
-
 var (
 	ErrSysInternal     = Error{ErrCode: 100500, Message: "系统内部错误"}
 	ErrNotFound        = Error{ErrCode: 100404, Message: "资源不存在"}
@@ -119,6 +91,8 @@ var (
 	ErrCodeListMatchesFailed        = ErrSysInternal.WithMessage("获取比赛列表失败")
 	ErrCodeMatchDetailFailed        = ErrSysInternal.WithMessage("获取比赛详情失败")
 	ErrCodeMatchNotFound            = ErrNotFound.WithMessage("比赛不存在")
+	ErrCodeNextRoundFailed          = ErrSysInternal.WithMessage("下一轮失败")
+	ErrCodeMatchMaxRoundReached     = ErrBadRequest.WithMessage("比赛轮数已达最大值").WithErrCode(200001)
 )
 
 func AsErrcode(err error) (Error, bool) {

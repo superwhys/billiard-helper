@@ -26,7 +26,35 @@ func MatchGroupRouter(matchApp *services.MatchApp) ginutils.Option {
 		ginutils.WithHandler(http.MethodPost, "/join", MatchJoinHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/leave", MatchLeaveHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/kick", MatchKickHandler(matchApp)),
+		ginutils.WithHandler(http.MethodPost, "/round/next", MatchRoundNextHandler(matchApp)),
 	)
+}
+
+// MatchRoundNextHandler 下一轮
+// @Summary 下一轮
+// @Description 下一轮
+// @Tags Match
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ginutils.Ret[any]
+// @Router /match/round/next [post]
+func MatchRoundNextHandler(matchApp *services.MatchApp) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *dto.MatchRoundNextRequest) {
+		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
+		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
+			return
+		}
+		req.UserID = claims.UserID
+
+		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
+		err = matchApp.NextRound(ctx, req)
+		if handleRouterError(c, err, "next round failed", errcode.ErrCodeNextRoundFailed) {
+			return
+		}
+
+		c.JSON(http.StatusOK, response.ResponseSuccess())
+	})
 }
 
 // MatchListHandler 获取比赛列表

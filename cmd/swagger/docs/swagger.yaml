@@ -577,6 +577,23 @@ paths:
       summary: 获取比赛列表
       tags:
       - Match
+  /match/round/next:
+    post:
+      consumes:
+      - application/json
+      description: 下一轮
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 下一轮
+      tags:
+      - Match
   /match/start:
     post:
       consumes:

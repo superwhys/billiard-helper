@@ -23,6 +23,8 @@ type IMatchService interface {
 	LeaveMatch(ctx context.Context, match *Match, player *Player) error
 	// KickPlayer 踢出玩家
 	KickMatchPlayer(ctx context.Context, match *Match, player *Player) error
+	// NextRound 下一轮
+	NextRound(ctx context.Context, match *Match) error
 }
 
 var _ IMatchService = (*MatchService)(nil)
@@ -135,4 +137,23 @@ func (s *MatchService) LeaveMatch(ctx context.Context, match *Match, player *Pla
 
 func (s *MatchService) KickMatchPlayer(ctx context.Context, match *Match, player *Player) error {
 	return s.LeaveMatch(ctx, match, player)
+}
+
+func (s *MatchService) NextRound(ctx context.Context, match *Match) error {
+	if match.Status != MatchStatusInProgress {
+		return errcode.ErrCodeMatchNotInProgress
+	}
+
+	maxRound := match.Config.TargetScore
+	if match.MatchRound >= maxRound {
+		return errcode.ErrCodeMatchMaxRoundReached
+	}
+
+	match.MatchRound++
+	err := s.matchRepository.Update(ctx, match)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

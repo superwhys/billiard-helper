@@ -357,3 +357,24 @@ func (a *MatchApp) DeleteMatch(ctx context.Context, req *dto.DeleteMatchRequest)
 		return nil
 	})
 }
+
+func (a *MatchApp) NextRound(ctx context.Context, req *dto.MatchRoundNextRequest) error {
+	matchRepo := a.repoFactory.MatchRepo()
+	matchService := a.serviceFactory.MatchService(a.repoFactory)
+
+	// 1. 获取比赛锁
+	lock := a.lockManager.MatchLock(req.MatchID)
+	if err := lock.Lock(ctx); err != nil {
+		return err
+	}
+	defer lock.Unlock(ctx)
+
+	// 2. 获取比赛信息
+	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID, false)
+	if err != nil {
+		return err
+	}
+
+	// 3. 下一轮
+	return matchService.NextRound(ctx, matchRoom)
+}
