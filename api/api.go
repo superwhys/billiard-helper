@@ -58,10 +58,16 @@ func SetupApi(
 			),
 		),
 		socketManager.Handler(),
-		routers.AccountGroupRouter(userApp),
 		ginutils.WithGroupHandlers(
-			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(userApp)),
-			routers.MatchGroupRouter(matchApp),
+			// 不需要token验证的接口
+			ginutils.WithGroupHandlers(
+				routers.AccountGroupRouter(userApp),
+			),
+			// 需要token验证的接口
+			ginutils.WithGroupHandlers(
+				ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(userApp)),
+				routers.MatchGroupRouter(matchApp),
+			),
 		),
 	)
 

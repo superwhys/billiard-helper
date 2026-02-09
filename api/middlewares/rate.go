@@ -22,26 +22,26 @@ const (
 	RateLimitExcludeKey = "rate_limit_excluded"
 )
 
-func keyGenerator(rateLimitPaths []string) func(c *gin.Context) string {
+func keyGenerator(excludedPaths []string) func(c *gin.Context) string {
 	return func(c *gin.Context) string {
 		path := c.Request.URL.Path
 		clientIP := c.ClientIP()
 		token := c.GetHeader("Authorization")
 
-		for _, p := range rateLimitPaths {
+		for _, p := range excludedPaths {
 			if strings.HasPrefix(path, p) {
-
-				hash := md5.New()
-				hash.Write([]byte(token))
-				hash.Write([]byte(path))
-				hash.Write([]byte(clientIP))
-				key := fmt.Sprintf("%x", hash.Sum(nil))
-
-				logging.Infoc(c.Request.Context(), "limit path: %s clientIp: %s key: %s", path, clientIP, key)
-				return key
+				return RateLimitExcludeKey
 			}
 		}
-		return RateLimitExcludeKey
+
+		hash := md5.New()
+		hash.Write([]byte(token))
+		hash.Write([]byte(path))
+		hash.Write([]byte(clientIP))
+		key := fmt.Sprintf("%x", hash.Sum(nil))
+
+		logging.Infoc(c.Request.Context(), "limit path: %s clientIp: %s key: %s", path, clientIP, key)
+		return key
 	}
 }
 
@@ -59,7 +59,7 @@ func RateLimitMiddleware(
 	max int,
 	expiration time.Duration,
 	redisClient *redisutils.RedisClient,
-	rateLimitPaths []string,
+	excludedPaths []string,
 ) gin.HandlerFunc {
 	store, err := redisstore.NewStoreWithOptions(redisClient, limiter.StoreOptions{
 		Prefix:   "limiter",
@@ -75,7 +75,7 @@ func RateLimitMiddleware(
 	instance := limiter.New(store, rate)
 	return ginlimiter.NewMiddleware(
 		instance,
-		ginlimiter.WithKeyGetter(keyGenerator(rateLimitPaths)),
+		ginlimiter.WithKeyGetter(keyGenerator(excludedPaths)),
 		ginlimiter.WithErrorHandler(onError),
 		ginlimiter.WithLimitReachedHandler(onLimitReached),
 		ginlimiter.WithExcludedKey(func(s string) bool {
