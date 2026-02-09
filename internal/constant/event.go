@@ -8,16 +8,20 @@ import (
 	"github.com/miebyte/goutils/logging"
 )
 
+// EventType 事件类型
+type EventType = string
+
 const (
-	EventClientConnectSuccess = "connect"
-	EventPlayerJoinRoom       = "player_join_room"
-	EventPlayerLeaveRoom      = "player_leave_room"
-	EventMatchStarted         = "match_started"
-	EventMatchEnded           = "match_ended"
-	EventPlayerScoreAdd       = "player_score_add"
-	EventPlayerScoreMinus     = "player_score_minus"
-	EventPlayerScoreReset     = "player_score_reset"
-	EventPlayerScoreUndo      = "player_score_undo"
+	EventClientConnectSuccess EventType = "connect"
+	EventPlayerJoinRoom       EventType = "player_join_room"
+	EventPlayerLeaveRoom      EventType = "player_leave_room"
+	EventMatchStarted         EventType = "match_started"
+	EventMatchEnded           EventType = "match_ended"
+	EventPlayerScoreAdd       EventType = "player_score_add"
+	EventPlayerScoreMinus     EventType = "player_score_minus"
+	EventPlayerScoreReset     EventType = "player_score_reset"
+	EventPlayerScoreUndo      EventType = "player_score_undo"
+	EventMatchRoundNext       EventType = "match_round_next"
 )
 
 const (
