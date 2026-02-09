@@ -20,6 +20,7 @@ func MatchGroupRouter(matchApp *services.MatchApp) ginutils.Option {
 		ginutils.WithHandler(http.MethodGet, "/detail", MatchDetailHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/create", MatchCreateHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/update", MatchUpdateHandler(matchApp)),
+		ginutils.WithHandler(http.MethodPost, "/delete", MatchDeleteHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/start", MatchStartHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/end", MatchEndHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/join", MatchJoinHandler(matchApp)),
@@ -133,6 +134,34 @@ func MatchUpdateHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, response.ResponseWithData(Match))
+	})
+}
+
+// MatchDeleteHandler 删除比赛
+// @Summary 删除比赛
+// @Description 删除比赛
+// @Tags Match
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.DeleteMatchRequest true "删除比赛请求体"
+// @Success 200 {object} ginutils.Ret[any]
+// @Router /match/delete [post]
+func MatchDeleteHandler(matchApp *services.MatchApp) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *dto.DeleteMatchRequest) {
+		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
+		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
+			return
+		}
+		req.UserID = claims.UserID
+
+		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
+		err = matchApp.DeleteMatch(ctx, req)
+		if handleRouterError(c, err, "delete Match failed", errcode.ErrCodeDeleteMatchFailed) {
+			return
+		}
+
+		c.JSON(http.StatusOK, response.ResponseSuccess())
 	})
 }
 

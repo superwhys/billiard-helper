@@ -99,6 +99,7 @@ var (
 	ErrCodeLeaveMatchFailed         = ErrSysInternal.WithMessage("离开比赛失败")
 	ErrCodeKickPlayerFailed         = ErrSysInternal.WithMessage("踢出比赛失败")
 	ErrCodeUpdateMatchFailed        = ErrSysInternal.WithMessage("更新比赛失败")
+	ErrCodeDeleteMatchFailed        = ErrSysInternal.WithMessage("删除比赛失败")
 	ErrCodeMatchPlayerFull          = ErrBadRequest.WithMessage("比赛人员已满")
 	ErrCodeMatchPlayerOutOfLimit    = ErrBadRequest.WithMessage("比赛人员超出限制")
 	ErrCodeMatchNotPending          = ErrBadRequest.WithMessage("比赛已开始")

@@ -257,6 +257,45 @@ const docTemplate = `{
                 }
             }
         },
+        "/match/delete": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除比赛",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Match"
+                ],
+                "summary": "删除比赛",
+                "parameters": [
+                    {
+                        "description": "删除比赛请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DeleteMatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
         "/match/detail": {
             "get": {
                 "security": [
@@ -591,6 +630,14 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/dto.Player"
                     }
+                }
+            }
+        },
+        "dto.DeleteMatchRequest": {
+            "type": "object",
+            "properties": {
+                "match_id": {
+                    "type": "integer"
                 }
             }
         },

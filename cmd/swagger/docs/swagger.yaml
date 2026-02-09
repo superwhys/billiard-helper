@@ -15,6 +15,11 @@ definitions:
           $ref: '#/definitions/dto.Player'
         type: array
     type: object
+  dto.DeleteMatchRequest:
+    properties:
+      match_id:
+        type: integer
+    type: object
   dto.JoinMatchRequest:
     properties:
       match_id:
@@ -381,6 +386,30 @@ paths:
       security:
       - BearerAuth: []
       summary: 创建房间
+      tags:
+      - Match
+  /match/delete:
+    post:
+      consumes:
+      - application/json
+      description: 删除比赛
+      parameters:
+      - description: 删除比赛请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DeleteMatchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 删除比赛
       tags:
       - Match
   /match/detail:

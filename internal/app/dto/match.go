@@ -42,6 +42,11 @@ type CreateMatchRequest struct {
 	VirtualPlayers []*Player       `json:"virtual_players"`
 }
 
+type DeleteMatchRequest struct {
+	Operator
+	MatchID uint `json:"match_id"`
+}
+
 type UpdateMatchRequest struct {
 	Operator
 	MatchID     uint   `json:"match_id"`

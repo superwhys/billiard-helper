@@ -323,3 +323,27 @@ func (a *MatchApp) GetMatchDetail(ctx context.Context, userId uint, matchID uint
 
 	return a.matchAssembler.ToMatchDTO(match), nil
 }
+
+func (a *MatchApp) DeleteMatch(ctx context.Context, req *dto.DeleteMatchRequest) error {
+	matchRepo := a.repoFactory.MatchRepo()
+
+	m, err := matchRepo.FindByID(ctx, req.MatchID, false)
+	if err != nil {
+		return err
+	}
+
+	if m.OwnerID != req.UserID {
+		return errcode.ErrCodeMatchNotFound
+	}
+
+	if m.Status != match.MatchStatusPending {
+		return errcode.ErrCodeMatchNotPending
+	}
+
+	err = matchRepo.Delete(ctx, req.MatchID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
