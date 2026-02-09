@@ -6,9 +6,9 @@ import (
 )
 
 type IVerifyCodeRepository interface {
-	GenerateCode(ctx context.Context, account string, ttl time.Duration) (string, error)
-	GetCode(ctx context.Context, account string) (string, error)
-	DeleteCode(ctx context.Context, account string) error
+	GenerateCode(ctx context.Context, account string, ttl time.Duration) (string, string, error)
+	GetCode(ctx context.Context, codeId, account string) (string, error)
+	DeleteCode(ctx context.Context, codeId string) error
 }
 
 type IUserRepository interface {

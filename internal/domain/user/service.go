@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/superwhys/billiard-helper/internal/app/dto"
 	"github.com/superwhys/billiard-helper/internal/errcode"
 	"github.com/superwhys/billiard-helper/internal/pkg/account"
 	"gorm.io/gorm"
@@ -14,7 +15,7 @@ type IUserService interface {
 	RegisterUser(ctx context.Context, account, password, name string) error
 
 	// Login 处理登录校验
-	Login(ctx context.Context, account, password, verifyCode string) (*User, error)
+	Login(ctx context.Context, req *dto.LoginReq) (*User, error)
 
 	// UpdateProfile 更新用户资料
 	UpdateProfile(ctx context.Context, userID uint, name string) error
@@ -33,9 +34,10 @@ type UserService struct {
 	verifyCodeRepo IVerifyCodeRepository
 }
 
-func NewUserService(userRepository IUserRepository) *UserService {
+func NewUserService(userRepository IUserRepository, verifyCodeRepo IVerifyCodeRepository) *UserService {
 	return &UserService{
 		userRepository: userRepository,
+		verifyCodeRepo: verifyCodeRepo,
 	}
 }
 
@@ -72,17 +74,17 @@ func (s *UserService) RegisterUser(ctx context.Context, acc, password, name stri
 	return s.userRepository.Save(ctx, user)
 }
 
-func (s *UserService) Login(ctx context.Context, acc, password, verifyCode string) (*User, error) {
+func (s *UserService) Login(ctx context.Context, req *dto.LoginReq) (*User, error) {
 	// 1. 查询用户
 	var (
 		user *User
 		err  error
 	)
 	switch {
-	case account.IsEmailAccount(acc):
-		user, err = s.userRepository.FindByEmail(ctx, acc)
-	case account.IsPhoneAccount(acc):
-		user, err = s.userRepository.FindByPhone(ctx, acc)
+	case account.IsEmailAccount(req.Account):
+		user, err = s.userRepository.FindByEmail(ctx, req.Account)
+	case account.IsPhoneAccount(req.Account):
+		user, err = s.userRepository.FindByPhone(ctx, req.Account)
 	default:
 		return nil, errcode.ErrBadRequest
 	}
@@ -95,19 +97,19 @@ func (s *UserService) Login(ctx context.Context, acc, password, verifyCode strin
 
 	// 2. 校验密码/验证码
 	switch {
-	case password != "":
-		if !user.Password.Compare(password) {
+	case req.Password != "":
+		if !user.Password.Compare(req.Password) {
 			return nil, errcode.ErrCodeInvalidPassword
 		}
-	case verifyCode != "":
-		storedCode, err := s.verifyCodeRepo.GetCode(ctx, acc)
+	case req.VerifyCode != "":
+		storedCode, err := s.verifyCodeRepo.GetCode(ctx, req.CodeID, req.Account)
 		if err != nil {
 			return nil, err
 		}
-		if verifyCode != storedCode {
+		if req.VerifyCode != storedCode {
 			return nil, errcode.ErrCodeInvalidCode
 		}
-		_ = s.verifyCodeRepo.DeleteCode(ctx, acc)
+		_ = s.verifyCodeRepo.DeleteCode(ctx, req.CodeID)
 	default:
 		return nil, errcode.ErrBadRequest
 	}

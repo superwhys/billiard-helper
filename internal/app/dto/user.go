@@ -21,6 +21,7 @@ type UpdateSelfInfoReq struct {
 
 type RegisterReq struct {
 	Account  string `json:"account"`
+	CodeID   string `json:"code_id"`
 	Code     string `json:"code"`
 	Password string `json:"password"`
 	Name     string `json:"name"`
@@ -29,6 +30,7 @@ type RegisterReq struct {
 type LoginReq struct {
 	Account    string `json:"account"`
 	Password   string `json:"password"`
+	CodeID     string `json:"code_id"`
 	VerifyCode string `json:"verify_code"`
 }
 

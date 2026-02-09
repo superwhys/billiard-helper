@@ -49,6 +49,34 @@ const docTemplate = `{
                 }
             }
         },
+        "/account/logout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "登出",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "登出",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
         "/account/me": {
             "get": {
                 "security": [
@@ -672,6 +700,9 @@ const docTemplate = `{
                 "account": {
                     "type": "string"
                 },
+                "code_id": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
                 },
@@ -798,6 +829,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "code": {
+                    "type": "string"
+                },
+                "code_id": {
                     "type": "string"
                 },
                 "name": {

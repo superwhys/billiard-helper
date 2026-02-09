@@ -91,12 +91,12 @@ func UpdateSelfInfoHandler(userApp *services.UserApp) gin.HandlerFunc {
 // @Router /account/send-email-code [post]
 func SendEmailCodeHandler(userApp *services.UserApp) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *dto.SendRegisterCodeReq) {
-		err := userApp.SendRegisterCode(c.Request.Context(), req)
+		codeId, err := userApp.SendRegisterCode(c.Request.Context(), req)
 		if handleRouterError(c, err, "auth send email code handler error", errcode.ErrCodeSendEmailCodeFailed) {
 			return
 		}
 
-		c.JSON(http.StatusOK, response.ResponseSuccess())
+		c.JSON(http.StatusOK, response.ResponseWithData(codeId))
 	})
 }
 

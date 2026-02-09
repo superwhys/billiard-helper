@@ -47,25 +47,30 @@ func NewUserApp(
 }
 
 // SendRegisterCode 发送注册验证码
-func (a *UserApp) SendRegisterCode(ctx context.Context, req *dto.SendRegisterCodeReq) error {
-	code, err := a.verifyCodeRepo.GenerateCode(ctx, req.Account, time.Minute*10)
+func (a *UserApp) SendRegisterCode(ctx context.Context, req *dto.SendRegisterCodeReq) (string, error) {
+	codeId, code, err := a.verifyCodeRepo.GenerateCode(ctx, req.Account, time.Minute*10)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	sender, err := a.verifyCodeSenderFactory.Pick(req.Account)
 	if err != nil {
-		return err
+		return "", err
 	}
 	logging.Debugc(ctx, "verify coder sender: %s", sender.Channel())
 
-	return sender.SendVerifyCode(ctx, req.Account, code)
+	err = sender.SendVerifyCode(ctx, req.Account, code)
+	if err != nil {
+		return "", err
+	}
+
+	return codeId, nil
 }
 
 // Register 注册用户
 func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
 	// 1. 校验验证码
-	storedCode, err := a.verifyCodeRepo.GetCode(ctx, req.Account)
+	storedCode, err := a.verifyCodeRepo.GetCode(ctx, req.CodeID, req.Account)
 	if err != nil {
 		return err
 	}
@@ -74,7 +79,7 @@ func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
 	}
 
 	// 删除验证码，不需要关心是否失败
-	_ = a.verifyCodeRepo.DeleteCode(ctx, req.Account)
+	_ = a.verifyCodeRepo.DeleteCode(ctx, req.CodeID)
 
 	userService := a.serviceFactory.UserService(a.repoFactory)
 	return userService.RegisterUser(ctx, req.Account, req.Password, req.Name)
@@ -88,7 +93,7 @@ func (a *UserApp) Login(ctx context.Context, req *dto.LoginReq) (*dto.TokenRespo
 
 	// 1. 验证账号密码或者验证码
 	userService := a.serviceFactory.UserService(a.repoFactory)
-	u, err := userService.Login(ctx, req.Account, req.Password, req.VerifyCode)
+	u, err := userService.Login(ctx, req)
 	if err != nil {
 		return nil, err
 	}

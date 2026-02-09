@@ -7,17 +7,19 @@ import (
 )
 
 type DomainServiceFactory struct {
-	rdb *redisutils.RedisClient
+	rdb            *redisutils.RedisClient
+	verifyCodeRepo user.IVerifyCodeRepository
 }
 
-func NewDomainServiceFactory(rdb *redisutils.RedisClient) *DomainServiceFactory {
+func NewDomainServiceFactory(rdb *redisutils.RedisClient, verifyCodeRepo user.IVerifyCodeRepository) *DomainServiceFactory {
 	return &DomainServiceFactory{
-		rdb: rdb,
+		rdb:            rdb,
+		verifyCodeRepo: verifyCodeRepo,
 	}
 }
 
 func (f *DomainServiceFactory) UserService(repoFactory IRepoFactory) user.IUserService {
-	return user.NewUserService(repoFactory.UserRepo())
+	return user.NewUserService(repoFactory.UserRepo(), f.verifyCodeRepo)
 }
 
 func (f *DomainServiceFactory) MatchService(repoFactory IRepoFactory) match.IMatchService {

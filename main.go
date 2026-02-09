@@ -59,7 +59,7 @@ func main() {
 	sessionRepo := cache.NewSessionRepository(redisClient)
 
 	repoFactory := factory.NewRepositoryFactory(mysqlDB)
-	serviceFactory := factory.NewDomainServiceFactory(redisClient)
+	serviceFactory := factory.NewDomainServiceFactory(redisClient, verifyCodeRepo)
 	eventBus := eventbus.NewRedisEventBus(redisClient)
 	lockManager := cache.NewLockManager(redisClient)
 

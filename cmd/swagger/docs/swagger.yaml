@@ -40,6 +40,8 @@ definitions:
     properties:
       account:
         type: string
+      code_id:
+        type: string
       password:
         type: string
       verify_code:
@@ -122,6 +124,8 @@ definitions:
       account:
         type: string
       code:
+        type: string
+      code_id:
         type: string
       name:
         type: string
@@ -255,6 +259,23 @@ paths:
           schema:
             $ref: '#/definitions/ginutils.Ret-dto_TokenResponse'
       summary: 登录
+      tags:
+      - Account
+  /account/logout:
+    post:
+      consumes:
+      - application/json
+      description: 登出
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 登出
       tags:
       - Account
   /account/me:

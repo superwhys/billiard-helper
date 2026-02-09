@@ -42,6 +42,34 @@
                 }
             }
         },
+        "/account/logout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "登出",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "登出",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
         "/account/me": {
             "get": {
                 "security": [
@@ -665,6 +693,9 @@
                 "account": {
                     "type": "string"
                 },
+                "code_id": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
                 },
@@ -791,6 +822,9 @@
                     "type": "string"
                 },
                 "code": {
+                    "type": "string"
+                },
+                "code_id": {
                     "type": "string"
                 },
                 "name": {
