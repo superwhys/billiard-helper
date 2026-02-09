@@ -382,5 +382,7 @@ func (a *MatchApp) NextRound(ctx context.Context, req *dto.MatchRoundNextRequest
 	}
 
 	// 3. 下一轮
+
+	// TODO: 写入一个新的事件，并记录到 match_games 中
 	return matchService.NextRound(ctx, matchRoom)
 }
