@@ -12,6 +12,7 @@ require (
 	github.com/sqids/sqids-go v0.4.1
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.6
+	github.com/ulule/limiter/v3 v3.11.2
 	golang.org/x/crypto v0.40.0
 	gorm.io/datatypes v1.2.4
 	gorm.io/gen v0.3.27

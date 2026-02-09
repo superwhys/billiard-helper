@@ -77,7 +77,7 @@ func main() {
 
 	socketManager := socket.NewSocketManager(hook.NewSocketHook(matchApp, config.JwtConfig))
 
-	apiApp := api.SetupApi(isDev(), socketManager, userApp, scoreApp, matchApp)
+	apiApp := api.SetupApi(isDev(), redisClient, socketManager, userApp, scoreApp, matchApp)
 	subscriber := subscribe.NewSubscriber(eventBus, socketManager, repoFactory)
 
 	srv := cores.NewCores(

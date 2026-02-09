@@ -2,8 +2,10 @@ package api
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/miebyte/goutils/ginutils"
+	"github.com/miebyte/goutils/redisutils"
 	"github.com/superwhys/billiard-helper/api/middlewares"
 	"github.com/superwhys/billiard-helper/api/routers"
 	"github.com/superwhys/billiard-helper/internal/app/services"
@@ -32,13 +34,29 @@ type Api struct {
 // @name Authorization
 func SetupApi(
 	isDev bool,
+	redisClient *redisutils.RedisClient,
 	socketManager *socket.SocketManager,
 	userApp *services.UserApp,
 	scoreApp *services.ScoreApp,
 	matchApp *services.MatchApp,
 ) *Api {
 	engine := ginutils.NewServerHandler(
-		ginutils.WithMiddleware(ginutils.WithLoggingRequest(true)),
+		ginutils.WithMiddleware(
+			ginutils.WithLoggingRequest(true),
+			middlewares.RateLimitMiddleware(
+				10,
+				time.Minute,
+				redisClient,
+				[]string{
+					"/account/send-email-code",
+					"/account/register",
+					"/account/login",
+					"/account/refresh",
+					"/account/logout",
+					"/account/me",
+				},
+			),
+		),
 		socketManager.Handler(),
 		routers.AccountGroupRouter(userApp),
 		ginutils.WithGroupHandlers(
