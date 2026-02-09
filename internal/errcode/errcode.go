@@ -1,6 +1,9 @@
 package errcode
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type Error struct {
 	ErrCode int
@@ -43,6 +46,11 @@ func (e Error) WithMessage(message string) Error {
 	return e
 }
 
+func (e Error) AddMessage(message string) Error {
+	e.Message = fmt.Sprintf("%s, %s", e.Message, message)
+	return e
+}
+
 const (
 	CodeNormal = iota + 10000
 	CodeInvalidRequest
@@ -77,13 +85,14 @@ var (
 	ErrBadRequest      = Error{ErrCode: 100400, Message: "请求参数错误"}
 	ErrUnauthorized    = Error{ErrCode: 100401, Message: "未登录"}
 	ErrForbidden       = Error{ErrCode: 100403, Message: "禁止访问"}
-	ErrTooManyRequests = Error{ErrCode: 100429, Message: "请求过多"}
+	ErrTooManyRequests = Error{ErrCode: 100429, Message: "请求过于频繁，请稍后再试"}
 
 	ErrNoToken      = Error{ErrCode: 400001, Message: "No Token"}
 	ErrTokenExpired = Error{ErrCode: 400002, Message: "Token Expired"}
 	ErrInvalidToken = Error{ErrCode: 400003, Message: "Invalid Token"}
 
 	ErrCodeSendEmailCodeFailed      = ErrSysInternal.WithMessage("发送邮箱验证码失败")
+	ErrCodeSendSMSCodeFailed        = ErrSysInternal.WithMessage("发送短信验证码失败")
 	ErrCodeUserGetInfoFailed        = ErrSysInternal.WithMessage("获取用户信息失败")
 	ErrCodeUserUpdateSelfInfoFailed = ErrSysInternal.WithMessage("更新用户信息失败")
 	ErrCodeUserRegisterFailed       = ErrSysInternal.WithMessage("用户注册失败")

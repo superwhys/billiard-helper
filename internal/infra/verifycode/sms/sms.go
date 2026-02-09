@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/miebyte/goutils/logging"
+	"github.com/superwhys/billiard-helper/internal/errcode"
 	"github.com/superwhys/billiard-helper/internal/infra/verifycode"
 )
 
@@ -16,7 +17,7 @@ func NewSMSSender() *SMSSender {
 
 func (s *SMSSender) SendVerifyCode(ctx context.Context, phone string, code string) error {
 	logging.Infoc(ctx, "send sms verify code, phone: %s", phone)
-	return nil
+	return errcode.ErrCodeSendSMSCodeFailed.AddMessage("暂不支持短信验证码")
 }
 
 func (s *SMSSender) Channel() string {
