@@ -54,11 +54,11 @@ func (m *Match) JoinPlayer(player *Player) error {
 		if player.Type == PlayerTypeReal {
 			if p.UserID != nil && *p.UserID == *player.UserID {
 				return errcode.ErrCodeMatchPlayerAlreadyJoined
-			} else {
-				// 如果是虚拟玩家，检查昵称是否相同
-				if p.NickName == player.NickName {
-					return errcode.ErrCodeMatchPlayerAlreadyJoined
-				}
+			}
+		} else {
+			// 如果是虚拟玩家，检查昵称是否相同
+			if p.NickName == player.NickName {
+				return errcode.ErrCodeMatchPlayerAlreadyJoined
 			}
 		}
 	}
