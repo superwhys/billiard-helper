@@ -34,6 +34,7 @@ func newMatchEvent(db *gorm.DB, opts ...gen.DOOption) matchEvent {
 	_matchEvent.MatchID = field.NewUint(tableName, "match_id")
 	_matchEvent.PlayerID = field.NewUint(tableName, "player_id")
 	_matchEvent.OperatorID = field.NewUint(tableName, "operator_id")
+	_matchEvent.EventType = field.NewString(tableName, "event_type")
 	_matchEvent.Data = field.NewField(tableName, "data")
 	_matchEvent.Operator = matchEventBelongsToOperator{
 		db: db.Session(&gorm.Session{}),
@@ -67,10 +68,11 @@ type matchEvent struct {
 	CreatedAt  field.Time
 	UpdatedAt  field.Time
 	DeletedAt  field.Field
-	MatchID    field.Uint  // 时间所属比赛 ID
-	PlayerID   field.Uint  // 事件涉及的玩家 ID
-	OperatorID field.Uint  // 事件操作人 ID
-	Data       field.Field // 事件数据
+	MatchID    field.Uint   // 时间所属比赛 ID
+	PlayerID   field.Uint   // 事件涉及的玩家 ID
+	OperatorID field.Uint   // 事件操作人 ID
+	EventType  field.String // 事件类型
+	Data       field.Field  // 事件数据
 	Operator   matchEventBelongsToOperator
 
 	fieldMap map[string]field.Expr
@@ -95,6 +97,7 @@ func (m *matchEvent) updateTableName(table string) *matchEvent {
 	m.MatchID = field.NewUint(table, "match_id")
 	m.PlayerID = field.NewUint(table, "player_id")
 	m.OperatorID = field.NewUint(table, "operator_id")
+	m.EventType = field.NewString(table, "event_type")
 	m.Data = field.NewField(table, "data")
 
 	m.fillFieldMap()
@@ -122,7 +125,7 @@ func (m *matchEvent) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (m *matchEvent) fillFieldMap() {
-	m.fieldMap = make(map[string]field.Expr, 9)
+	m.fieldMap = make(map[string]field.Expr, 10)
 	m.fieldMap["id"] = m.ID
 	m.fieldMap["created_at"] = m.CreatedAt
 	m.fieldMap["updated_at"] = m.UpdatedAt
@@ -130,6 +133,7 @@ func (m *matchEvent) fillFieldMap() {
 	m.fieldMap["match_id"] = m.MatchID
 	m.fieldMap["player_id"] = m.PlayerID
 	m.fieldMap["operator_id"] = m.OperatorID
+	m.fieldMap["event_type"] = m.EventType
 	m.fieldMap["data"] = m.Data
 
 }

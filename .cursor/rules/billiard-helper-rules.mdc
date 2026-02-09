@@ -10,6 +10,8 @@ alwaysApply: true
 
 目标：为移动端/小程序/网页前端提供稳定的 RESTful API，保证在多人并发下的记录一致性与便捷的撤回能力。
 
+注意：这是一个全新的应用，因此不需要考虑兼容问题。
+
 二、角色与模块
 - 模块划分
   - User 用户模块：账号、登录状态、基本资料
@@ -101,15 +103,19 @@ alwaysApply: true
 - 数据隔离：所有 API 以 room_id 校验资源归属
 
 八、错误码与响应规范
-- 4xx
-  - 400 BadRequest：参数无效
-  - 401 Unauthorized：未登录
-  - 403 Forbidden：无权限
-  - 404 NotFound：房间/玩家/事件不存在或不属于该 room
-  - 409 Conflict：状态不允许操作（例如房间已结束、顺序冲突、并发版本冲突）
-  - 422 Unprocessable：业务规则不满足（玩家满员、重复加入）
-- 5xx
-  - 500 ServerError
+- 统一错误定义在 `internal/errcode`，通过 `errcode.Error` 返回 `ErrCode` 与 `Message`
+- 通用错误码
+  - 100400：请求参数错误
+  - 100401：未登录
+  - 100403：禁止访问
+  - 100404：资源不存在
+  - 100429：请求过于频繁，请稍后再试
+  - 100500：系统内部错误
+- 认证相关错误码
+  - 400001：No Token
+  - 400002：Token Expired
+  - 400003：Invalid Token
+- 业务错误码以 `ErrSysInternal/ErrBadRequest/ErrNotFound` 派生 `WithMessage` 为主，必要时单独指定 `ErrCode`（如 `200001`）
 - 响应格式
   - { code, message, data?, request_id }
 
