@@ -26,6 +26,7 @@ func AccountGroupRouter(userApp *services.UserApp) ginutils.Option {
 			ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(userApp)),
 			ginutils.WithHandler(http.MethodGet, "/me", SelfInfoHandler(userApp)),
 			ginutils.WithHandler(http.MethodPost, "/me/update", UpdateSelfInfoHandler(userApp)),
+			ginutils.WithHandler(http.MethodPost, "/logout", LogoutHandler(userApp)),
 		),
 	)
 }
@@ -136,6 +137,25 @@ func AccountLoginHandler(userApp *services.UserApp) gin.HandlerFunc {
 		}
 		c.JSON(http.StatusOK, response.ResponseWithData(token))
 	})
+}
+
+// LogoutHandler 处理登出
+// @Summary 登出
+// @Description 登出
+// @Tags Account
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ginutils.Ret[any]
+// @Router /account/logout [post]
+func LogoutHandler(userApp *services.UserApp) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := userApp.Logout(c.Request.Context())
+		if handleRouterError(c, err, "auth logout handler error", errcode.ErrCodeUserLogoutFailed) {
+			return
+		}
+		c.JSON(http.StatusOK, response.ResponseSuccess())
+	}
 }
 
 // AccountRefreshHandler 刷新 access token

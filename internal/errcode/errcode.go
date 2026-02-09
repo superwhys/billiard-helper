@@ -88,6 +88,7 @@ var (
 	ErrCodeUserUpdateSelfInfoFailed = ErrSysInternal.WithMessage("更新用户信息失败")
 	ErrCodeUserRegisterFailed       = ErrSysInternal.WithMessage("用户注册失败")
 	ErrCodeUserLoginFailed          = ErrSysInternal.WithMessage("用户登录失败")
+	ErrCodeUserLogoutFailed         = ErrSysInternal.WithMessage("用户登出失败")
 	ErrCodeInvalidCode              = ErrBadRequest.WithMessage("无效的验证码")
 	ErrCodeUserAlreadyExists        = ErrBadRequest.WithMessage("用户已存在")
 	ErrCodeUserNotFound             = ErrNotFound.WithMessage("用户不存在")

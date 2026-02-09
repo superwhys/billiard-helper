@@ -142,29 +142,12 @@ func (a *UserApp) GetUserTokenClaims(ctx context.Context, tokenStr string) (*jwt
 	return claims, nil
 }
 
-func (a *UserApp) Logout(ctx context.Context, tokenStr string) error {
-	claims, err := a.GetUserTokenClaims(ctx, tokenStr)
+func (a *UserApp) Logout(ctx context.Context) error {
+	claims, err := jwt.TokenClaimsFromContext(ctx)
 	if err != nil {
 		return err
 	}
 
-	return a.sessionRepo.DeleteSession(ctx, claims.Subject)
-}
-
-func (a *UserApp) ForceLogoutByRefreshToken(ctx context.Context, refreshToken string) error {
-	claims, err := jwt.ParseToken(refreshToken, []byte(a.jwtConfig.JwtSecret))
-	if err != nil {
-		if errors.Is(err, jwt.ErrTokenExpired) {
-			return errcode.ErrTokenExpired
-		}
-		return errcode.ErrInvalidToken
-	}
-	if claims.TokenType != jwt.TokenTypeRefresh {
-		return errcode.ErrUnauthorized
-	}
-	if claims.Subject == "" {
-		return errcode.ErrUnauthorized
-	}
 	return a.sessionRepo.DeleteSession(ctx, claims.Subject)
 }
 
