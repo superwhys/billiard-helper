@@ -325,9 +325,7 @@ func (a *MatchApp) GetMatchDetail(ctx context.Context, userId uint, matchID uint
 }
 
 func (a *MatchApp) DeleteMatch(ctx context.Context, req *dto.DeleteMatchRequest) error {
-	matchRepo := a.repoFactory.MatchRepo()
-
-	m, err := matchRepo.FindByID(ctx, req.MatchID, false)
+	m, err := a.repoFactory.MatchRepo().FindByID(ctx, req.MatchID, true)
 	if err != nil {
 		return err
 	}
@@ -340,10 +338,22 @@ func (a *MatchApp) DeleteMatch(ctx context.Context, req *dto.DeleteMatchRequest)
 		return errcode.ErrCodeMatchNotPending
 	}
 
-	err = matchRepo.Delete(ctx, req.MatchID)
-	if err != nil {
-		return err
-	}
+	return a.repoFactory.WithTransaction(ctx, func(factory factory.IRepoFactory) error {
+		matchRepo := factory.MatchRepo()
+		playerRepo := factory.PlayerRepo()
 
-	return nil
+		err = matchRepo.Delete(ctx, req.MatchID)
+		if err != nil {
+			return err
+		}
+
+		for _, player := range m.Players {
+			err = playerRepo.Delete(ctx, player.ID)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
