@@ -71,6 +71,11 @@ func newMatch(db *gorm.DB, opts ...gen.DOOption) match {
 		}{
 			RelationField: field.NewRelation("MatchGames.Winner", "models.Player"),
 		},
+		LastEvent: struct {
+			field.RelationField
+		}{
+			RelationField: field.NewRelation("MatchGames.LastEvent", "models.MatchEvent"),
+		},
 	}
 
 	_match.fillFieldMap()
@@ -355,6 +360,9 @@ type matchHasManyMatchGames struct {
 	field.RelationField
 
 	Winner struct {
+		field.RelationField
+	}
+	LastEvent struct {
 		field.RelationField
 	}
 }

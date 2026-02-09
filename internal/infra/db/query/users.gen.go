@@ -74,12 +74,20 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 			Winner struct {
 				field.RelationField
 			}
+			LastEvent struct {
+				field.RelationField
+			}
 		}{
 			RelationField: field.NewRelation("Matches.MatchGames", "models.MatchGame"),
 			Winner: struct {
 				field.RelationField
 			}{
 				RelationField: field.NewRelation("Matches.MatchGames.Winner", "models.Player"),
+			},
+			LastEvent: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("Matches.MatchGames.LastEvent", "models.MatchEvent"),
 			},
 		},
 	}
@@ -198,6 +206,9 @@ type userHasManyMatches struct {
 	MatchGames struct {
 		field.RelationField
 		Winner struct {
+			field.RelationField
+		}
+		LastEvent struct {
 			field.RelationField
 		}
 	}

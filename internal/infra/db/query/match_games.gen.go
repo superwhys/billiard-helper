@@ -35,6 +35,8 @@ func newMatchGame(db *gorm.DB, opts ...gen.DOOption) matchGame {
 	_matchGame.GameNum = field.NewUint(tableName, "game_num")
 	_matchGame.StartAt = field.NewInt64(tableName, "start_at")
 	_matchGame.EndAt = field.NewInt64(tableName, "end_at")
+	_matchGame.Scores = field.NewField(tableName, "scores")
+	_matchGame.LastEventID = field.NewUint(tableName, "last_event_id")
 	_matchGame.WinnerID = field.NewUint(tableName, "winner_id")
 	_matchGame.Winner = matchGameBelongsToWinner{
 		db: db.Session(&gorm.Session{}),
@@ -55,6 +57,12 @@ func newMatchGame(db *gorm.DB, opts ...gen.DOOption) matchGame {
 		},
 	}
 
+	_matchGame.LastEvent = matchGameBelongsToLastEvent{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("LastEvent", "models.MatchEvent"),
+	}
+
 	_matchGame.fillFieldMap()
 
 	return _matchGame
@@ -63,17 +71,21 @@ func newMatchGame(db *gorm.DB, opts ...gen.DOOption) matchGame {
 type matchGame struct {
 	matchGameDo matchGameDo
 
-	ALL       field.Asterisk
-	ID        field.Uint
-	CreatedAt field.Time
-	UpdatedAt field.Time
-	DeletedAt field.Field
-	MatchID   field.Uint  // 比赛ID
-	GameNum   field.Uint  // 局数
-	StartAt   field.Int64 // 开始时间
-	EndAt     field.Int64 // 结束时间
-	WinnerID  field.Uint  // 赢家ID
-	Winner    matchGameBelongsToWinner
+	ALL         field.Asterisk
+	ID          field.Uint
+	CreatedAt   field.Time
+	UpdatedAt   field.Time
+	DeletedAt   field.Field
+	MatchID     field.Uint  // 比赛ID
+	GameNum     field.Uint  // 局数
+	StartAt     field.Int64 // 开始时间
+	EndAt       field.Int64 // 结束时间
+	Scores      field.Field // 玩家分数快照
+	LastEventID field.Uint  // 最新事件ID
+	WinnerID    field.Uint  // 赢家ID
+	Winner      matchGameBelongsToWinner
+
+	LastEvent matchGameBelongsToLastEvent
 
 	fieldMap map[string]field.Expr
 }
@@ -98,6 +110,8 @@ func (m *matchGame) updateTableName(table string) *matchGame {
 	m.GameNum = field.NewUint(table, "game_num")
 	m.StartAt = field.NewInt64(table, "start_at")
 	m.EndAt = field.NewInt64(table, "end_at")
+	m.Scores = field.NewField(table, "scores")
+	m.LastEventID = field.NewUint(table, "last_event_id")
 	m.WinnerID = field.NewUint(table, "winner_id")
 
 	m.fillFieldMap()
@@ -125,7 +139,7 @@ func (m *matchGame) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (m *matchGame) fillFieldMap() {
-	m.fieldMap = make(map[string]field.Expr, 10)
+	m.fieldMap = make(map[string]field.Expr, 13)
 	m.fieldMap["id"] = m.ID
 	m.fieldMap["created_at"] = m.CreatedAt
 	m.fieldMap["updated_at"] = m.UpdatedAt
@@ -134,6 +148,8 @@ func (m *matchGame) fillFieldMap() {
 	m.fieldMap["game_num"] = m.GameNum
 	m.fieldMap["start_at"] = m.StartAt
 	m.fieldMap["end_at"] = m.EndAt
+	m.fieldMap["scores"] = m.Scores
+	m.fieldMap["last_event_id"] = m.LastEventID
 	m.fieldMap["winner_id"] = m.WinnerID
 
 }
@@ -142,12 +158,15 @@ func (m matchGame) clone(db *gorm.DB) matchGame {
 	m.matchGameDo.ReplaceConnPool(db.Statement.ConnPool)
 	m.Winner.db = db.Session(&gorm.Session{Initialized: true})
 	m.Winner.db.Statement.ConnPool = db.Statement.ConnPool
+	m.LastEvent.db = db.Session(&gorm.Session{Initialized: true})
+	m.LastEvent.db.Statement.ConnPool = db.Statement.ConnPool
 	return m
 }
 
 func (m matchGame) replaceDB(db *gorm.DB) matchGame {
 	m.matchGameDo.ReplaceDB(db)
 	m.Winner.db = db.Session(&gorm.Session{})
+	m.LastEvent.db = db.Session(&gorm.Session{})
 	return m
 }
 
@@ -235,6 +254,87 @@ func (a matchGameBelongsToWinnerTx) Count() int64 {
 }
 
 func (a matchGameBelongsToWinnerTx) Unscoped() *matchGameBelongsToWinnerTx {
+	a.tx = a.tx.Unscoped()
+	return &a
+}
+
+type matchGameBelongsToLastEvent struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a matchGameBelongsToLastEvent) Where(conds ...field.Expr) *matchGameBelongsToLastEvent {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a matchGameBelongsToLastEvent) WithContext(ctx context.Context) *matchGameBelongsToLastEvent {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a matchGameBelongsToLastEvent) Session(session *gorm.Session) *matchGameBelongsToLastEvent {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a matchGameBelongsToLastEvent) Model(m *models.MatchGame) *matchGameBelongsToLastEventTx {
+	return &matchGameBelongsToLastEventTx{a.db.Model(m).Association(a.Name())}
+}
+
+func (a matchGameBelongsToLastEvent) Unscoped() *matchGameBelongsToLastEvent {
+	a.db = a.db.Unscoped()
+	return &a
+}
+
+type matchGameBelongsToLastEventTx struct{ tx *gorm.Association }
+
+func (a matchGameBelongsToLastEventTx) Find() (result *models.MatchEvent, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a matchGameBelongsToLastEventTx) Append(values ...*models.MatchEvent) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a matchGameBelongsToLastEventTx) Replace(values ...*models.MatchEvent) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a matchGameBelongsToLastEventTx) Delete(values ...*models.MatchEvent) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a matchGameBelongsToLastEventTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a matchGameBelongsToLastEventTx) Count() int64 {
+	return a.tx.Count()
+}
+
+func (a matchGameBelongsToLastEventTx) Unscoped() *matchGameBelongsToLastEventTx {
 	a.tx = a.tx.Unscoped()
 	return &a
 }
