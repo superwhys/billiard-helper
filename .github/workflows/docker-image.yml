@@ -1,0 +1,39 @@
+name: Docker Image CI
+
+on:
+  push:
+    tags:
+      - 'server/*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Extract image tag
+        id: vars
+        run: |
+          echo "image_tag=${GITHUB_REF_NAME#server/}" >> "$GITHUB_OUTPUT"
+      
+      - name: docker registry login
+        uses: docker/login-action@v3
+        with:
+          registry: hoven-registry-cn-beijing.cr.volces.com
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          build-args: |
+            BINARY_NAME=billiard-helper
+            VERSION=${{ steps.vars.outputs.image_tag }}
+          push: true
+          tags: hoven-registry-cn-beijing.cr.volces.com/library/billiard-helper:${{ steps.vars.outputs.image_tag }}
