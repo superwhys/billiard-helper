@@ -325,6 +325,12 @@ func (a *MatchApp) GetMatchDetail(ctx context.Context, userId uint, matchID uint
 }
 
 func (a *MatchApp) DeleteMatch(ctx context.Context, req *dto.DeleteMatchRequest) error {
+	lock := a.lockManager.MatchLock(req.MatchID)
+	if err := lock.Lock(ctx); err != nil {
+		return err
+	}
+	defer lock.Unlock(ctx)
+
 	m, err := a.repoFactory.MatchRepo().FindByID(ctx, req.MatchID, true)
 	if err != nil {
 		return err
