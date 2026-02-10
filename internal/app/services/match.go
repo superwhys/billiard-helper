@@ -140,9 +140,13 @@ func (a *MatchApp) StartMatch(ctx context.Context, req *dto.MatchActionRequest) 
 	defer lock.Unlock(ctx)
 
 	// 2. 检查比赛是否存在
-	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID, false)
+	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID, true)
 	if err != nil {
 		return err
+	}
+
+	if len(matchRoom.Players) <= 1 {
+		return errcode.ErrCodeMatchPlayerNotEnough
 	}
 
 	// 3. 开始比赛

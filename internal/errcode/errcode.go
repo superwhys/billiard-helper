@@ -91,6 +91,7 @@ var (
 	ErrCodeListMatchesFailed        = ErrSysInternal.WithMessage("获取比赛列表失败")
 	ErrCodeMatchDetailFailed        = ErrSysInternal.WithMessage("获取比赛详情失败")
 	ErrCodeMatchNotFound            = ErrNotFound.WithMessage("比赛不存在")
+	ErrCodeMatchPlayerNotEnough     = ErrBadRequest.WithMessage("比赛人数不足")
 	ErrCodeNextRoundFailed          = ErrSysInternal.WithMessage("下一轮失败")
 	ErrCodeMatchMaxRoundReached     = ErrBadRequest.WithMessage("比赛轮数已达最大值").WithErrCode(200001)
 )
