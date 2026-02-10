@@ -781,6 +781,10 @@
         "dto.MatchConfig": {
             "type": "object",
             "properties": {
+                "data": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
                 "max_players": {
                     "type": "integer"
                 },
@@ -885,6 +889,10 @@
         "dto.UpdateMatchRequest": {
             "type": "object",
             "properties": {
+                "config_data": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
                 "match_id": {
                     "type": "integer"
                 },
@@ -1003,7 +1011,6 @@
         },
         "match.PlayerType": {
             "type": "integer",
-            "format": "int32",
             "enum": [
                 1,
                 2

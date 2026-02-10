@@ -48,6 +48,7 @@ func (a *MatchAssembler) ToMatchDTO(r *match.Match) *dto.Match {
 	config := dto.MatchConfig{
 		MaxPlayers:  r.Config.MaxPlayers,
 		TargetScore: r.Config.TargetScore,
+		Data:        r.Config.Data,
 	}
 
 	return &dto.Match{

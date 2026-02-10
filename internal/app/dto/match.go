@@ -7,8 +7,9 @@ import (
 )
 
 type MatchConfig struct {
-	MaxPlayers  uint `json:"max_players"`
-	TargetScore uint `json:"target_score"`
+	MaxPlayers  uint           `json:"max_players"`
+	TargetScore uint           `json:"target_score"`
+	Data        map[string]any `json:"data"`
 }
 
 type Match struct {
@@ -49,9 +50,10 @@ type DeleteMatchRequest struct {
 
 type UpdateMatchRequest struct {
 	Operator
-	MatchID     uint   `json:"match_id"`
-	Name        string `json:"name"`
-	TargetScore uint   `json:"target_score"`
+	MatchID     uint           `json:"match_id"`
+	Name        string         `json:"name"`
+	TargetScore uint           `json:"target_score"`
+	ConfigData  map[string]any `json:"config_data"`
 }
 
 type JoinMatchRequest struct {

@@ -788,6 +788,10 @@ const docTemplate = `{
         "dto.MatchConfig": {
             "type": "object",
             "properties": {
+                "data": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
                 "max_players": {
                     "type": "integer"
                 },
@@ -892,6 +896,10 @@ const docTemplate = `{
         "dto.UpdateMatchRequest": {
             "type": "object",
             "properties": {
+                "config_data": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
                 "match_id": {
                     "type": "integer"
                 },
@@ -1010,7 +1018,6 @@ const docTemplate = `{
         },
         "match.PlayerType": {
             "type": "integer",
-            "format": "int32",
             "enum": [
                 1,
                 2

@@ -79,6 +79,9 @@ definitions:
     type: object
   dto.MatchConfig:
     properties:
+      data:
+        additionalProperties: {}
+        type: object
       max_players:
         type: integer
       target_score:
@@ -146,6 +149,9 @@ definitions:
     type: object
   dto.UpdateMatchRequest:
     properties:
+      config_data:
+        additionalProperties: {}
+        type: object
       match_id:
         type: integer
       name:
@@ -228,7 +234,6 @@ definitions:
     enum:
     - 1
     - 2
-    format: int32
     type: integer
     x-enum-varnames:
     - PlayerTypeVirtual

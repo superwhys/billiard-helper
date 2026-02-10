@@ -6,8 +6,9 @@ import (
 )
 
 type MatchConfig struct {
-	MaxPlayers  uint `json:"max_players"`  // 最大玩家数量
-	TargetScore uint `json:"target_score"` // 目标分数（如抢几）
+	MaxPlayers  uint           `json:"max_players"`  // 最大玩家数量
+	TargetScore uint           `json:"target_score"` // 目标分数（如抢几）
+	Data        map[string]any `json:"data"`         // 其他配置数据
 }
 
 type Match struct {

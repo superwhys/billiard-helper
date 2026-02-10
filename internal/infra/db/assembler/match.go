@@ -17,6 +17,7 @@ func (a *MatchPoAssembler) ToMatchConfig(po match.MatchConfig) models.MatchConfi
 	return models.MatchConfig{
 		MaxPlayers:  po.MaxPlayers,
 		TargetScore: po.TargetScore,
+		Data:        po.Data,
 	}
 }
 
@@ -24,6 +25,7 @@ func (a *MatchPoAssembler) ToMatchConfigEntity(config models.MatchConfig) match.
 	return match.MatchConfig{
 		MaxPlayers:  config.MaxPlayers,
 		TargetScore: config.TargetScore,
+		Data:        config.Data,
 	}
 }
 

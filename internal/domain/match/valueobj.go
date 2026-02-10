@@ -26,8 +26,10 @@ const (
 // MatchConfig 比赛配置值对象
 // 仅存储配置信息，不包含计算逻辑
 type MatchConfig struct {
-	MaxPlayers  uint `json:"max_players"`  // 最大玩家数量
-	TargetScore uint `json:"target_score"` // 目标分数（如抢几）
+	MaxPlayers  uint           `json:"max_players"`  // 最大玩家数量
+	TargetScore uint           `json:"target_score"` // 目标分数（如抢几）
+	Data        map[string]any `json:"data"`         // 其他配置数据
+
 }
 
 func MatchTypeMaxPlayers(mt MatchType) uint {
@@ -40,5 +42,15 @@ func MatchTypeMaxPlayers(mt MatchType) uint {
 		return 2
 	default:
 		return 2
+	}
+}
+
+func Default9BallScoreConfig() map[string]any {
+	return map[string]any{
+		"big":    10,
+		"small":  20,
+		"golden": 4,
+		"win":    4,
+		"foul":   -1,
 	}
 }

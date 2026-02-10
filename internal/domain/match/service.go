@@ -46,6 +46,10 @@ func (s *MatchService) CreateMatch(ctx context.Context, userID uint, match *Matc
 		return errcode.ErrCodeMatchPlayerOutOfLimit
 	}
 
+	if match.MatchType == MatchType9Ball {
+		match.Config.Data = Default9BallScoreConfig()
+	}
+
 	// 创建比赛
 	err := s.matchRepository.Create(ctx, match)
 	if err != nil {

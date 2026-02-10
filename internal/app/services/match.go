@@ -75,6 +75,7 @@ func (a *MatchApp) UpdateMatch(ctx context.Context, req *dto.UpdateMatchRequest)
 
 	m.Name = req.Name
 	m.Config.TargetScore = req.TargetScore
+	m.Config.Data = req.ConfigData
 
 	err = matchRepo.Update(ctx, m)
 	if err != nil {
