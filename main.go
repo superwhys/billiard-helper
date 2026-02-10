@@ -1,11 +1,14 @@
 package main
 
 import (
+	"time"
+
 	"github.com/miebyte/goutils/cores"
 	"github.com/miebyte/goutils/flags"
 	"github.com/miebyte/goutils/logging"
 	"github.com/miebyte/goutils/mysqlutils"
 	"github.com/miebyte/goutils/redisutils"
+
 	"github.com/superwhys/billiard-helper/api"
 	"github.com/superwhys/billiard-helper/config"
 	"github.com/superwhys/billiard-helper/internal/app/factory"
@@ -19,6 +22,7 @@ import (
 	"github.com/superwhys/billiard-helper/internal/infra/verifycode"
 	"github.com/superwhys/billiard-helper/internal/infra/verifycode/email"
 	"github.com/superwhys/billiard-helper/internal/infra/verifycode/sms"
+	"github.com/superwhys/billiard-helper/internal/pkg/ratelimit"
 )
 
 var (
@@ -62,6 +66,10 @@ func main() {
 	serviceFactory := factory.NewDomainServiceFactory(redisClient, verifyCodeRepo)
 	eventBus := eventbus.NewRedisEventBus(redisClient)
 	lockManager := cache.NewLockManager(redisClient)
+	verifyCodeLimiter, err := ratelimit.NewRedisLimiter(5, time.Minute, redisClient, "verify_code_send")
+	logging.PanicError(err)
+	httpLimiter, err := ratelimit.NewRedisLimiter(10, time.Second*10, redisClient, "http_rate")
+	logging.PanicError(err)
 
 	// Initialize app services
 	userApp := services.NewUserApp(
@@ -70,6 +78,7 @@ func main() {
 		sessionRepo,
 		verifyCodeRepo,
 		senderFactory,
+		verifyCodeLimiter,
 		config.JwtConfig,
 	)
 	matchApp := services.NewMatchApp(serviceFactory, repoFactory, eventBus, lockManager)
@@ -77,7 +86,7 @@ func main() {
 
 	socketManager := socket.NewSocketManager(hook.NewSocketHook(matchApp, config.JwtConfig))
 
-	apiApp := api.SetupApi(isDev(), redisClient, socketManager, userApp, scoreApp, matchApp)
+	apiApp := api.SetupApi(isDev(), socketManager, httpLimiter, userApp, scoreApp, matchApp)
 	subscriber := subscribe.NewSubscriber(eventBus, socketManager, repoFactory)
 
 	srv := cores.NewCores(

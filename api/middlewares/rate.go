@@ -5,17 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/miebyte/goutils/logging"
-	"github.com/miebyte/goutils/redisutils"
 	"github.com/superwhys/billiard-helper/api/response"
 	"github.com/superwhys/billiard-helper/internal/errcode"
-	"github.com/ulule/limiter/v3"
 
+	"github.com/ulule/limiter/v3"
 	ginlimiter "github.com/ulule/limiter/v3/drivers/middleware/gin"
-	redisstore "github.com/ulule/limiter/v3/drivers/store/redis"
 )
 
 const (
@@ -56,23 +53,12 @@ func onLimitReached(c *gin.Context) {
 }
 
 func RateLimitMiddleware(
-	max int,
-	expiration time.Duration,
-	redisClient *redisutils.RedisClient,
+	instance *limiter.Limiter,
 	excludedPaths []string,
 ) gin.HandlerFunc {
-	store, err := redisstore.NewStoreWithOptions(redisClient, limiter.StoreOptions{
-		Prefix:   "limiter",
-		MaxRetry: 3,
-	})
-	logging.PanicError(err)
-
-	rate := limiter.Rate{
-		Period: expiration,
-		Limit:  int64(max),
+	if instance == nil {
+		logging.PanicError(fmt.Errorf("limiter instance is nil"))
 	}
-
-	instance := limiter.New(store, rate)
 	return ginlimiter.NewMiddleware(
 		instance,
 		ginlimiter.WithKeyGetter(keyGenerator(excludedPaths)),

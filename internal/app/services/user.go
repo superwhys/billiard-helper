@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/miebyte/goutils/logging"
+	"github.com/ulule/limiter/v3"
+
 	"github.com/superwhys/billiard-helper/config"
 	"github.com/superwhys/billiard-helper/internal/app/assembler"
 	"github.com/superwhys/billiard-helper/internal/app/dto"
@@ -24,6 +26,7 @@ type UserApp struct {
 	sessionRepo             user.ISessionRepository
 	verifyCodeRepo          user.IVerifyCodeRepository
 	verifyCodeSenderFactory verifycode.SenderFactory
+	verifyCodeLimiter       *limiter.Limiter
 	jwtConfig               *config.JwtConfig
 }
 
@@ -33,6 +36,7 @@ func NewUserApp(
 	sessionRepo user.ISessionRepository,
 	verifyCodeRepo user.IVerifyCodeRepository,
 	senderFactory verifycode.SenderFactory,
+	verifyCodeLimiter *limiter.Limiter,
 	jwtConfig *config.JwtConfig,
 ) *UserApp {
 	return &UserApp{
@@ -42,12 +46,23 @@ func NewUserApp(
 		sessionRepo:             sessionRepo,
 		verifyCodeRepo:          verifyCodeRepo,
 		verifyCodeSenderFactory: senderFactory,
+		verifyCodeLimiter:       verifyCodeLimiter,
 		jwtConfig:               jwtConfig,
 	}
 }
 
 // SendRegisterCode 发送注册验证码
 func (a *UserApp) SendRegisterCode(ctx context.Context, req *dto.SendRegisterCodeReq) (string, error) {
+	if a.verifyCodeLimiter != nil {
+		limitCtx, err := a.verifyCodeLimiter.Get(ctx, req.Account)
+		if err != nil {
+			return "", err
+		}
+		if limitCtx.Reached {
+			return "", errcode.ErrTooManyRequests
+		}
+	}
+
 	codeId, code, err := a.verifyCodeRepo.GenerateCode(ctx, req.Account, time.Minute*10)
 	if err != nil {
 		return "", err

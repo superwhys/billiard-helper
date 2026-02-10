@@ -2,14 +2,13 @@ package api
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/miebyte/goutils/ginutils"
-	"github.com/miebyte/goutils/redisutils"
 	"github.com/superwhys/billiard-helper/api/middlewares"
 	"github.com/superwhys/billiard-helper/api/routers"
 	"github.com/superwhys/billiard-helper/internal/app/services"
 	"github.com/superwhys/billiard-helper/internal/infra/socket"
+	"github.com/ulule/limiter/v3"
 
 	_ "github.com/superwhys/billiard-helper/cmd/swagger/docs"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
@@ -34,8 +33,8 @@ type Api struct {
 // @name Authorization
 func SetupApi(
 	isDev bool,
-	redisClient *redisutils.RedisClient,
 	socketManager *socket.SocketManager,
+	httpLimiter *limiter.Limiter,
 	userApp *services.UserApp,
 	scoreApp *services.ScoreApp,
 	matchApp *services.MatchApp,
@@ -43,12 +42,7 @@ func SetupApi(
 	engine := ginutils.NewServerHandler(
 		ginutils.WithMiddleware(
 			ginutils.WithLoggingRequest(true),
-			middlewares.RateLimitMiddleware(
-				10,
-				time.Minute,
-				redisClient,
-				nil,
-			),
+			middlewares.RateLimitMiddleware(httpLimiter, nil),
 		),
 		socketManager.Handler(),
 		ginutils.WithGroupHandlers(
