@@ -66,6 +66,8 @@ func main() {
 	serviceFactory := factory.NewDomainServiceFactory(redisClient, verifyCodeRepo)
 	eventBus := eventbus.NewRedisEventBus(redisClient)
 	lockManager := cache.NewLockManager(redisClient)
+
+	// Initialize rate limiters
 	verifyCodeLimiter, err := ratelimit.NewRedisLimiter(5, time.Minute, redisClient, "verify_code_send")
 	logging.PanicError(err)
 	httpLimiter, err := ratelimit.NewRedisLimiter(10, time.Second*10, redisClient, "http_rate")

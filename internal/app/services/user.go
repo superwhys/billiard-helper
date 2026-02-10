@@ -53,14 +53,12 @@ func NewUserApp(
 
 // SendRegisterCode 发送注册验证码
 func (a *UserApp) SendRegisterCode(ctx context.Context, req *dto.SendRegisterCodeReq) (string, error) {
-	if a.verifyCodeLimiter != nil {
-		limitCtx, err := a.verifyCodeLimiter.Get(ctx, req.Account)
-		if err != nil {
-			return "", err
-		}
-		if limitCtx.Reached {
-			return "", errcode.ErrTooManyRequests
-		}
+	limitCtx, err := a.verifyCodeLimiter.Get(ctx, req.Account)
+	if err != nil {
+		return "", err
+	}
+	if limitCtx.Reached {
+		return "", errcode.ErrTooManyRequests.WithMessage("验证码发送过于频繁，请稍后再试")
 	}
 
 	codeId, code, err := a.verifyCodeRepo.GenerateCode(ctx, req.Account, time.Minute*10)
