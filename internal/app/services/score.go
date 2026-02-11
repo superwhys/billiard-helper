@@ -68,18 +68,19 @@ func (a *ScoreApp) findMatchGame(ctx context.Context, matchID uint, round uint) 
 // 每次操作的分数变化都会记录一条分数事件(有可能一次操作会有多次操作变化)
 // 每条操作事件都会记录到数据库中，方便后续查询和统计
 // 同时，还会修改当前比赛轮次中的分数快照并且发布一个事件
-func (a *ScoreApp) SyncScore(ctx context.Context, req *dto.MatchScoreSyncEvent) error {
+func (a *ScoreApp) SyncScore(ctx context.Context, req *dto.MatchScoreSyncEvent) (map[string]any, error) {
 	match, err := a.findMatch(ctx, req.UserID, req.MatchID, req.Round)
 	if err != nil {
-		return fmt.Errorf("find match failed: %w", err)
+		return nil, fmt.Errorf("find match failed: %w", err)
 	}
 
 	matchGame, err := a.findMatchGame(ctx, match.ID, req.Round)
 	if err != nil {
-		return fmt.Errorf("find match game failed: %w", err)
+		return nil, fmt.Errorf("find match game failed: %w", err)
 	}
 
-	return a.repoFactory.WithTransaction(ctx, func(factory factory.IRepoFactory) error {
+	var newScores map[string]any
+	err = a.repoFactory.WithTransaction(ctx, func(factory factory.IRepoFactory) error {
 		eventRepo := factory.EventRepo()
 		matchGameRepo := factory.MatchGameRepo()
 
@@ -115,21 +116,24 @@ func (a *ScoreApp) SyncScore(ctx context.Context, req *dto.MatchScoreSyncEvent) 
 
 		return nil
 	})
+
+	return newScores, err
 }
 
-func (a *ScoreApp) UndoScore(ctx context.Context, req *dto.MatchScoreUndoReq) error {
+func (a *ScoreApp) UndoScore(ctx context.Context, req *dto.MatchScoreUndoReq) (map[string]any, error) {
+	var newScores map[string]any
 	matchGameRepo := a.repoFactory.MatchGameRepo()
 	eventRepo := a.repoFactory.EventRepo()
 
 	matchGame, err := a.findMatchGame(ctx, req.MatchID, req.Round)
 	if err != nil {
-		return fmt.Errorf("find match game failed: %w", err)
+		return nil, fmt.Errorf("find match game failed: %w", err)
 	}
 
 	lastEventID := matchGame.LastEventID
 	deletedEvent, err := eventRepo.DeleteEvent(ctx, lastEventID)
 	if err != nil {
-		return fmt.Errorf("delete event failed: %w", err)
+		return nil, fmt.Errorf("delete event failed: %w", err)
 	}
 
 	// 撤回该时间的操作
@@ -137,17 +141,17 @@ func (a *ScoreApp) UndoScore(ctx context.Context, req *dto.MatchScoreUndoReq) er
 
 	lastEvent, err := eventRepo.GetLastEvent(ctx, req.MatchID, req.Round)
 	if err != nil {
-		return fmt.Errorf("get last event failed: %w", err)
+		return nil, fmt.Errorf("get last event failed: %w", err)
 	}
 
 	// TODO: 修改当前比赛轮次中的分数快照
 	matchGame.LastEventID = lastEvent.ID
 	err = matchGameRepo.Update(ctx, matchGame)
 	if err != nil {
-		return fmt.Errorf("update match game failed: %w", err)
+		return nil, fmt.Errorf("update match game failed: %w", err)
 	}
 
-	return nil
+	return newScores, nil
 }
 
 func (a *ScoreApp) ListScores(ctx context.Context, req *dto.MatchScoreListReq) ([]*dto.MatchScoreSyncEvent, error) {
