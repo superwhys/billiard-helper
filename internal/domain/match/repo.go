@@ -17,3 +17,13 @@ type IPlayerRepository interface {
 	CreateInBatches(ctx context.Context, players []*Player) error
 	Delete(ctx context.Context, id uint) error
 }
+
+type IMatchGameRepository interface {
+	Create(ctx context.Context, matchGame *MatchGame) error
+	FindByMatchID(ctx context.Context, matchID uint, gameNum uint) (*MatchGame, error)
+	FindMatchRounds(ctx context.Context, matchID uint) ([]*MatchGame, error)
+	EndGameRound(ctx context.Context, matchID uint, gameNum uint) error
+	StartGameRound(ctx context.Context, matchID uint, gameNum uint) (*MatchGame, error)
+	Update(ctx context.Context, matchGame *MatchGame) error
+	Delete(ctx context.Context, id uint) error
+}

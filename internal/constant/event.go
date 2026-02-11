@@ -17,9 +17,7 @@ const (
 	EventPlayerLeaveRoom      EventType = "player_leave_room"
 	EventMatchStarted         EventType = "match_started"
 	EventMatchEnded           EventType = "match_ended"
-	EventPlayerScoreAdd       EventType = "player_score_add"
-	EventPlayerScoreMinus     EventType = "player_score_minus"
-	EventPlayerScoreReset     EventType = "player_score_reset"
+	EventPlayerScoreSync      EventType = "player_score_sync"
 	EventPlayerScoreUndo      EventType = "player_score_undo"
 	EventMatchRoundNext       EventType = "match_round_next"
 )

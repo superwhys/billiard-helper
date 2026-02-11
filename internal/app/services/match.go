@@ -244,48 +244,6 @@ func (a *MatchApp) LeaveMatch(ctx context.Context, req *dto.MatchActionRequest) 
 	return nil
 }
 
-// KickPlayer 踢人
-func (a *MatchApp) KickMatchPlayer(ctx context.Context, req *dto.KickPlayerRequest) error {
-	matchService := a.serviceFactory.MatchService(a.repoFactory)
-	playerRepo := a.repoFactory.PlayerRepo()
-	matchRepo := a.repoFactory.MatchRepo()
-
-	// 1. 获取比赛锁
-	lock := a.lockManager.MatchLock(req.MatchID)
-	if err := lock.Lock(ctx); err != nil {
-		return err
-	}
-	defer lock.Unlock(ctx)
-
-	// 2. 获取玩家信息
-	player, err := playerRepo.FindByCode(ctx, req.PlayerCode)
-	if err != nil {
-		return err
-	}
-
-	// 3. 获取房间信息
-	matchRoom, err := matchRepo.FindByID(ctx, player.MatchID, false)
-	if err != nil {
-		return err
-	}
-
-	// 4. 踢出玩家
-	err = matchService.KickMatchPlayer(ctx, matchRoom, player)
-	if err != nil {
-		return err
-	}
-
-	// 5. 发布踢人事件 (通常复用离开事件)
-	_ = a.publishEvent(ctx, constant.EventPlayerLeaveRoom, &dto.LeaveMatchEventMessage{
-		EventMsgBase: dto.EventMsgBase{
-			UserID:  req.UserID,
-			MatchID: matchRoom.ID,
-		},
-		PlayerCode: req.PlayerCode,
-	})
-	return nil
-}
-
 // publishEvent 辅助方法：发布消息到 EventBus
 func (a *MatchApp) publishEvent(ctx context.Context, eventType string, payload any) error {
 	data, err := json.Marshal(payload)
@@ -370,29 +328,26 @@ func (a *MatchApp) DeleteMatch(ctx context.Context, req *dto.DeleteMatchRequest)
 }
 
 func (a *MatchApp) NextRound(ctx context.Context, req *dto.MatchRoundNextRequest) (*dto.Match, error) {
-	matchRepo := a.repoFactory.MatchRepo()
-	matchService := a.serviceFactory.MatchService(a.repoFactory)
-
-	// 1. 获取比赛锁
 	lock := a.lockManager.MatchLock(req.MatchID)
 	if err := lock.Lock(ctx); err != nil {
 		return nil, err
 	}
 	defer lock.Unlock(ctx)
 
-	// 2. 获取比赛信息
-	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID, false)
-	if err != nil {
-		return nil, err
-	}
+	var match *match.Match
+	var err error
+	a.repoFactory.WithTransaction(ctx, func(factory factory.IRepoFactory) error {
+		matchService := a.serviceFactory.MatchService(factory)
 
-	// 3. 下一轮
-	err = matchService.NextRound(ctx, matchRoom)
-	if err != nil {
-		return nil, err
-	}
+		match, err = matchService.NextRound(ctx, req.MatchID)
+		if err != nil {
+			return err
+		}
 
-	// TODO: 写入一个新的事件，并记录到 match_games 中
+		// TODO: 写入一个新的事件，并记录到 match_games 中
 
-	return a.matchAssembler.ToMatchDTO(matchRoom), nil
+		return nil
+	})
+
+	return a.matchAssembler.ToMatchDTO(match), nil
 }

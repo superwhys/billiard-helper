@@ -8,6 +8,7 @@ type IEventRepository interface {
 	AddEvent(ctx context.Context, event *Event) error
 	// GetMatchEvents 获取比赛的所有事件（用于重放计算）
 	GetMatchEvents(ctx context.Context, matchID uint) ([]*Event, error)
-	// DeleteLastEvent 删除(或标记失效)最后一条事件 -> 对应撤回操作
-	DeleteLastEvent(ctx context.Context, matchID uint) error
+	// DeleteEvent 删除(或标记失效)指定轮次的事件 -> 对应撤回操作
+	DeleteEvent(ctx context.Context, eventID uint) (*Event, error)
+	GetLastEvent(ctx context.Context, matchID uint, round uint) (*Event, error)
 }

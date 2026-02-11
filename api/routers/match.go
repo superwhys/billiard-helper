@@ -25,7 +25,6 @@ func MatchGroupRouter(matchApp *services.MatchApp) ginutils.Option {
 		ginutils.WithHandler(http.MethodPost, "/end", MatchEndHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/join", MatchJoinHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/leave", MatchLeaveHandler(matchApp)),
-		ginutils.WithHandler(http.MethodPost, "/kick", MatchKickHandler(matchApp)),
 		ginutils.WithHandler(http.MethodPost, "/round/next", MatchRoundNextHandler(matchApp)),
 	)
 }
@@ -298,34 +297,6 @@ func MatchLeaveHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
 		err = matchApp.LeaveMatch(ctx, req)
 		if handleRouterError(c, err, "leave Match failed", errcode.ErrCodeLeaveMatchFailed) {
-			return
-		}
-
-		c.JSON(http.StatusOK, response.ResponseSuccess())
-	})
-}
-
-// MatchKickHandler 踢出玩家
-// @Summary 踢出玩家
-// @Description 踢出玩家
-// @Tags Match
-// @Security BearerAuth
-// @Accept json
-// @Produce json
-// @Param request body dto.KickPlayerRequest true "踢出玩家请求体"
-// @Success 200 {object} ginutils.Ret[any]
-// @Router /match/kick [post]
-func MatchKickHandler(matchApp *services.MatchApp) gin.HandlerFunc {
-	return ginutils.RequestHandler(func(c *gin.Context, req *dto.KickPlayerRequest) {
-		claims, err := jwt.TokenClaimsFromContext(c.Request.Context())
-		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
-			return
-		}
-		req.UserID = claims.UserID
-
-		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
-		err = matchApp.KickMatchPlayer(ctx, req)
-		if handleRouterError(c, err, "kick player failed", errcode.ErrCodeKickPlayerFailed) {
 			return
 		}
 

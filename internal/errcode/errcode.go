@@ -92,8 +92,13 @@ var (
 	ErrCodeMatchDetailFailed        = ErrSysInternal.WithMessage("获取比赛详情失败")
 	ErrCodeMatchNotFound            = ErrNotFound.WithMessage("比赛不存在")
 	ErrCodeMatchPlayerNotEnough     = ErrBadRequest.WithMessage("比赛人数不足")
+	ErrCodeMatchRoundNotMatch       = ErrBadRequest.WithMessage("比赛轮数不匹配")
 	ErrCodeNextRoundFailed          = ErrSysInternal.WithMessage("下一轮失败")
 	ErrCodeMatchMaxRoundReached     = ErrBadRequest.WithMessage("比赛轮数已达最大值").WithErrCode(200001)
+
+	ErrCodeSyncScoreFailed  = ErrSysInternal.WithMessage("同步分数失败")
+	ErrCodeUndoScoreFailed  = ErrSysInternal.WithMessage("撤回分数失败")
+	ErrCodeListScoresFailed = ErrSysInternal.WithMessage("获取分数历史记录失败")
 )
 
 func AsErrcode(err error) (Error, bool) {

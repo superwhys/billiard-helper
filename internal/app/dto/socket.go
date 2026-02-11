@@ -25,5 +25,5 @@ type MatchEndedEventMessage struct {
 
 type MatchScoreUpdateEventMessage struct {
 	EventMsgBase
-	Score *Score `json:"score"`
+	Score *MatchEvent `json:"score"`
 }

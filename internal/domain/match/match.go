@@ -23,8 +23,16 @@ type Match struct {
 	UpdatedAt  time.Time   `json:"updated_at"`
 }
 
+func (m *Match) IsStart() bool {
+	return m.Status == MatchStatusInProgress
+}
+
 func (m *Match) CanDelete() bool {
 	return m.Status != MatchStatusInProgress
+}
+
+func (m *Match) IsMaxRoundReached() bool {
+	return m.MatchRound < m.Config.TargetScore
 }
 
 func (m *Match) IsPlayerFull() bool {
@@ -69,6 +77,17 @@ func (m *Match) JoinPlayer(player *Player) error {
 
 	m.Players = append(m.Players, player)
 	return nil
+}
+
+type MatchGame struct {
+	ID          uint           `json:"id"`
+	MatchID     uint           `json:"match_id"`
+	GameNum     uint           `json:"game_num"`
+	StartAt     time.Time      `json:"start_at"`
+	EndAt       time.Time      `json:"end_at"`
+	WinnerID    uint           `json:"winner_id"`
+	Scores      map[string]any `json:"scores"`
+	LastEventID uint           `json:"last_event_id"`
 }
 
 type Player struct {

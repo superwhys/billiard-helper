@@ -32,9 +32,7 @@ func NewHandlers(socketManager *socket.SocketManager, repoFactory factory.IRepoF
 func (h *Handlers) register() {
 	h.handlers[constant.EventPlayerJoinRoom] = h.handlePlayerJoinRoom
 	h.handlers[constant.EventPlayerLeaveRoom] = h.handlePlayerLeaveRoom
-	h.handlers[constant.EventPlayerScoreAdd] = h.handlePlayerScoreAdd
-	h.handlers[constant.EventPlayerScoreMinus] = h.handlePlayerScoreMinus
-	h.handlers[constant.EventPlayerScoreReset] = h.handlePlayerScoreReset
+	h.handlers[constant.EventPlayerScoreSync] = h.handleScoreSync
 	h.handlers[constant.EventPlayerScoreUndo] = h.handlePlayerScoreUndo
 }
 
