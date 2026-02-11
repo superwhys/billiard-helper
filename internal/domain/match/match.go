@@ -23,6 +23,10 @@ type Match struct {
 	UpdatedAt  time.Time   `json:"updated_at"`
 }
 
+func (m *Match) CanDelete() bool {
+	return m.Status != MatchStatusInProgress
+}
+
 func (m *Match) IsPlayerFull() bool {
 	if len(m.Players) >= int(m.Config.MaxPlayers) {
 		return true

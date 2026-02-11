@@ -37,7 +37,7 @@ func MatchGroupRouter(matchApp *services.MatchApp) ginutils.Option {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} ginutils.Ret[any]
+// @Success 200 {object} ginutils.Ret[dto.Match]
 // @Router /match/round/next [post]
 func MatchRoundNextHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 	return ginutils.RequestHandler(func(c *gin.Context, req *dto.MatchRoundNextRequest) {
@@ -48,12 +48,12 @@ func MatchRoundNextHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 		req.UserID = claims.UserID
 
 		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
-		err = matchApp.NextRound(ctx, req)
+		match, err := matchApp.NextRound(ctx, req)
 		if handleRouterError(c, err, "next round failed", errcode.ErrCodeNextRoundFailed) {
 			return
 		}
 
-		c.JSON(http.StatusOK, response.ResponseSuccess())
+		c.JSON(http.StatusOK, response.ResponseWithData(match))
 	})
 }
 

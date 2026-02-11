@@ -345,7 +345,7 @@ func (a *MatchApp) DeleteMatch(ctx context.Context, req *dto.DeleteMatchRequest)
 		return errcode.ErrCodeMatchNotFound
 	}
 
-	if m.Status != match.MatchStatusPending {
+	if !m.CanDelete() {
 		return errcode.ErrCodeMatchNotPending
 	}
 
@@ -369,25 +369,30 @@ func (a *MatchApp) DeleteMatch(ctx context.Context, req *dto.DeleteMatchRequest)
 	})
 }
 
-func (a *MatchApp) NextRound(ctx context.Context, req *dto.MatchRoundNextRequest) error {
+func (a *MatchApp) NextRound(ctx context.Context, req *dto.MatchRoundNextRequest) (*dto.Match, error) {
 	matchRepo := a.repoFactory.MatchRepo()
 	matchService := a.serviceFactory.MatchService(a.repoFactory)
 
 	// 1. 获取比赛锁
 	lock := a.lockManager.MatchLock(req.MatchID)
 	if err := lock.Lock(ctx); err != nil {
-		return err
+		return nil, err
 	}
 	defer lock.Unlock(ctx)
 
 	// 2. 获取比赛信息
 	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID, false)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// 3. 下一轮
+	err = matchService.NextRound(ctx, matchRoom)
+	if err != nil {
+		return nil, err
+	}
 
 	// TODO: 写入一个新的事件，并记录到 match_games 中
-	return matchService.NextRound(ctx, matchRoom)
+
+	return a.matchAssembler.ToMatchDTO(matchRoom), nil
 }

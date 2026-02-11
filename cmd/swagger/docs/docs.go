@@ -580,7 +580,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-any"
+                            "$ref": "#/definitions/ginutils.Ret-dto_Match"
                         }
                     }
                 }
@@ -1018,6 +1018,7 @@ const docTemplate = `{
         },
         "match.PlayerType": {
             "type": "integer",
+            "format": "int32",
             "enum": [
                 1,
                 2

@@ -573,7 +573,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-any"
+                            "$ref": "#/definitions/ginutils.Ret-dto_Match"
                         }
                     }
                 }
@@ -1011,6 +1011,7 @@
         },
         "match.PlayerType": {
             "type": "integer",
+            "format": "int32",
             "enum": [
                 1,
                 2
