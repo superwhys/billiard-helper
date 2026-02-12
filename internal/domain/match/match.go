@@ -32,6 +32,42 @@ func (m *Match) CanDelete() bool {
 	return m.Status != MatchStatusInProgress
 }
 
+// AssertUpdatable 校验比赛是否允许更新
+func (m *Match) AssertUpdatable(userID uint) error {
+	if m.OwnerID != userID {
+		return errcode.ErrCodeMatchNotFound
+	}
+	if m.Status != MatchStatusPending {
+		return errcode.ErrCodeMatchNotPending
+	}
+	return nil
+}
+
+// AssertStartable 校验比赛是否允许开始
+func (m *Match) AssertStartable() error {
+	if len(m.Players) <= 1 {
+		return errcode.ErrCodeMatchPlayerNotEnough
+	}
+	if m.Status != MatchStatusPending {
+		return errcode.ErrCodeMatchNotPending
+	}
+	return nil
+}
+
+// AssertScoreRequest 校验记分请求是否合法
+func (m *Match) AssertScoreRequest(userID uint, round uint) error {
+	if !m.IsStart() {
+		return errcode.ErrCodeMatchNotInProgress
+	}
+	if m.OwnerID != userID {
+		return errcode.ErrCodeMatchNotFound
+	}
+	if m.MatchRound != round {
+		return errcode.ErrCodeMatchRoundNotMatch
+	}
+	return nil
+}
+
 func (m *Match) IsMaxRoundReached() bool {
 	return m.MatchRound < m.Config.TargetScore
 }

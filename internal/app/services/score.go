@@ -12,7 +12,6 @@ import (
 	"github.com/superwhys/billiard-helper/internal/domain/event"
 	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/domain/shared"
-	"github.com/superwhys/billiard-helper/internal/errcode"
 )
 
 type ScoreApp struct {
@@ -39,17 +38,8 @@ func (a *ScoreApp) findMatch(ctx context.Context, userID uint, matchID uint, rou
 	if err != nil {
 		return nil, err
 	}
-
-	if !match.IsStart() {
-		return nil, errcode.ErrCodeMatchNotInProgress
-	}
-
-	if match.OwnerID != userID {
-		return nil, errcode.ErrCodeMatchNotFound
-	}
-
-	if match.MatchRound != round {
-		return nil, errcode.ErrCodeMatchRoundNotMatch
+	if err := match.AssertScoreRequest(userID, round); err != nil {
+		return nil, err
 	}
 
 	return match, nil

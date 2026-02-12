@@ -124,8 +124,8 @@ func (s *MatchService) JoinMatch(ctx context.Context, match *Match, player *Play
 }
 
 func (s *MatchService) StartMatch(ctx context.Context, match *Match) error {
-	if match.Status != MatchStatusPending {
-		return errcode.ErrCodeMatchNotPending
+	if err := match.AssertStartable(); err != nil {
+		return err
 	}
 
 	match.Status = MatchStatusInProgress

@@ -11,11 +11,12 @@ import (
 
 	"github.com/superwhys/billiard-helper/api"
 	"github.com/superwhys/billiard-helper/config"
-	"github.com/superwhys/billiard-helper/internal/app/factory"
+	appfactory "github.com/superwhys/billiard-helper/internal/app/factory"
 	"github.com/superwhys/billiard-helper/internal/app/hook"
 	"github.com/superwhys/billiard-helper/internal/app/services"
 	"github.com/superwhys/billiard-helper/internal/app/worker/subscribe"
 	"github.com/superwhys/billiard-helper/internal/infra/cache"
+	infrafactory "github.com/superwhys/billiard-helper/internal/infra/factory"
 	"github.com/superwhys/billiard-helper/internal/infra/db/models"
 	"github.com/superwhys/billiard-helper/internal/infra/eventbus"
 	"github.com/superwhys/billiard-helper/internal/infra/socket"
@@ -62,8 +63,8 @@ func main() {
 	verifyCodeRepo := cache.NewVerifyCodeRepository(redisClient)
 	sessionRepo := cache.NewSessionRepository(redisClient)
 
-	repoFactory := factory.NewRepositoryFactory(mysqlDB)
-	serviceFactory := factory.NewDomainServiceFactory(redisClient, verifyCodeRepo)
+	repoFactory := infrafactory.NewRepositoryFactory(mysqlDB)
+	serviceFactory := appfactory.NewDomainServiceFactory(redisClient, verifyCodeRepo)
 	eventBus := eventbus.NewRedisEventBus(redisClient)
 	lockManager := cache.NewLockManager(redisClient)
 

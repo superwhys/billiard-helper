@@ -65,12 +65,8 @@ func (a *MatchApp) UpdateMatch(ctx context.Context, req *dto.UpdateMatchRequest)
 	if err != nil {
 		return nil, err
 	}
-	if m.OwnerID != req.UserID {
-		return nil, errcode.ErrCodeMatchNotFound
-	}
-
-	if m.Status != match.MatchStatusPending {
-		return nil, errcode.ErrCodeMatchNotPending
+	if err := m.AssertUpdatable(req.UserID); err != nil {
+		return nil, err
 	}
 
 	m.Name = req.Name
@@ -143,10 +139,6 @@ func (a *MatchApp) StartMatch(ctx context.Context, req *dto.MatchActionRequest) 
 	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID, true)
 	if err != nil {
 		return err
-	}
-
-	if len(matchRoom.Players) <= 1 {
-		return errcode.ErrCodeMatchPlayerNotEnough
 	}
 
 	// 3. 开始比赛

@@ -106,7 +106,7 @@ func (a *UserApp) Login(ctx context.Context, req *dto.LoginReq) (*dto.TokenRespo
 
 	// 1. 验证账号密码或者验证码
 	userService := a.serviceFactory.UserService(a.repoFactory)
-	u, err := userService.Login(ctx, req)
+	u, err := userService.Login(ctx, req.Account, req.Password, req.VerifyCode, req.CodeID)
 	if err != nil {
 		return nil, err
 	}
