@@ -1,6 +1,9 @@
 package dto
 
-import "gorm.io/datatypes"
+import (
+	"github.com/superwhys/billiard-helper/internal/domain/event"
+	"gorm.io/datatypes"
+)
 
 type MatchEvent struct {
 	ID         uint `json:"id"`
@@ -12,11 +15,6 @@ type MatchEvent struct {
 	Data      datatypes.JSONMap `json:"data"`
 }
 
-type ScoreAction struct {
-	PlayerIds []uint `json:"player_ids"`
-	Score     uint   `json:"score"`
-}
-
 type MatchScoreSyncEvent struct {
 	Operator
 	MatchID uint `json:"match_id"`
@@ -25,8 +23,8 @@ type MatchScoreSyncEvent struct {
 	// 用于记录一次操作的所有分数变化
 	// 比如一次操作中，A 玩家加分，B,C 玩家扣分
 	// 也有可能一次操作只有一个玩家有分数变化，此时 ScoreActions 只有一个元素即可
-	ScoreActions []ScoreAction  `json:"score_actions"`
-	Context      map[string]any `json:"context"`
+	ScoreActions []event.ScoreAction `json:"score_actions"`
+	Context      any                 `json:"context"`
 }
 
 // MatchScoreUndoReq 撤回分数请求

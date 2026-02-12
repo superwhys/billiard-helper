@@ -29,13 +29,6 @@ definitions:
       player_type:
         $ref: '#/definitions/match.PlayerType'
     type: object
-  dto.KickPlayerRequest:
-    properties:
-      match_id:
-        type: integer
-      player_code:
-        type: string
-    type: object
   dto.LoginReq:
     properties:
       account:
@@ -53,6 +46,7 @@ definitions:
         $ref: '#/definitions/dto.MatchConfig'
       created_at:
         type: string
+      current_scores: {}
       id:
         type: integer
       match_round:
@@ -100,6 +94,36 @@ definitions:
         type: integer
       match_type:
         $ref: '#/definitions/match.MatchType'
+    type: object
+  dto.MatchScoreListReq:
+    properties:
+      match_id:
+        type: integer
+      round:
+        type: integer
+    type: object
+  dto.MatchScoreSyncEvent:
+    properties:
+      context: {}
+      match_id:
+        type: integer
+      round:
+        type: integer
+      score_actions:
+        description: |-
+          用于记录一次操作的所有分数变化
+          比如一次操作中，A 玩家加分，B,C 玩家扣分
+          也有可能一次操作只有一个玩家有分数变化，此时 ScoreActions 只有一个元素即可
+        items:
+          $ref: '#/definitions/event.ScoreAction'
+        type: array
+    type: object
+  dto.MatchScoreUndoReq:
+    properties:
+      match_id:
+        type: integer
+      round:
+        type: integer
     type: object
   dto.Player:
     properties:
@@ -179,6 +203,15 @@ definitions:
       updated_at:
         type: string
     type: object
+  event.ScoreAction:
+    properties:
+      player_ids:
+        items:
+          type: integer
+        type: array
+      score:
+        type: integer
+    type: object
   ginutils.Ret-any:
     properties:
       code:
@@ -193,6 +226,16 @@ definitions:
       data:
         items:
           $ref: '#/definitions/dto.Match'
+        type: array
+      message: {}
+    type: object
+  ginutils.Ret-array_dto_MatchScoreSyncEvent:
+    properties:
+      code:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/dto.MatchScoreSyncEvent'
         type: array
       message: {}
     type: object
@@ -511,30 +554,6 @@ paths:
       summary: 加入房间
       tags:
       - Match
-  /match/kick:
-    post:
-      consumes:
-      - application/json
-      description: 踢出玩家
-      parameters:
-      - description: 踢出玩家请求体
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.KickPlayerRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ginutils.Ret-any'
-      security:
-      - BearerAuth: []
-      summary: 踢出玩家
-      tags:
-      - Match
   /match/leave:
     post:
       consumes:
@@ -648,6 +667,78 @@ paths:
       summary: 更新比赛
       tags:
       - Match
+  /score/list:
+    get:
+      consumes:
+      - application/json
+      description: 获取分数历史记录
+      parameters:
+      - description: 获取分数历史记录请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MatchScoreListReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-array_dto_MatchScoreSyncEvent'
+      security:
+      - BearerAuth: []
+      summary: 获取分数历史记录
+      tags:
+      - Score
+  /score/sync:
+    post:
+      consumes:
+      - application/json
+      description: 同步分数
+      parameters:
+      - description: 同步分数请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MatchScoreSyncEvent'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 同步分数
+      tags:
+      - Score
+  /score/undo:
+    post:
+      consumes:
+      - application/json
+      description: 撤回分数
+      parameters:
+      - description: 撤回分数请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MatchScoreUndoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 撤回分数
+      tags:
+      - Score
 securityDefinitions:
   BearerAuth:
     in: header

@@ -32,28 +32,10 @@ func newMatchEvent(db *gorm.DB, opts ...gen.DOOption) matchEvent {
 	_matchEvent.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_matchEvent.DeletedAt = field.NewField(tableName, "deleted_at")
 	_matchEvent.MatchID = field.NewUint(tableName, "match_id")
-	_matchEvent.PlayerID = field.NewUint(tableName, "player_id")
+	_matchEvent.Round = field.NewUint(tableName, "round")
 	_matchEvent.OperatorID = field.NewUint(tableName, "operator_id")
 	_matchEvent.EventType = field.NewString(tableName, "event_type")
 	_matchEvent.Data = field.NewField(tableName, "data")
-	_matchEvent.Operator = matchEventBelongsToOperator{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Operator", "models.Player"),
-		Events: struct {
-			field.RelationField
-			Operator struct {
-				field.RelationField
-			}
-		}{
-			RelationField: field.NewRelation("Operator.Events", "models.MatchEvent"),
-			Operator: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Operator.Events.Operator", "models.Player"),
-			},
-		},
-	}
 
 	_matchEvent.fillFieldMap()
 
@@ -69,11 +51,10 @@ type matchEvent struct {
 	UpdatedAt  field.Time
 	DeletedAt  field.Field
 	MatchID    field.Uint   // 时间所属比赛 ID
-	PlayerID   field.Uint   // 事件涉及的玩家 ID
+	Round      field.Uint   // 事件所属比赛轮次
 	OperatorID field.Uint   // 事件操作人 ID
 	EventType  field.String // 事件类型
 	Data       field.Field  // 事件数据
-	Operator   matchEventBelongsToOperator
 
 	fieldMap map[string]field.Expr
 }
@@ -95,7 +76,7 @@ func (m *matchEvent) updateTableName(table string) *matchEvent {
 	m.UpdatedAt = field.NewTime(table, "updated_at")
 	m.DeletedAt = field.NewField(table, "deleted_at")
 	m.MatchID = field.NewUint(table, "match_id")
-	m.PlayerID = field.NewUint(table, "player_id")
+	m.Round = field.NewUint(table, "round")
 	m.OperatorID = field.NewUint(table, "operator_id")
 	m.EventType = field.NewString(table, "event_type")
 	m.Data = field.NewField(table, "data")
@@ -125,118 +106,26 @@ func (m *matchEvent) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (m *matchEvent) fillFieldMap() {
-	m.fieldMap = make(map[string]field.Expr, 10)
+	m.fieldMap = make(map[string]field.Expr, 9)
 	m.fieldMap["id"] = m.ID
 	m.fieldMap["created_at"] = m.CreatedAt
 	m.fieldMap["updated_at"] = m.UpdatedAt
 	m.fieldMap["deleted_at"] = m.DeletedAt
 	m.fieldMap["match_id"] = m.MatchID
-	m.fieldMap["player_id"] = m.PlayerID
+	m.fieldMap["round"] = m.Round
 	m.fieldMap["operator_id"] = m.OperatorID
 	m.fieldMap["event_type"] = m.EventType
 	m.fieldMap["data"] = m.Data
-
 }
 
 func (m matchEvent) clone(db *gorm.DB) matchEvent {
 	m.matchEventDo.ReplaceConnPool(db.Statement.ConnPool)
-	m.Operator.db = db.Session(&gorm.Session{Initialized: true})
-	m.Operator.db.Statement.ConnPool = db.Statement.ConnPool
 	return m
 }
 
 func (m matchEvent) replaceDB(db *gorm.DB) matchEvent {
 	m.matchEventDo.ReplaceDB(db)
-	m.Operator.db = db.Session(&gorm.Session{})
 	return m
-}
-
-type matchEventBelongsToOperator struct {
-	db *gorm.DB
-
-	field.RelationField
-
-	Events struct {
-		field.RelationField
-		Operator struct {
-			field.RelationField
-		}
-	}
-}
-
-func (a matchEventBelongsToOperator) Where(conds ...field.Expr) *matchEventBelongsToOperator {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a matchEventBelongsToOperator) WithContext(ctx context.Context) *matchEventBelongsToOperator {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a matchEventBelongsToOperator) Session(session *gorm.Session) *matchEventBelongsToOperator {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a matchEventBelongsToOperator) Model(m *models.MatchEvent) *matchEventBelongsToOperatorTx {
-	return &matchEventBelongsToOperatorTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a matchEventBelongsToOperator) Unscoped() *matchEventBelongsToOperator {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type matchEventBelongsToOperatorTx struct{ tx *gorm.Association }
-
-func (a matchEventBelongsToOperatorTx) Find() (result *models.Player, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a matchEventBelongsToOperatorTx) Append(values ...*models.Player) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a matchEventBelongsToOperatorTx) Replace(values ...*models.Player) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a matchEventBelongsToOperatorTx) Delete(values ...*models.Player) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a matchEventBelongsToOperatorTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a matchEventBelongsToOperatorTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a matchEventBelongsToOperatorTx) Unscoped() *matchEventBelongsToOperatorTx {
-	a.tx = a.tx.Unscoped()
-	return &a
 }
 
 type matchEventDo struct{ gen.DO }

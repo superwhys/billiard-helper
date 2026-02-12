@@ -42,19 +42,6 @@ func newMatchGame(db *gorm.DB, opts ...gen.DOOption) matchGame {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Winner", "models.Player"),
-		Events: struct {
-			field.RelationField
-			Operator struct {
-				field.RelationField
-			}
-		}{
-			RelationField: field.NewRelation("Winner.Events", "models.MatchEvent"),
-			Operator: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Winner.Events.Operator", "models.Player"),
-			},
-		},
 	}
 
 	_matchGame.LastEvent = matchGameBelongsToLastEvent{
@@ -174,13 +161,6 @@ type matchGameBelongsToWinner struct {
 	db *gorm.DB
 
 	field.RelationField
-
-	Events struct {
-		field.RelationField
-		Operator struct {
-			field.RelationField
-		}
-	}
 }
 
 func (a matchGameBelongsToWinner) Where(conds ...field.Expr) *matchGameBelongsToWinner {

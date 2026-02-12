@@ -441,45 +441,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/match/kick": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "踢出玩家",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Match"
-                ],
-                "summary": "踢出玩家",
-                "parameters": [
-                    {
-                        "description": "踢出玩家请求体",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.KickPlayerRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ginutils.Ret-any"
-                        }
-                    }
-                }
-            }
-        },
         "/match/leave": {
             "post": {
                 "security": [
@@ -663,6 +624,123 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/score/list": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取分数历史记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Score"
+                ],
+                "summary": "获取分数历史记录",
+                "parameters": [
+                    {
+                        "description": "获取分数历史记录请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.MatchScoreListReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-array_dto_MatchScoreSyncEvent"
+                        }
+                    }
+                }
+            }
+        },
+        "/score/sync": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "同步分数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Score"
+                ],
+                "summary": "同步分数",
+                "parameters": [
+                    {
+                        "description": "同步分数请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.MatchScoreSyncEvent"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/score/undo": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "撤回分数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Score"
+                ],
+                "summary": "撤回分数",
+                "parameters": [
+                    {
+                        "description": "撤回分数请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.MatchScoreUndoReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -711,17 +789,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.KickPlayerRequest": {
-            "type": "object",
-            "properties": {
-                "match_id": {
-                    "type": "integer"
-                },
-                "player_code": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.LoginReq": {
             "type": "object",
             "properties": {
@@ -748,6 +815,7 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "current_scores": {},
                 "id": {
                     "type": "integer"
                 },
@@ -819,6 +887,47 @@ const docTemplate = `{
                 },
                 "match_type": {
                     "$ref": "#/definitions/match.MatchType"
+                }
+            }
+        },
+        "dto.MatchScoreListReq": {
+            "type": "object",
+            "properties": {
+                "match_id": {
+                    "type": "integer"
+                },
+                "round": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.MatchScoreSyncEvent": {
+            "type": "object",
+            "properties": {
+                "context": {},
+                "match_id": {
+                    "type": "integer"
+                },
+                "round": {
+                    "type": "integer"
+                },
+                "score_actions": {
+                    "description": "用于记录一次操作的所有分数变化\n比如一次操作中，A 玩家加分，B,C 玩家扣分\n也有可能一次操作只有一个玩家有分数变化，此时 ScoreActions 只有一个元素即可",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/event.ScoreAction"
+                    }
+                }
+            }
+        },
+        "dto.MatchScoreUndoReq": {
+            "type": "object",
+            "properties": {
+                "match_id": {
+                    "type": "integer"
+                },
+                "round": {
+                    "type": "integer"
                 }
             }
         },
@@ -942,6 +1051,20 @@ const docTemplate = `{
                 }
             }
         },
+        "event.ScoreAction": {
+            "type": "object",
+            "properties": {
+                "player_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "score": {
+                    "type": "integer"
+                }
+            }
+        },
         "ginutils.Ret-any": {
             "type": "object",
             "properties": {
@@ -962,6 +1085,21 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.Match"
+                    }
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-array_dto_MatchScoreSyncEvent": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.MatchScoreSyncEvent"
                     }
                 },
                 "message": {}

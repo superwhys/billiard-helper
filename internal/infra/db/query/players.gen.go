@@ -36,24 +36,6 @@ func newPlayer(db *gorm.DB, opts ...gen.DOOption) player {
 	_player.UserID = field.NewUint(tableName, "user_id")
 	_player.NickName = field.NewString(tableName, "nick_name")
 	_player.Type = field.NewUint8(tableName, "type")
-	_player.Events = playerHasManyEvents{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Events", "models.MatchEvent"),
-		Operator: struct {
-			field.RelationField
-			Events struct {
-				field.RelationField
-			}
-		}{
-			RelationField: field.NewRelation("Events.Operator", "models.Player"),
-			Events: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Events.Operator.Events", "models.MatchEvent"),
-			},
-		},
-	}
 
 	_player.fillFieldMap()
 
@@ -73,7 +55,6 @@ type player struct {
 	UserID    field.Uint   // 真实玩家的用户ID
 	NickName  field.String // 昵称
 	Type      field.Uint8  // 玩家类型
-	Events    playerHasManyEvents
 
 	fieldMap map[string]field.Expr
 }
@@ -123,7 +104,7 @@ func (p *player) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *player) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 10)
+	p.fieldMap = make(map[string]field.Expr, 9)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
@@ -133,108 +114,16 @@ func (p *player) fillFieldMap() {
 	p.fieldMap["user_id"] = p.UserID
 	p.fieldMap["nick_name"] = p.NickName
 	p.fieldMap["type"] = p.Type
-
 }
 
 func (p player) clone(db *gorm.DB) player {
 	p.playerDo.ReplaceConnPool(db.Statement.ConnPool)
-	p.Events.db = db.Session(&gorm.Session{Initialized: true})
-	p.Events.db.Statement.ConnPool = db.Statement.ConnPool
 	return p
 }
 
 func (p player) replaceDB(db *gorm.DB) player {
 	p.playerDo.ReplaceDB(db)
-	p.Events.db = db.Session(&gorm.Session{})
 	return p
-}
-
-type playerHasManyEvents struct {
-	db *gorm.DB
-
-	field.RelationField
-
-	Operator struct {
-		field.RelationField
-		Events struct {
-			field.RelationField
-		}
-	}
-}
-
-func (a playerHasManyEvents) Where(conds ...field.Expr) *playerHasManyEvents {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a playerHasManyEvents) WithContext(ctx context.Context) *playerHasManyEvents {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a playerHasManyEvents) Session(session *gorm.Session) *playerHasManyEvents {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a playerHasManyEvents) Model(m *models.Player) *playerHasManyEventsTx {
-	return &playerHasManyEventsTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a playerHasManyEvents) Unscoped() *playerHasManyEvents {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type playerHasManyEventsTx struct{ tx *gorm.Association }
-
-func (a playerHasManyEventsTx) Find() (result []*models.MatchEvent, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a playerHasManyEventsTx) Append(values ...*models.MatchEvent) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a playerHasManyEventsTx) Replace(values ...*models.MatchEvent) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a playerHasManyEventsTx) Delete(values ...*models.MatchEvent) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a playerHasManyEventsTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a playerHasManyEventsTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a playerHasManyEventsTx) Unscoped() *playerHasManyEventsTx {
-	a.tx = a.tx.Unscoped()
-	return &a
 }
 
 type playerDo struct{ gen.DO }

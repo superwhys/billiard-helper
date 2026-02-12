@@ -1,9 +1,20 @@
 package event
 
 import (
+	"encoding/json"
+
 	"github.com/superwhys/billiard-helper/internal/constant"
-	"gorm.io/datatypes"
 )
+
+type ScoreAction struct {
+	PlayerIds []uint `json:"player_ids"`
+	Score     int    `json:"score"`
+}
+
+type EventData[C any] struct {
+	ScoreActions []ScoreAction `json:"score_actions"`
+	Context      C             `json:"context"`
+}
 
 type Event struct {
 	ID         uint               `json:"id"`
@@ -11,5 +22,5 @@ type Event struct {
 	Round      uint               `json:"round"`       // 事件所属比赛轮次
 	OperatorID uint               `json:"operator_id"` // 操作人
 	EventType  constant.EventType `json:"event_type"`  // 事件类型
-	Data       datatypes.JSONMap  `json:"data"`        // 事件数据
+	Data       json.RawMessage    `json:"data"`        // 事件数据
 }

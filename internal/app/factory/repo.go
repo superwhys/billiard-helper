@@ -36,8 +36,8 @@ func NewRepositoryFactory(gormDB *gorm.DB) *repositoryFactory {
 		matchRepo:     db.NewMatchRepo(gormDB),
 		userRepo:      db.NewUserRepo(gormDB),
 		playerRepo:    db.NewPlayerRepo(gormDB),
-		matchGameRepo: nil,
-		eventRepo:     nil,
+		matchGameRepo: db.NewMatchGameRepo(gormDB),
+		eventRepo:     db.NewMatchEventRepo(gormDB),
 	}
 }
 

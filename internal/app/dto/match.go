@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/superwhys/billiard-helper/internal/domain/match"
@@ -12,16 +13,28 @@ type MatchConfig struct {
 	Data        map[string]any `json:"data"`
 }
 
+type MatchGame struct {
+	ID          uint            `json:"id"`
+	MatchID     uint            `json:"match_id"`
+	GameNum     uint            `json:"game_num"`
+	StartAt     int64           `json:"start_at"`
+	EndAt       int64           `json:"end_at"`
+	WinnerID    *uint           `json:"winner_id"`
+	LastEventID *uint           `json:"last_event_id"`
+	Scores      json.RawMessage `json:"scores"`
+}
+
 type Match struct {
-	ID         uint            `json:"id"`
-	OwnerID    uint            `json:"owner_id"`
-	Name       string          `json:"name"`
-	Status     int             `json:"status"`
-	MatchType  match.MatchType `json:"match_type"`
-	MatchRound uint            `json:"match_round"`
-	Config     MatchConfig     `json:"config"`
-	Players    []Player        `json:"players"`
-	CreatedAt  time.Time       `json:"created_at"`
+	ID            uint            `json:"id"`
+	OwnerID       uint            `json:"owner_id"`
+	Name          string          `json:"name"`
+	Status        int             `json:"status"`
+	MatchType     match.MatchType `json:"match_type"`
+	MatchRound    uint            `json:"match_round"`
+	CurrentScores any             `json:"current_scores"`
+	Config        MatchConfig     `json:"config"`
+	Players       []Player        `json:"players"`
+	CreatedAt     time.Time       `json:"created_at"`
 }
 
 type Player struct {

@@ -48,7 +48,7 @@ func MatchTypeMaxPlayers(mt MatchType) uint {
 func Default9BallScoreConfig() map[string]any {
 	return map[string]any{
 		"big":    10,
-		"small":  20,
+		"small":  7,
 		"golden": 4,
 		"win":    4,
 		"foul":   -1,

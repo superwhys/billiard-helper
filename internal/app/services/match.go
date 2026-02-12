@@ -275,6 +275,8 @@ func (a *MatchApp) ListMatches(ctx context.Context, userId uint, req *dto.MatchL
 
 func (a *MatchApp) GetMatchDetail(ctx context.Context, userId uint, matchID uint) (*dto.Match, error) {
 	matchRepo := a.repoFactory.MatchRepo()
+	matchGameRepo := a.repoFactory.MatchGameRepo()
+
 	match, err := matchRepo.FindByID(ctx, matchID, true)
 	if err != nil {
 		return nil, err
@@ -284,7 +286,14 @@ func (a *MatchApp) GetMatchDetail(ctx context.Context, userId uint, matchID uint
 		return nil, errcode.ErrCodeMatchNotFound
 	}
 
-	return a.matchAssembler.ToMatchDTO(match), nil
+	matchGame, err := matchGameRepo.FindByMatchID(ctx, matchID, match.MatchRound)
+	if err != nil {
+		return nil, err
+	}
+
+	matchDTO := a.matchAssembler.ToMatchDTO(match)
+	matchDTO.CurrentScores = matchGame.Scores
+	return matchDTO, nil
 }
 
 func (a *MatchApp) DeleteMatch(ctx context.Context, req *dto.DeleteMatchRequest) error {

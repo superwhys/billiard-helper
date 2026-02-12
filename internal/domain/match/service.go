@@ -2,10 +2,12 @@ package match
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/miebyte/goutils/logging"
 	"github.com/miebyte/goutils/utils/ptrx"
+	"github.com/superwhys/billiard-helper/internal/domain/event"
 	"github.com/superwhys/billiard-helper/internal/errcode"
 	"github.com/superwhys/billiard-helper/internal/pkg/codegen"
 )
@@ -23,6 +25,13 @@ type IMatchService interface {
 	LeaveMatch(ctx context.Context, match *Match, player *Player) error
 	// NextRound 下一轮
 	NextRound(ctx context.Context, matchID uint) (*Match, error)
+	// CalculateMatchGameScore 计算比赛轮次中的分数快照
+	// 计算分数快照的逻辑：
+	// 1. 获取当前的分数快照
+	// 2. 遍历当前事件的 ScoreActions，根据 ScoreActions 中的 PlayerIds 和 Score 计算新的分数快照
+	//     2.1 这里也许要使用策略模式，不同的玩法有不同的分数计算逻辑
+	//     2.2 然后这里传递当前房间的玩家，当前的分数快照，以及分数事件数据，来计算新的分数快照
+	CalculateMatchGameScore(ctx context.Context, match *Match, matchGame *MatchGame, event *event.Event) (json.RawMessage, error)
 }
 
 var _ IMatchService = (*MatchService)(nil)
@@ -33,10 +42,15 @@ type MatchService struct {
 	playerRepository    IPlayerRepository
 }
 
-func NewMatchService(matchRepository IMatchRepository, playerRepository IPlayerRepository) *MatchService {
+func NewMatchService(
+	matchRepository IMatchRepository,
+	playerRepository IPlayerRepository,
+	matchGameRepository IMatchGameRepository,
+) *MatchService {
 	return &MatchService{
-		matchRepository:  matchRepository,
-		playerRepository: playerRepository,
+		matchRepository:     matchRepository,
+		playerRepository:    playerRepository,
+		matchGameRepository: matchGameRepository,
 	}
 }
 
@@ -76,7 +90,14 @@ func (s *MatchService) CreateMatch(ctx context.Context, userID uint, match *Matc
 		return fmt.Errorf("create player failed: %w", err)
 	}
 
-	_, err = s.matchGameRepository.StartGameRound(ctx, match.ID, 1)
+	// 根据不同玩法初始化默认分数快照
+	strategy := MatchTypeStrategyFactory(match.MatchType)
+	defaultScores, err := strategy.DefaultScores(ctx, match.Players)
+	if err != nil {
+		return fmt.Errorf("default scores failed: %w", err)
+	}
+
+	_, err = s.matchGameRepository.StartGameRound(ctx, match.ID, 1, defaultScores)
 	if err != nil {
 		return fmt.Errorf("start game round failed: %w", err)
 	}
@@ -172,10 +193,26 @@ func (s *MatchService) NextRound(ctx context.Context, matchID uint) (*Match, err
 	}
 
 	// 开始新的一轮
-	_, err = s.matchGameRepository.StartGameRound(ctx, match.ID, match.MatchRound)
+	strategy := MatchTypeStrategyFactory(match.MatchType)
+	defaultScores, err := strategy.DefaultScores(ctx, match.Players)
+	if err != nil {
+		return nil, fmt.Errorf("default scores failed: %w", err)
+	}
+	_, err = s.matchGameRepository.StartGameRound(ctx, match.ID, match.MatchRound, defaultScores)
 	if err != nil {
 		return nil, fmt.Errorf("start game round failed: %w", err)
 	}
 
 	return match, nil
+}
+
+func (s *MatchService) CalculateMatchGameScore(ctx context.Context, match *Match, matchGame *MatchGame, event *event.Event) (json.RawMessage, error) {
+	strategy := MatchTypeStrategyFactory(match.MatchType)
+
+	newScores, err := strategy.CalculateScore(ctx, match.Players, matchGame.Scores, event.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	return newScores, nil
 }

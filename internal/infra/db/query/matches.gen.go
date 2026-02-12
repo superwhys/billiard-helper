@@ -41,19 +41,6 @@ func newMatch(db *gorm.DB, opts ...gen.DOOption) match {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Players", "models.Player"),
-		Events: struct {
-			field.RelationField
-			Operator struct {
-				field.RelationField
-			}
-		}{
-			RelationField: field.NewRelation("Players.Events", "models.MatchEvent"),
-			Operator: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Players.Events.Operator", "models.Player"),
-			},
-		},
 	}
 
 	_match.Events = matchHasManyEvents{
@@ -189,13 +176,6 @@ type matchHasManyPlayers struct {
 	db *gorm.DB
 
 	field.RelationField
-
-	Events struct {
-		field.RelationField
-		Operator struct {
-			field.RelationField
-		}
-	}
 }
 
 func (a matchHasManyPlayers) Where(conds ...field.Expr) *matchHasManyPlayers {

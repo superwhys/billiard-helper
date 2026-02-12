@@ -1,6 +1,7 @@
 package match
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -80,14 +81,14 @@ func (m *Match) JoinPlayer(player *Player) error {
 }
 
 type MatchGame struct {
-	ID          uint           `json:"id"`
-	MatchID     uint           `json:"match_id"`
-	GameNum     uint           `json:"game_num"`
-	StartAt     time.Time      `json:"start_at"`
-	EndAt       time.Time      `json:"end_at"`
-	WinnerID    uint           `json:"winner_id"`
-	Scores      map[string]any `json:"scores"`
-	LastEventID uint           `json:"last_event_id"`
+	ID          uint            `json:"id"`
+	MatchID     uint            `json:"match_id"`
+	GameNum     uint            `json:"game_num"`
+	StartAt     int64           `json:"start_at"`
+	EndAt       int64           `json:"end_at"`
+	WinnerID    *uint           `json:"winner_id"`
+	LastEventID *uint           `json:"last_event_id"`
+	Scores      json.RawMessage `json:"scores"`
 }
 
 type Player struct {

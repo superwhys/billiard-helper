@@ -13,8 +13,6 @@ type Player struct {
 	UserID   *uint  `gorm:"column:user_id;index;comment:真实玩家的用户ID" json:"user_id"`
 	NickName string `gorm:"column:nick_name;type:varchar(255);not null;comment:昵称" json:"nick_name"`
 	Type     uint8  `gorm:"column:type;type:tinyint(1);default:1;not null;comment:玩家类型" json:"type"`
-
-	Events []*MatchEvent `json:"events"`
 }
 
 func (p *Player) TableName() string {

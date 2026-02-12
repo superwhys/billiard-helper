@@ -1,6 +1,9 @@
 package match
 
-import "context"
+import (
+	"context"
+	"encoding/json"
+)
 
 type IMatchRepository interface {
 	Create(ctx context.Context, match *Match) error
@@ -23,7 +26,7 @@ type IMatchGameRepository interface {
 	FindByMatchID(ctx context.Context, matchID uint, gameNum uint) (*MatchGame, error)
 	FindMatchRounds(ctx context.Context, matchID uint) ([]*MatchGame, error)
 	EndGameRound(ctx context.Context, matchID uint, gameNum uint) error
-	StartGameRound(ctx context.Context, matchID uint, gameNum uint) (*MatchGame, error)
+	StartGameRound(ctx context.Context, matchID uint, gameNum uint, scores json.RawMessage) (*MatchGame, error)
 	Update(ctx context.Context, matchGame *MatchGame) error
 	Delete(ctx context.Context, id uint) error
 }

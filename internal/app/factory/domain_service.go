@@ -23,5 +23,9 @@ func (f *DomainServiceFactory) UserService(repoFactory IRepoFactory) user.IUserS
 }
 
 func (f *DomainServiceFactory) MatchService(repoFactory IRepoFactory) match.IMatchService {
-	return match.NewMatchService(repoFactory.MatchRepo(), repoFactory.PlayerRepo())
+	return match.NewMatchService(
+		repoFactory.MatchRepo(),
+		repoFactory.PlayerRepo(),
+		repoFactory.MatchGameRepo(),
+	)
 }

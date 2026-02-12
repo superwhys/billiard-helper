@@ -17,7 +17,7 @@ func ScoreGroupRouter(scoreApp *services.ScoreApp) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithPrefix("/score"),
 		ginutils.WithHandler(http.MethodPost, "/sync", ScoreSyncHandler(scoreApp)),
-		ginutils.WithHandler(http.MethodPost, "/undo", ScoreUndoHandler(scoreApp)),
+		ginutils.WithHandler(http.MethodPost, "/undo", nil),
 		ginutils.WithHandler(http.MethodGet, "/list", ScoreListHandler(scoreApp)),
 	)
 }
@@ -41,12 +41,12 @@ func ScoreSyncHandler(scoreApp *services.ScoreApp) gin.HandlerFunc {
 		req.UserID = claims.UserID
 
 		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
-		err = scoreApp.SyncScore(ctx, req)
+		newScores, err := scoreApp.SyncScore(ctx, req)
 		if handleRouterError(c, err, "sync score failed", errcode.ErrCodeSyncScoreFailed) {
 			return
 		}
 
-		c.JSON(http.StatusOK, response.ResponseSuccess())
+		c.JSON(http.StatusOK, response.ResponseWithData(newScores))
 	})
 }
 
@@ -57,7 +57,7 @@ func ScoreSyncHandler(scoreApp *services.ScoreApp) gin.HandlerFunc {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param request body dto.MatchScoreUndoEvent true "撤回分数请求体"
+// @Param request body dto.MatchScoreUndoReq true "撤回分数请求体"
 // @Success 200 {object} ginutils.Ret[any]
 // @Router /score/undo [post]
 func ScoreUndoHandler(scoreApp *services.ScoreApp) gin.HandlerFunc {
@@ -69,12 +69,12 @@ func ScoreUndoHandler(scoreApp *services.ScoreApp) gin.HandlerFunc {
 		req.UserID = claims.UserID
 
 		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
-		err = scoreApp.UndoScore(ctx, req)
+		newScores, err := scoreApp.UndoScore(ctx, req)
 		if handleRouterError(c, err, "undo score failed", errcode.ErrCodeUndoScoreFailed) {
 			return
 		}
 
-		c.JSON(http.StatusOK, response.ResponseSuccess())
+		c.JSON(http.StatusOK, response.ResponseWithData(newScores))
 	})
 }
 
