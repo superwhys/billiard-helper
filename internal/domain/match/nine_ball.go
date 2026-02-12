@@ -9,11 +9,6 @@ import (
 	"github.com/superwhys/billiard-helper/internal/domain/event"
 )
 
-// type NineBallScore struct {
-// 	Score     int             `json:"score"`
-// 	TypeCount map[string]uint `json:"type_count"`
-// }
-
 type NineBallScoreContext struct {
 	StatKey        string `json:"stat_key"`
 	ScorerPlayerID uint   `json:"scorer_player_id"`
