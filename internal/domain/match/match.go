@@ -12,16 +12,17 @@ import (
 
 // Match 聚合根
 type Match struct {
-	ID         uint        `json:"id"`
-	Name       string      `json:"name"`
-	OwnerID    uint        `json:"owner_id"`
-	Status     MatchStatus `json:"status"`
-	MatchType  MatchType   `json:"match_type"`
-	MatchRound uint        `json:"match_round"`
-	Config     MatchConfig `json:"config"`
-	Players    []*Player   `json:"players"`
-	CreatedAt  time.Time   `json:"created_at"`
-	UpdatedAt  time.Time   `json:"updated_at"`
+	ID            uint        `json:"id"`
+	Name          string      `json:"name"`
+	OwnerID       uint        `json:"owner_id"`
+	Status        MatchStatus `json:"status"`
+	MatchType     MatchType   `json:"match_type"`
+	MatchRound    uint        `json:"match_round"`
+	Config        MatchConfig `json:"config"`
+	Players       []*Player   `json:"players"`
+	CurrentScores any         `json:"current_scores"`
+	CreatedAt     time.Time   `json:"created_at"`
+	UpdatedAt     time.Time   `json:"updated_at"`
 }
 
 func (m *Match) IsStart() bool {
@@ -69,7 +70,7 @@ func (m *Match) AssertScoreRequest(userID uint, round uint) error {
 }
 
 func (m *Match) IsMaxRoundReached() bool {
-	return m.MatchRound < m.Config.TargetScore
+	return m.MatchRound >= m.Config.TargetScore
 }
 
 func (m *Match) IsPlayerFull() bool {

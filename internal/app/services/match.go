@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/miebyte/goutils/utils/ptrx"
 	"github.com/superwhys/billiard-helper/internal/app/assembler"
@@ -335,20 +336,23 @@ func (a *MatchApp) NextRound(ctx context.Context, req *dto.MatchRoundNextRequest
 	}
 	defer lock.Unlock(ctx)
 
-	var match *match.Match
-	var err error
-	a.repoFactory.WithTransaction(ctx, func(factory factory.IRepoFactory) error {
+	var matchDTO *dto.Match
+	err := a.repoFactory.WithTransaction(ctx, func(factory factory.IRepoFactory) error {
 		matchService := a.serviceFactory.MatchService(factory)
 
-		match, err = matchService.NextRound(ctx, req.MatchID)
+		match, err := factory.MatchRepo().FindByID(ctx, req.MatchID, true)
+		if err != nil {
+			return fmt.Errorf("find match failed: %w", err)
+		}
+
+		err = matchService.NextRound(ctx, match)
 		if err != nil {
 			return err
 		}
 
-		// TODO: 写入一个新的事件，并记录到 match_games 中
-
+		matchDTO = a.matchAssembler.ToMatchDTO(match)
 		return nil
 	})
 
-	return a.matchAssembler.ToMatchDTO(match), nil
+	return matchDTO, err
 }

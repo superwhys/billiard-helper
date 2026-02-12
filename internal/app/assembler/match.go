@@ -52,15 +52,16 @@ func (a *MatchAssembler) ToMatchDTO(r *match.Match) *dto.Match {
 	}
 
 	return &dto.Match{
-		ID:         r.ID,
-		OwnerID:    r.OwnerID,
-		Name:       r.Name,
-		Status:     int(r.Status),
-		MatchType:  r.MatchType,
-		MatchRound: r.MatchRound,
-		Config:     config,
-		Players:    players,
-		CreatedAt:  r.CreatedAt,
+		ID:            r.ID,
+		OwnerID:       r.OwnerID,
+		Name:          r.Name,
+		Status:        int(r.Status),
+		MatchType:     r.MatchType,
+		MatchRound:    r.MatchRound,
+		Config:        config,
+		Players:       players,
+		CurrentScores: r.CurrentScores,
+		CreatedAt:     r.CreatedAt,
 	}
 }
 

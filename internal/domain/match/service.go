@@ -24,7 +24,7 @@ type IMatchService interface {
 	// LeaveMatch 离开比赛
 	LeaveMatch(ctx context.Context, match *Match, player *Player) error
 	// NextRound 下一轮
-	NextRound(ctx context.Context, matchID uint) (*Match, error)
+	NextRound(ctx context.Context, match *Match) error
 	// CalculateMatchGameScore 计算比赛轮次中的分数快照
 	// 计算分数快照的逻辑：
 	// 1. 获取当前的分数快照
@@ -165,46 +165,46 @@ func (s *MatchService) LeaveMatch(ctx context.Context, match *Match, player *Pla
 	return nil
 }
 
-func (s *MatchService) NextRound(ctx context.Context, matchID uint) (*Match, error) {
-	match, err := s.matchRepository.FindByID(ctx, matchID, false)
-	if err != nil {
-		return nil, fmt.Errorf("find match failed: %w", err)
-	}
-
+func (s *MatchService) NextRound(ctx context.Context, match *Match) error {
 	if !match.IsStart() {
-		return nil, errcode.ErrCodeMatchNotInProgress
+		return errcode.ErrCodeMatchNotInProgress
 	}
 
 	if match.IsMaxRoundReached() {
-		return nil, errcode.ErrCodeMatchMaxRoundReached
+		return errcode.ErrCodeMatchMaxRoundReached
 	}
 
 	beforeRound := match.MatchRound
-	match.MatchRound++
-	err = s.matchRepository.Update(ctx, match)
-	if err != nil {
-		return nil, fmt.Errorf("update match failed: %w", err)
-	}
+	newRound := beforeRound + 1
 
 	// TODO: 这里应该是要获取到本轮赢的玩家的
 	// 结束上一轮
-	err = s.matchGameRepository.EndGameRound(ctx, match.ID, beforeRound)
+	err := s.matchGameRepository.EndGameRound(ctx, match.ID, beforeRound)
 	if err != nil {
-		return nil, fmt.Errorf("end game round failed: %w", err)
+		return fmt.Errorf("end game round failed: %w", err)
 	}
 
 	// 开始新的一轮
 	strategy := MatchTypeStrategyFactory(match.MatchType)
 	defaultScores, err := strategy.DefaultScores(ctx, match.Players)
 	if err != nil {
-		return nil, fmt.Errorf("default scores failed: %w", err)
+		return fmt.Errorf("default scores failed: %w", err)
 	}
-	_, err = s.matchGameRepository.StartGameRound(ctx, match.ID, match.MatchRound, defaultScores)
+	logging.Infoc(ctx, "defaultScores: %v", string(defaultScores))
+	_, err = s.matchGameRepository.StartGameRound(ctx, match.ID, newRound, defaultScores)
 	if err != nil {
-		return nil, fmt.Errorf("start game round failed: %w", err)
+		return fmt.Errorf("start game round failed: %w", err)
 	}
 
-	return match, nil
+	match.MatchRound = newRound
+	match.CurrentScores = defaultScores
+
+	err = s.matchRepository.Update(ctx, match)
+	if err != nil {
+		return fmt.Errorf("update match failed: %w", err)
+	}
+
+	return nil
 }
 
 func (s *MatchService) CalculateMatchGameScore(ctx context.Context, match *Match, matchGame *MatchGame, event *event.Event) (json.RawMessage, error) {
