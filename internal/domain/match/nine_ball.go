@@ -9,10 +9,10 @@ import (
 	"github.com/superwhys/billiard-helper/internal/domain/event"
 )
 
-type NineBallScore struct {
-	Score     int             `json:"score"`
-	TypeCount map[string]uint `json:"type_count"`
-}
+// type NineBallScore struct {
+// 	Score     int             `json:"score"`
+// 	TypeCount map[string]uint `json:"type_count"`
+// }
 
 type NineBallScoreContext struct {
 	StatKey        string `json:"stat_key"`
@@ -27,20 +27,20 @@ func NewNineBallStrategy() *NineBallStrategy {
 	return &NineBallStrategy{}
 }
 
-func (s *NineBallStrategy) defaultPlayerScores() NineBallScore {
+func (s *NineBallStrategy) defaultPlayerScores() GameScore[map[string]uint] {
 	typeCnt := make(map[string]uint)
 	for scoreType := range Default9BallScoreConfig() {
 		typeCnt[scoreType] = 0
 	}
 
-	return NineBallScore{
-		Score:     0,
-		TypeCount: typeCnt,
+	return GameScore[map[string]uint]{
+		Score: 0,
+		Extra: typeCnt,
 	}
 }
 
 func (s *NineBallStrategy) DefaultScores(ctx context.Context, players []*Player) (json.RawMessage, error) {
-	resp := make(map[string]NineBallScore)
+	resp := make(map[string]GameScore[map[string]uint])
 
 	// 初始化玩家分数
 	for _, player := range players {
@@ -57,8 +57,8 @@ func (s *NineBallStrategy) DefaultScores(ctx context.Context, players []*Player)
 	return scoresJSON, nil
 }
 
-func (s *NineBallStrategy) parseCurrentScore(currentScore json.RawMessage) (map[string]NineBallScore, error) {
-	var currentScoreMap map[string]NineBallScore
+func (s *NineBallStrategy) parseCurrentScore(currentScore json.RawMessage) (map[string]GameScore[map[string]uint], error) {
+	var currentScoreMap map[string]GameScore[map[string]uint]
 	err := json.Unmarshal(currentScore, &currentScoreMap)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal current score failed: %w", err)
@@ -109,7 +109,7 @@ func (s *NineBallStrategy) CalculateScore(ctx context.Context, players []*Player
 	return json.Marshal(currentScoreMap)
 }
 
-func (s *NineBallStrategy) increaseTypeCount(currentScore map[string]NineBallScore, ctx *NineBallScoreContext) error {
+func (s *NineBallStrategy) increaseTypeCount(currentScore map[string]GameScore[map[string]uint], ctx *NineBallScoreContext) error {
 	statKey := ctx.StatKey
 	if statKey == "" {
 		return nil
@@ -124,7 +124,7 @@ func (s *NineBallStrategy) increaseTypeCount(currentScore map[string]NineBallSco
 		playerScore = s.defaultPlayerScores()
 	}
 
-	playerScore.TypeCount[statKey]++
+	playerScore.Extra[statKey]++
 	currentScore[fmt.Sprintf("%d", ctx.ScorerPlayerID)] = playerScore
 	return nil
 }

@@ -116,15 +116,21 @@ func (m *Match) JoinPlayer(player *Player) error {
 	return nil
 }
 
+type GameScore[T any] struct {
+	Score int `json:"score"`
+	Extra T   `json:"extra"`
+}
+
 type MatchGame struct {
-	ID          uint            `json:"id"`
-	MatchID     uint            `json:"match_id"`
-	GameNum     uint            `json:"game_num"`
-	StartAt     int64           `json:"start_at"`
-	EndAt       int64           `json:"end_at"`
-	WinnerID    *uint           `json:"winner_id"`
-	LastEventID *uint           `json:"last_event_id"`
-	Scores      json.RawMessage `json:"scores"`
+	ID          uint  `json:"id"`
+	MatchID     uint  `json:"match_id"`
+	GameNum     uint  `json:"game_num"`
+	StartAt     int64 `json:"start_at"`
+	EndAt       int64 `json:"end_at"`
+	WinnerID    *uint `json:"winner_id"`
+	LastEventID *uint `json:"last_event_id"`
+	// 分数快照, GameScore 类型
+	Scores json.RawMessage `json:"scores"`
 }
 
 type Player struct {
