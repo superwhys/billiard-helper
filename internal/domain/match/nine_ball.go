@@ -109,6 +109,49 @@ func (s *NineBallStrategy) CalculateScore(ctx context.Context, players []*Player
 	return json.Marshal(currentScoreMap)
 }
 
+// UndoScore 回退分数快照
+func (s *NineBallStrategy) UndoScore(ctx context.Context, players []*Player, currentScore, eventData json.RawMessage) (json.RawMessage, error) {
+	var scoreEventData NineBallScoreEventData
+	err := json.Unmarshal(eventData, &scoreEventData)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal event data failed: %w", err)
+	}
+
+	if currentScore == nil {
+		currentScore, err = s.DefaultScores(ctx, players)
+		if err != nil {
+			return nil, fmt.Errorf("default scores failed: %w", err)
+		}
+	}
+
+	currentScoreMap, err := s.parseCurrentScore(currentScore)
+	if err != nil {
+		return nil, fmt.Errorf("parse current score failed: %w", err)
+	}
+
+	scoreActions := scoreEventData.ScoreActions
+	scoreContext := scoreEventData.Context
+	if scoreContext.StatKey != "" {
+		err := s.decreaseTypeCount(currentScoreMap, &scoreContext)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _, action := range scoreActions {
+		for _, playerID := range action.PlayerIds {
+			playerScore, exists := currentScoreMap[fmt.Sprintf("%d", playerID)]
+			if !exists {
+				playerScore = s.defaultPlayerScores()
+			}
+			playerScore.Score -= action.Score
+			currentScoreMap[fmt.Sprintf("%d", playerID)] = playerScore
+		}
+	}
+
+	return json.Marshal(currentScoreMap)
+}
+
 func (s *NineBallStrategy) increaseTypeCount(currentScore map[string]GameScore[map[string]uint], ctx *NineBallScoreContext) error {
 	statKey := ctx.StatKey
 	if statKey == "" {
@@ -125,6 +168,28 @@ func (s *NineBallStrategy) increaseTypeCount(currentScore map[string]GameScore[m
 	}
 
 	playerScore.Extra[statKey]++
+	currentScore[fmt.Sprintf("%d", ctx.ScorerPlayerID)] = playerScore
+	return nil
+}
+
+func (s *NineBallStrategy) decreaseTypeCount(currentScore map[string]GameScore[map[string]uint], ctx *NineBallScoreContext) error {
+	statKey := ctx.StatKey
+	if statKey == "" {
+		return nil
+	}
+
+	if ctx.ScorerPlayerID == 0 {
+		return nil
+	}
+
+	playerScore, exists := currentScore[fmt.Sprintf("%d", ctx.ScorerPlayerID)]
+	if !exists {
+		playerScore = s.defaultPlayerScores()
+	}
+
+	if playerScore.Extra[statKey] > 0 {
+		playerScore.Extra[statKey]--
+	}
 	currentScore[fmt.Sprintf("%d", ctx.ScorerPlayerID)] = playerScore
 	return nil
 }

@@ -32,6 +32,7 @@ type IMatchService interface {
 	//     2.1 这里也许要使用策略模式，不同的玩法有不同的分数计算逻辑
 	//     2.2 然后这里传递当前房间的玩家，当前的分数快照，以及分数事件数据，来计算新的分数快照
 	CalculateMatchGameScore(ctx context.Context, match *Match, matchGame *MatchGame, event *event.Event) (json.RawMessage, error)
+	UndoMatchGameScore(ctx context.Context, match *Match, matchGame *MatchGame, event *event.Event) (json.RawMessage, error)
 }
 
 var _ IMatchService = (*MatchService)(nil)
@@ -210,6 +211,17 @@ func (s *MatchService) CalculateMatchGameScore(ctx context.Context, match *Match
 	strategy := MatchTypeStrategyFactory(match.MatchType)
 
 	newScores, err := strategy.CalculateScore(ctx, match.Players, matchGame.Scores, event.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	return newScores, nil
+}
+
+func (s *MatchService) UndoMatchGameScore(ctx context.Context, match *Match, matchGame *MatchGame, event *event.Event) (json.RawMessage, error) {
+	strategy := MatchTypeStrategyFactory(match.MatchType)
+
+	newScores, err := strategy.UndoScore(ctx, match.Players, matchGame.Scores, event.Data)
 	if err != nil {
 		return nil, err
 	}

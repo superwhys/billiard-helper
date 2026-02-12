@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/miebyte/goutils/utils/ptrx"
@@ -12,6 +13,8 @@ import (
 	"github.com/superwhys/billiard-helper/internal/domain/event"
 	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/domain/shared"
+	"github.com/superwhys/billiard-helper/internal/errcode"
+	"gorm.io/gorm"
 )
 
 type ScoreApp struct {
@@ -126,36 +129,62 @@ func (a *ScoreApp) SyncScore(ctx context.Context, req *dto.MatchScoreSyncEvent) 
 
 func (a *ScoreApp) UndoScore(ctx context.Context, req *dto.MatchScoreUndoReq) (map[string]any, error) {
 	var newScores map[string]any
-	matchGameRepo := a.repoFactory.MatchGameRepo()
-	eventRepo := a.repoFactory.EventRepo()
+	m, err := a.findMatch(ctx, req.UserID, req.MatchID, req.Round)
+	if err != nil {
+		return nil, fmt.Errorf("find match failed: %w", err)
+	}
 
 	matchGame, err := a.findMatchGame(ctx, req.MatchID, req.Round)
 	if err != nil {
 		return nil, fmt.Errorf("find match game failed: %w", err)
 	}
 
-	lastEventID := matchGame.LastEventID
-	deletedEvent, err := eventRepo.DeleteEvent(ctx, ptrx.UintValue(lastEventID))
-	if err != nil {
-		return nil, fmt.Errorf("delete event failed: %w", err)
+	if matchGame.LastEventID == nil {
+		return nil, errcode.ErrCodeUndoScoreFailed.WithMessage("没有可撤回的事件")
 	}
 
-	// 撤回该时间的操作
-	_ = deletedEvent
+	err = a.repoFactory.WithTransaction(ctx, func(factory factory.IRepoFactory) error {
+		matchGameRepo := factory.MatchGameRepo()
+		eventRepo := factory.EventRepo()
 
-	lastEvent, err := eventRepo.GetLastEvent(ctx, req.MatchID, req.Round)
-	if err != nil {
-		return nil, fmt.Errorf("get last event failed: %w", err)
-	}
+		lastEventID := matchGame.LastEventID
+		deletedEvent, err := eventRepo.DeleteEvent(ctx, ptrx.UintValue(lastEventID))
+		if err != nil {
+			return fmt.Errorf("delete event failed: %w", err)
+		}
 
-	// TODO: 修改当前比赛轮次中的分数快照
-	matchGame.LastEventID = new(lastEvent.ID)
-	err = matchGameRepo.Update(ctx, matchGame)
-	if err != nil {
-		return nil, fmt.Errorf("update match game failed: %w", err)
-	}
+		matchService := a.serviceFactory.MatchService(factory)
+		newScoresJSON, err := matchService.UndoMatchGameScore(ctx, m, matchGame, deletedEvent)
+		if err != nil {
+			return fmt.Errorf("undo match game score failed: %w", err)
+		}
 
-	return newScores, nil
+		err = json.Unmarshal(newScoresJSON, &newScores)
+		if err != nil {
+			return fmt.Errorf("unmarshal new scores failed: %w", err)
+		}
+
+		matchGame.Scores = newScoresJSON
+
+		lastEvent, err := eventRepo.GetLastEvent(ctx, req.MatchID, req.Round)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				matchGame.LastEventID = nil
+				return matchGameRepo.Update(ctx, matchGame)
+			}
+			return fmt.Errorf("get last event failed: %w", err)
+		}
+
+		matchGame.LastEventID = new(lastEvent.ID)
+		err = matchGameRepo.Update(ctx, matchGame)
+		if err != nil {
+			return fmt.Errorf("update match game failed: %w", err)
+		}
+
+		return nil
+	})
+
+	return newScores, err
 }
 
 func (a *ScoreApp) ListScores(ctx context.Context, req *dto.MatchScoreListReq) ([]*dto.MatchScoreSyncEvent, error) {

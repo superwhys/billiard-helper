@@ -106,6 +106,7 @@ func (r *MatchGameRepo) Update(ctx context.Context, matchGame *match.MatchGame) 
 
 	_, err := mg.WithContext(ctx).
 		Where(mg.ID.Eq(matchGame.ID)).
+		Select(mg.LastEventID, mg.WinnerID, mg.Scores, mg.StartAt, mg.EndAt).
 		Updates(po)
 	if err != nil {
 		return err

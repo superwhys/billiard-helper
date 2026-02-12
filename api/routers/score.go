@@ -17,7 +17,7 @@ func ScoreGroupRouter(scoreApp *services.ScoreApp) ginutils.Option {
 	return ginutils.WithGroupHandlers(
 		ginutils.WithPrefix("/score"),
 		ginutils.WithHandler(http.MethodPost, "/sync", ScoreSyncHandler(scoreApp)),
-		ginutils.WithHandler(http.MethodPost, "/undo", nil),
+		ginutils.WithHandler(http.MethodPost, "/undo", ScoreUndoHandler(scoreApp)),
 		ginutils.WithHandler(http.MethodGet, "/list", ScoreListHandler(scoreApp)),
 	)
 }

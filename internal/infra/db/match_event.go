@@ -51,6 +51,12 @@ func (r *MatchEventRepo) DeleteEvent(ctx context.Context, eventID uint) (*event.
 	if err != nil {
 		return nil, err
 	}
+
+	_, err = me.WithContext(ctx).Where(me.ID.Eq(eventID)).Delete()
+	if err != nil {
+		return nil, err
+	}
+
 	return r.matchEventPoAssembler.ToEntity(po), nil
 }
 

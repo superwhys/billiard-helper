@@ -21,12 +21,14 @@ func (a *MatchGamePoAssembler) ToEntity(po *models.MatchGame) *match.MatchGame {
 	}
 
 	return &match.MatchGame{
-		ID:      po.ID,
-		MatchID: po.MatchID,
-		GameNum: po.GameNum,
-		StartAt: po.StartAt,
-		EndAt:   po.EndAt,
-		Scores:  json.RawMessage(po.Scores),
+		ID:          po.ID,
+		MatchID:     po.MatchID,
+		GameNum:     po.GameNum,
+		StartAt:     po.StartAt,
+		EndAt:       po.EndAt,
+		LastEventID: po.LastEventID,
+		WinnerID:    po.WinnerID,
+		Scores:      json.RawMessage(po.Scores),
 	}
 }
 
