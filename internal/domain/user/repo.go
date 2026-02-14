@@ -16,6 +16,7 @@ type IUserRepository interface {
 	IsExists(ctx context.Context, account string) (bool, error)
 	FindByEmail(ctx context.Context, email string) (*User, error)
 	FindByPhone(ctx context.Context, phone string) (*User, error)
+	FindByOpenID(ctx context.Context, openID string) (*User, error)
 	FindByID(ctx context.Context, id uint) (*User, error)
 	Update(ctx context.Context, user *User) error
 }

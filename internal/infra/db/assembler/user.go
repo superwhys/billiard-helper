@@ -17,11 +17,26 @@ func (a *UserPoAssembler) ToEntity(po *models.User) *user.User {
 		return nil
 	}
 
-	email, _ := user.NewEmail(po.Email)
+	emailStr := ""
+	if po.Email != nil {
+		emailStr = *po.Email
+	}
+	phone := ""
+	if po.Phone != nil {
+		phone = *po.Phone
+	}
+	openID := ""
+	if po.OpenID != nil {
+		openID = *po.OpenID
+	}
+
+	email, _ := user.NewEmail(emailStr)
 	password := user.NewPasswordFromHash(po.Password)
 	return &user.User{
 		ID:       po.ID,
+		Phone:    phone,
 		Email:    email,
+		OpenID:   openID,
 		Name:     po.Name,
 		Password: password,
 		Avatar:   po.Avatar,
@@ -33,11 +48,31 @@ func (a *UserPoAssembler) ToPO(entity *user.User) *models.User {
 		return nil
 	}
 
+	emailStr := entity.Email.String()
+	var email *string
+	if emailStr != "" {
+		email = &emailStr
+	}
+
+	phoneStr := entity.Phone
+	var phone *string
+	if phoneStr != "" {
+		phone = &phoneStr
+	}
+
+	openIDStr := entity.OpenID
+	var openID *string
+	if openIDStr != "" {
+		openID = &openIDStr
+	}
+
 	return &models.User{
 		Model: gorm.Model{
 			ID: entity.ID,
 		},
-		Email:    entity.Email.String(),
+		Phone:    phone,
+		Email:    email,
+		OpenID:   openID,
 		Name:     entity.Name,
 		Password: entity.Password.Hash(),
 		Avatar:   entity.Avatar,

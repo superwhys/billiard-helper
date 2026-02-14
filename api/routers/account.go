@@ -20,6 +20,7 @@ func AccountGroupRouter(userApp *services.UserApp) ginutils.Option {
 			ginutils.WithHandler(http.MethodPost, "/send-email-code", SendEmailCodeHandler(userApp)),
 			ginutils.WithHandler(http.MethodPost, "/register", AccountRegisterHandler(userApp)),
 			ginutils.WithHandler(http.MethodPost, "/login", AccountLoginHandler(userApp)),
+			ginutils.WithHandler(http.MethodPost, "/wx-login", WechatLoginHandler(userApp)),
 			ginutils.WithHandler(http.MethodPost, "/refresh", AccountRefreshHandler(userApp)),
 		),
 		ginutils.WithGroupHandlers(
@@ -29,6 +30,25 @@ func AccountGroupRouter(userApp *services.UserApp) ginutils.Option {
 			ginutils.WithHandler(http.MethodPost, "/logout", LogoutHandler(userApp)),
 		),
 	)
+}
+
+// WechatLoginHandler 处理微信登录
+// @Summary 微信登录
+// @Description 微信登录
+// @Tags Account
+// @Accept json
+// @Produce json
+// @Param request body dto.WechatLoginReq true "微信登录请求体"
+// @Success 200 {object} ginutils.Ret[dto.TokenResponse]
+// @Router /account/wx-login [post]
+func WechatLoginHandler(userApp *services.UserApp) gin.HandlerFunc {
+	return ginutils.RequestHandler(func(c *gin.Context, req *dto.WechatLoginReq) {
+		token, err := userApp.WechatLogin(c.Request.Context(), req)
+		if handleRouterError(c, err, "auth wechat login handler error", errcode.ErrCodeUserWechatLoginFailed) {
+			return
+		}
+		c.JSON(http.StatusOK, response.ResponseWithData(token))
+	})
 }
 
 // SelfInfoHandler 处理获取用户信息

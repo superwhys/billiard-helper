@@ -96,7 +96,7 @@ func (r *MatchRepo) Delete(ctx context.Context, id uint) error {
 	return err
 }
 
-func (r *MatchRepo) ListMatches(ctx context.Context, matchType string, limit uint, cursor uint) ([]*match.Match, error) {
+func (r *MatchRepo) ListMatches(ctx context.Context, userID uint, matchType string, limit uint, cursor uint) ([]*match.Match, error) {
 	m := r.query.Match
 
 	query := r.query.Match.WithContext(ctx)
@@ -109,6 +109,7 @@ func (r *MatchRepo) ListMatches(ctx context.Context, matchType string, limit uin
 	}
 
 	matches, err := query.
+		Where(m.UserID.Eq(userID)).
 		Preload(m.Players).
 		Limit(int(limit)).
 		Order(m.ID.Desc()).

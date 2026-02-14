@@ -254,7 +254,7 @@ func (a *MatchApp) publishEvent(ctx context.Context, eventType string, payload a
 
 func (a *MatchApp) ListMatches(ctx context.Context, userId uint, req *dto.MatchListRequest) ([]*dto.Match, error) {
 	matchRepo := a.repoFactory.MatchRepo()
-	matches, err := matchRepo.ListMatches(ctx, string(req.MatchType), req.Limit, req.Cursor)
+	matches, err := matchRepo.ListMatches(ctx, userId, string(req.MatchType), req.Limit, req.Cursor)
 	if err != nil {
 		return nil, err
 	}

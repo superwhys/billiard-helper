@@ -2,8 +2,11 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/miebyte/goutils/logging"
@@ -28,6 +31,7 @@ type UserApp struct {
 	verifyCodeSenderFactory verifycode.SenderFactory
 	verifyCodeLimiter       *limiter.Limiter
 	jwtConfig               *config.JwtConfig
+	wechatConfig            *config.WechatConfig
 }
 
 func NewUserApp(
@@ -38,6 +42,7 @@ func NewUserApp(
 	senderFactory verifycode.SenderFactory,
 	verifyCodeLimiter *limiter.Limiter,
 	jwtConfig *config.JwtConfig,
+	wechatConfig *config.WechatConfig,
 ) *UserApp {
 	return &UserApp{
 		serviceFactory:          serviceFactory,
@@ -48,6 +53,7 @@ func NewUserApp(
 		verifyCodeSenderFactory: senderFactory,
 		verifyCodeLimiter:       verifyCodeLimiter,
 		jwtConfig:               jwtConfig,
+		wechatConfig:            wechatConfig,
 	}
 }
 
@@ -96,6 +102,70 @@ func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
 
 	userService := a.serviceFactory.UserService(a.repoFactory)
 	return userService.RegisterUser(ctx, req.Account, req.Password, req.Name)
+}
+
+func (a *UserApp) WechatLogin(ctx context.Context, req *dto.WechatLoginReq) (*dto.TokenResponse, error) {
+	wechatURL, err := url.Parse(a.wechatConfig.Jscode2SessionApi)
+	if err != nil {
+		return nil, fmt.Errorf("parse jscode2SessionApiUrl: %w", err)
+	}
+
+	q := wechatURL.Query()
+	q.Add("appid", a.wechatConfig.AppID)
+	q.Add("secret", a.wechatConfig.SecretID)
+	q.Add("grant_type", "authorization_code")
+	q.Add("js_code", req.Code)
+
+	wechatURL.RawQuery = q.Encode()
+
+	resp, err := http.Get(wechatURL.String())
+	if err != nil {
+		return nil, fmt.Errorf("getSessionKeyResponse: %w", err)
+	}
+	defer resp.Body.Close()
+
+	type wechatSessionKeyResponse struct {
+		OpenID     string `json:"openid"`
+		SessionKey string `json:"session_key"`
+		UnionID    string `json:"unionid,omitempty"`
+		ErrCode    int    `json:"errcode,omitempty"`
+		ErrMsg     string `json:"errmsg,omitempty"`
+	}
+
+	sessionResp := &wechatSessionKeyResponse{}
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(sessionResp); err != nil {
+		return nil, fmt.Errorf("decodeSessionResp: %w", err)
+	}
+
+	if sessionResp.ErrCode != 0 {
+		return nil, fmt.Errorf("code=%s, errcode=%d, errmsg=%s", req.Code, sessionResp.ErrCode, sessionResp.ErrMsg)
+	}
+
+	userService := a.serviceFactory.UserService(a.repoFactory)
+	userEntity, err := userService.WechatLogin(ctx, sessionResp.OpenID)
+	if err != nil {
+		return nil, err
+	}
+
+	accessToken, refreshToken, sessionID, err := jwt.GenerateTokenPair(
+		[]byte(a.jwtConfig.JwtSecret),
+		a.jwtConfig.JwtTimeout,
+		a.jwtConfig.JwtRefreshTimeout,
+		userEntity.ID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := a.sessionRepo.SetSession(ctx, sessionID, userEntity.ID, a.jwtConfig.JwtRefreshTimeout); err != nil {
+		return nil, err
+	}
+
+	return &dto.TokenResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
 
 // Login 用户登录

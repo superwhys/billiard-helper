@@ -27,7 +27,13 @@ func (r *UserRepo) Save(ctx context.Context, user *user.User) error {
 	u := r.query.User
 
 	po := r.userPoAssembler.ToPO(user)
-	return u.WithContext(ctx).Create(po)
+	err := u.WithContext(ctx).Create(po)
+	if err != nil {
+		return err
+	}
+
+	user.ID = po.ID
+	return nil
 }
 
 func (r *UserRepo) IsExists(ctx context.Context, account string) (bool, error) {
@@ -58,6 +64,17 @@ func (r *UserRepo) FindByPhone(ctx context.Context, phone string) (*user.User, e
 	u := r.query.User
 
 	po, err := u.WithContext(ctx).Where(u.Phone.Eq(phone)).First()
+	if err != nil {
+		return nil, err
+	}
+
+	return r.userPoAssembler.ToEntity(po), nil
+}
+
+func (r *UserRepo) FindByOpenID(ctx context.Context, openID string) (*user.User, error) {
+	u := r.query.User
+
+	po, err := u.WithContext(ctx).Where(u.OpenID.Eq(openID)).First()
 	if err != nil {
 		return nil, err
 	}

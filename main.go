@@ -16,9 +16,9 @@ import (
 	"github.com/superwhys/billiard-helper/internal/app/services"
 	"github.com/superwhys/billiard-helper/internal/app/worker/subscribe"
 	"github.com/superwhys/billiard-helper/internal/infra/cache"
-	infrafactory "github.com/superwhys/billiard-helper/internal/infra/factory"
 	"github.com/superwhys/billiard-helper/internal/infra/db/models"
 	"github.com/superwhys/billiard-helper/internal/infra/eventbus"
+	infrafactory "github.com/superwhys/billiard-helper/internal/infra/factory"
 	"github.com/superwhys/billiard-helper/internal/infra/socket"
 	"github.com/superwhys/billiard-helper/internal/infra/verifycode"
 	"github.com/superwhys/billiard-helper/internal/infra/verifycode/email"
@@ -83,6 +83,7 @@ func main() {
 		senderFactory,
 		verifyCodeLimiter,
 		config.JwtConfig,
+		config.WechatConfig,
 	)
 	matchApp := services.NewMatchApp(serviceFactory, repoFactory, eventBus, lockManager)
 	scoreApp := services.NewScoreApp(serviceFactory, repoFactory, eventBus)

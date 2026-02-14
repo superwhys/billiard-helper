@@ -33,6 +33,7 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.DeletedAt = field.NewField(tableName, "deleted_at")
 	_user.Phone = field.NewString(tableName, "phone")
 	_user.Email = field.NewString(tableName, "email")
+	_user.OpenID = field.NewString(tableName, "open_id")
 	_user.Name = field.NewString(tableName, "name")
 	_user.Password = field.NewString(tableName, "password")
 	_user.Avatar = field.NewString(tableName, "avatar")
@@ -88,6 +89,7 @@ type user struct {
 	DeletedAt field.Field
 	Phone     field.String
 	Email     field.String
+	OpenID    field.String
 	Name      field.String
 	Password  field.String
 	Avatar    field.String
@@ -114,6 +116,7 @@ func (u *user) updateTableName(table string) *user {
 	u.DeletedAt = field.NewField(table, "deleted_at")
 	u.Phone = field.NewString(table, "phone")
 	u.Email = field.NewString(table, "email")
+	u.OpenID = field.NewString(table, "open_id")
 	u.Name = field.NewString(table, "name")
 	u.Password = field.NewString(table, "password")
 	u.Avatar = field.NewString(table, "avatar")
@@ -141,13 +144,14 @@ func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *user) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 10)
+	u.fieldMap = make(map[string]field.Expr, 11)
 	u.fieldMap["id"] = u.ID
 	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["updated_at"] = u.UpdatedAt
 	u.fieldMap["deleted_at"] = u.DeletedAt
 	u.fieldMap["phone"] = u.Phone
 	u.fieldMap["email"] = u.Email
+	u.fieldMap["open_id"] = u.OpenID
 	u.fieldMap["name"] = u.Name
 	u.fieldMap["password"] = u.Password
 	u.fieldMap["avatar"] = u.Avatar

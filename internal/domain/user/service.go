@@ -16,6 +16,9 @@ type IUserService interface {
 	// Login 处理登录校验
 	Login(ctx context.Context, account, password, verifyCode string, codeId string) (*User, error)
 
+	// WechatLogin 微信登录
+	WechatLogin(ctx context.Context, openID string) (*User, error)
+
 	// UpdateProfile 更新用户资料
 	UpdateProfile(ctx context.Context, userID uint, name string) error
 
@@ -71,6 +74,30 @@ func (s *UserService) RegisterUser(ctx context.Context, acc, password, name stri
 	}
 
 	return s.userRepository.Save(ctx, user)
+}
+
+func (s *UserService) WechatLogin(ctx context.Context, openID string) (*User, error) {
+	if openID == "" {
+		return nil, errcode.ErrBadRequest
+	}
+
+	u, err := s.userRepository.FindByOpenID(ctx, openID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if u != nil {
+		return u, nil
+	}
+
+	user := &User{
+		OpenID: openID,
+		Name:   "微信用户",
+	}
+	err = s.userRepository.Save(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func (s *UserService) Login(ctx context.Context, acc, password, verifyCode string, codeId string) (*User, error) {

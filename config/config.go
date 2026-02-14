@@ -26,9 +26,29 @@ func (c *JwtConfig) Validate() error {
 	return nil
 }
 
+type WechatConfig struct {
+	AppID             string
+	SecretID          string
+	Jscode2SessionApi string
+}
+
+func (c *WechatConfig) Validate() error {
+	if c.AppID == "" {
+		return errors.New("appid is required")
+	}
+	if c.SecretID == "" {
+		return errors.New("secretid is required")
+	}
+	if c.Jscode2SessionApi == "" {
+		return errors.New("jscode2sessionapi is required")
+	}
+	return nil
+}
+
 type Config struct {
-	JwtConfig   *JwtConfig
-	EmailConfig *emailutils.EmailConfig
+	JwtConfig    *JwtConfig
+	EmailConfig  *emailutils.EmailConfig
+	WechatConfig *WechatConfig
 }
 
 func (c *Config) Validate() error {
@@ -42,6 +62,14 @@ func (c *Config) Validate() error {
 
 	if c.EmailConfig == nil {
 		return errors.New("email config is required")
+	}
+
+	if c.WechatConfig == nil {
+		return errors.New("wechat config is required")
+	}
+
+	if err := c.WechatConfig.Validate(); err != nil {
+		return err
 	}
 	return nil
 }
