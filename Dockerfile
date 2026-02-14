@@ -1,6 +1,6 @@
 ARG GO_VERSION=1.25.4
 # FROM golang:${GO_VERSION} AS builder
-FROM hoven-registry-cn-beijing.cr.volces.com/base/golang:1.25.7-alpine AS builder
+FROM hoven-registry-cn-beijing.cr.volces.com/base/golang:1.26.0-alpine AS builder
 
 ARG MAIN_PACKAGE=.
 ARG BINARY_NAME=app
