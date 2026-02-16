@@ -67,7 +67,7 @@ func (r *MatchEventRepo) GetLastEvent(ctx context.Context, matchID uint, round u
 			me.MatchID.Eq(matchID),
 			me.Round.Eq(round),
 		).
-		Order(me.Round.Desc()).
+		Order(me.ID.Desc()).
 		First()
 	if err != nil {
 		return nil, err
