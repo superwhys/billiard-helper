@@ -37,7 +37,7 @@ func keyGenerator(excludedPaths []string) func(c *gin.Context) string {
 		hash.Write([]byte(clientIP))
 		key := fmt.Sprintf("%x", hash.Sum(nil))
 
-		logging.Infoc(c.Request.Context(), "limit path: %s clientIp: %s key: %s", path, clientIP, key)
+		logging.Debugc(c.Request.Context(), "limit path: %s clientIp: %s key: %s", path, clientIP, key)
 		return key
 	}
 }

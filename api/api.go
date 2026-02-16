@@ -41,11 +41,7 @@ func SetupApi(
 	feedbackApp *services.FeedbackApp,
 ) *Api {
 	engine := ginutils.NewServerHandler(
-		ginutils.WithMiddleware(
-			ginutils.WithLoggingRequest(true),
-			middlewares.RateLimitMiddleware(httpLimiter, nil),
-		),
-		socketManager.Handler(),
+		ginutils.WithMiddleware(middlewares.RateLimitMiddleware(httpLimiter, nil)),
 		ginutils.WithGroupHandlers(
 			// 不需要token验证的接口
 			ginutils.WithGroupHandlers(
@@ -54,6 +50,7 @@ func SetupApi(
 			// 需要token验证的接口
 			ginutils.WithGroupHandlers(
 				ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(userApp)),
+				socketManager.Handler(),
 				routers.MatchGroupRouter(matchApp),
 				routers.ScoreGroupRouter(scoreApp),
 				routers.FeedbackRouter(feedbackApp),
