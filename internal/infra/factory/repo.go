@@ -5,6 +5,7 @@ import (
 
 	appfactory "github.com/superwhys/billiard-helper/internal/app/factory"
 	"github.com/superwhys/billiard-helper/internal/domain/event"
+	"github.com/superwhys/billiard-helper/internal/domain/feedback"
 	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/domain/user"
 	"github.com/superwhys/billiard-helper/internal/infra/db"
@@ -19,6 +20,7 @@ type repositoryFactory struct {
 	playerRepo    match.IPlayerRepository
 	matchGameRepo match.IMatchGameRepository
 	eventRepo     event.IEventRepository
+	feedbackRepo  feedback.IFeedbackRepository
 }
 
 // NewRepositoryFactory 创建仓储工厂
@@ -31,6 +33,7 @@ func NewRepositoryFactory(gormDB *gorm.DB) appfactory.IRepoFactory {
 		playerRepo:    db.NewPlayerRepo(gormDB),
 		matchGameRepo: db.NewMatchGameRepo(gormDB),
 		eventRepo:     db.NewMatchEventRepo(gormDB),
+		feedbackRepo:  db.NewFeedbackRepo(gormDB),
 	}
 }
 
@@ -58,4 +61,8 @@ func (f *repositoryFactory) MatchGameRepo() match.IMatchGameRepository {
 
 func (f *repositoryFactory) EventRepo() event.IEventRepository {
 	return f.eventRepo
+}
+
+func (f *repositoryFactory) FeedbackRepo() feedback.IFeedbackRepository {
+	return f.feedbackRepo
 }

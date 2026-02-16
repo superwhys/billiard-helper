@@ -246,6 +246,79 @@ const docTemplate = `{
                 }
             }
         },
+        "/account/wx-login": {
+            "post": {
+                "description": "微信登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "微信登录",
+                "parameters": [
+                    {
+                        "description": "微信登录请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.WechatLoginReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-dto_TokenResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/feedback/report": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "反馈",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Feedback"
+                ],
+                "summary": "反馈",
+                "parameters": [
+                    {
+                        "description": "反馈请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.FeedbackReportReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-any"
+                        }
+                    }
+                }
+            }
+        },
         "/match/create": {
             "post": {
                 "security": [
@@ -775,6 +848,14 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.FeedbackReportReq": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.JoinMatchRequest": {
             "type": "object",
             "properties": {
@@ -1051,6 +1132,14 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.WechatLoginReq": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
         "event.ScoreAction": {
             "type": "object",
             "properties": {
@@ -1156,7 +1245,6 @@ const docTemplate = `{
         },
         "match.PlayerType": {
             "type": "integer",
-            "format": "int32",
             "enum": [
                 1,
                 2

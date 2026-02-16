@@ -20,6 +20,11 @@ definitions:
       match_id:
         type: integer
     type: object
+  dto.FeedbackReportReq:
+    properties:
+      content:
+        type: string
+    type: object
   dto.JoinMatchRequest:
     properties:
       match_id:
@@ -203,6 +208,11 @@ definitions:
       updated_at:
         type: string
     type: object
+  dto.WechatLoginReq:
+    properties:
+      code:
+        type: string
+    type: object
   event.ScoreAction:
     properties:
       player_ids:
@@ -277,7 +287,6 @@ definitions:
     enum:
     - 1
     - 2
-    format: int32
     type: integer
     x-enum-varnames:
     - PlayerTypeVirtual
@@ -434,6 +443,52 @@ paths:
       summary: 发送邮箱验证码
       tags:
       - Account
+  /account/wx-login:
+    post:
+      consumes:
+      - application/json
+      description: 微信登录
+      parameters:
+      - description: 微信登录请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.WechatLoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-dto_TokenResponse'
+      summary: 微信登录
+      tags:
+      - Account
+  /feedback/report:
+    post:
+      consumes:
+      - application/json
+      description: 反馈
+      parameters:
+      - description: 反馈请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.FeedbackReportReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-any'
+      security:
+      - BearerAuth: []
+      summary: 反馈
+      tags:
+      - Feedback
   /match/create:
     post:
       consumes:

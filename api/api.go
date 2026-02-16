@@ -38,6 +38,7 @@ func SetupApi(
 	userApp *services.UserApp,
 	scoreApp *services.ScoreApp,
 	matchApp *services.MatchApp,
+	feedbackApp *services.FeedbackApp,
 ) *Api {
 	engine := ginutils.NewServerHandler(
 		ginutils.WithMiddleware(
@@ -55,6 +56,7 @@ func SetupApi(
 				ginutils.WithMiddleware(middlewares.TokenVerifyMiddleware(userApp)),
 				routers.MatchGroupRouter(matchApp),
 				routers.ScoreGroupRouter(scoreApp),
+				routers.FeedbackRouter(feedbackApp),
 			),
 		),
 	)
