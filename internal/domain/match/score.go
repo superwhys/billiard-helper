@@ -3,8 +3,6 @@ package match
 import (
 	"encoding/json"
 	"strconv"
-
-	"github.com/miebyte/goutils/utils/ptrx"
 )
 
 // ParseGameScores 解析比赛分数快照
@@ -85,8 +83,7 @@ func FindMatchWinner(scoreMap map[uint]int) (*uint, int) {
 }
 
 // BuildMatchPlayerScores 计算比赛维度的玩家分数
-// 对于九球追分模式，只有一局比赛，所以直接计算这一局的分数即可
-// 对于八球追分模式，有多局比赛，所以需要计算每局的赢家，并统计赢家数量
+// 对于九球追分模式和八球模式，只有一局比赛，所以直接计算这一局的分数即可
 func BuildMatchPlayerScores(matchType MatchType, games []*MatchGame) (map[uint]int, error) {
 	playerScores := map[uint]int{}
 
@@ -97,14 +94,9 @@ func BuildMatchPlayerScores(matchType MatchType, games []*MatchGame) (map[uint]i
 		}
 
 		switch matchType {
-		case MatchType9Ball:
+		case MatchType9Ball, MatchType8Ball:
 			for playerID, score := range scoreMap {
 				playerScores[playerID] = score.Score
-			}
-		case MatchType8Ball:
-			winnerID, _ := FindGameWinner(scoreMap)
-			if winnerID != nil {
-				playerScores[ptrx.UintValue(winnerID)]++
 			}
 		}
 	}
