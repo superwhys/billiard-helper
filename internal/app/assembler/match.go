@@ -35,6 +35,16 @@ func (a *MatchAssembler) CreateMatchReqToMatch(req *dto.CreateMatchRequest) *mat
 	return m
 }
 
+func (a *MatchAssembler) ToMatchDTOList(ms []*match.Match) []*dto.Match {
+	resp := make([]*dto.Match, 0, len(ms))
+
+	for _, m := range ms {
+		resp = append(resp, a.ToMatchDTO(m))
+	}
+
+	return resp
+}
+
 func (a *MatchAssembler) ToMatchDTO(r *match.Match) *dto.Match {
 	if r == nil {
 		return nil
@@ -58,6 +68,8 @@ func (a *MatchAssembler) ToMatchDTO(r *match.Match) *dto.Match {
 		Status:        int(r.Status),
 		MatchType:     r.MatchType,
 		MatchRound:    r.MatchRound,
+		WinnerID:      r.WinnerID,
+		WinnerScore:   r.WinnerScore,
 		Config:        config,
 		Players:       players,
 		CurrentScores: r.CurrentScores,

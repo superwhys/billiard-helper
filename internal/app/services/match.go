@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/miebyte/goutils/logging"
 	"github.com/miebyte/goutils/utils/ptrx"
 	"github.com/superwhys/billiard-helper/internal/app/assembler"
 	"github.com/superwhys/billiard-helper/internal/app/dto"
@@ -254,15 +255,56 @@ func (a *MatchApp) publishEvent(ctx context.Context, eventType string, payload a
 
 func (a *MatchApp) ListMatches(ctx context.Context, userId uint, req *dto.MatchListRequest) ([]*dto.Match, error) {
 	matchRepo := a.repoFactory.MatchRepo()
-	matches, err := matchRepo.ListMatches(ctx, userId, string(req.MatchType), req.Limit, req.Cursor)
+	matches, err := matchRepo.ListMatches(
+		ctx,
+		userId,
+		string(req.MatchType),
+		req.Limit,
+		req.Cursor,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	matchDTOs := make([]*dto.Match, 0, len(matches))
-	for _, match := range matches {
-		matchDTOs = append(matchDTOs, a.matchAssembler.ToMatchDTO(match))
+	matchPlayerScores := make(map[uint]map[uint]int)
+	for _, m := range matches {
+		if len(m.MatchGames) == 0 {
+			continue
+		}
+		if m.Status != match.MatchStatusFinished {
+			continue
+		}
+
+		playerScores, err := match.BuildMatchPlayerScores(m.MatchType, m.MatchGames)
+		if err != nil {
+			logging.Errorc(ctx, "build match scores failed: matchID=%d err=%v", m.ID, err)
+			continue
+		}
+
+		if len(playerScores) > 0 {
+			winnerID, winnerScore := match.FindMatchWinner(playerScores)
+			if winnerID != nil {
+				m.WinnerID = winnerID
+				m.WinnerScore = winnerScore
+			}
+			matchPlayerScores[m.ID] = playerScores
+		}
 	}
+
+	matchDTOs := a.matchAssembler.ToMatchDTOList(matches)
+	for i := range matchDTOs {
+		playerScores, ok := matchPlayerScores[matchDTOs[i].ID]
+		if !ok {
+			continue
+		}
+		for pIdx := range matchDTOs[i].Players {
+			playerID := matchDTOs[i].Players[pIdx].ID
+			if score, exists := playerScores[playerID]; exists {
+				matchDTOs[i].Players[pIdx].Scores = score
+			}
+		}
+	}
+
 	return matchDTOs, nil
 }
 

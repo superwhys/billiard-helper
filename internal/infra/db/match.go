@@ -111,6 +111,7 @@ func (r *MatchRepo) ListMatches(ctx context.Context, userID uint, matchType stri
 	matches, err := query.
 		Where(m.UserID.Eq(userID)).
 		Preload(m.Players).
+		Preload(m.MatchGames).
 		Limit(int(limit)).
 		Order(m.ID.Desc()).
 		Find()

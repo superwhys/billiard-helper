@@ -1,6 +1,8 @@
 package assembler
 
 import (
+	"encoding/json"
+
 	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/infra/db/models"
 	"gorm.io/datatypes"
@@ -71,6 +73,11 @@ func (a *MatchPoAssembler) ToEntity(po *models.Match) *match.Match {
 		players = append(players, a.ToPlayerEntity(p))
 	}
 
+	matchGames := make([]*match.MatchGame, 0, len(po.MatchGames))
+	for _, m := range po.MatchGames {
+		matchGames = append(matchGames, a.ToMatchGameEntity(m))
+	}
+
 	config := a.ToMatchConfigEntity(po.Config.Data())
 
 	return &match.Match{
@@ -82,6 +89,7 @@ func (a *MatchPoAssembler) ToEntity(po *models.Match) *match.Match {
 		MatchType:  match.MatchType(po.MatchType),
 		MatchRound: po.MatchRound,
 		Players:    players,
+		MatchGames: matchGames,
 		CreatedAt:  po.CreatedAt,
 		UpdatedAt:  po.UpdatedAt,
 	}
@@ -115,4 +123,21 @@ func (a *MatchPoAssembler) ToPO(entity *match.Match) *models.Match {
 	}
 
 	return m
+}
+
+func (a *MatchPoAssembler) ToMatchGameEntity(mg *models.MatchGame) *match.MatchGame {
+	if mg == nil {
+		return nil
+	}
+
+	return &match.MatchGame{
+		ID:          mg.ID,
+		MatchID:     mg.MatchID,
+		GameNum:     mg.GameNum,
+		StartAt:     mg.StartAt,
+		EndAt:       mg.EndAt,
+		Scores:      json.RawMessage(mg.Scores),
+		LastEventID: mg.LastEventID,
+		WinnerID:    mg.WinnerID,
+	}
 }

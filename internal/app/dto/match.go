@@ -31,7 +31,9 @@ type Match struct {
 	Status        int             `json:"status"`
 	MatchType     match.MatchType `json:"match_type"`
 	MatchRound    uint            `json:"match_round"`
-	CurrentScores any             `json:"current_scores"`
+	WinnerID      *uint           `json:"winner_id,omitempty"`
+	WinnerScore   int             `json:"winner_score,omitempty"`
+	CurrentScores any             `json:"current_scores,omitempty"`
 	Config        MatchConfig     `json:"config"`
 	Players       []Player        `json:"players"`
 	CreatedAt     time.Time       `json:"created_at"`
@@ -45,6 +47,7 @@ type Player struct {
 	NickName string           `json:"nick_name"`
 	Type     match.PlayerType `json:"type"`
 	JoinTime time.Time        `json:"join_time"`
+	Scores   int              `json:"scores,omitempty"`
 }
 
 type CreateMatchRequest struct {
