@@ -103,7 +103,7 @@ func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*d
 	}
 
 	// 3. 创建玩家
-	player := match.NewPlayer(req.MatchID, ptrx.Uint(req.UserID), req.NickName, req.PlayerType)
+	player := match.NewPlayer(req.MatchID, req.UserID, req.NickName, req.PlayerType)
 
 	// 4. 加入比赛
 	joinedPlayer, err := matchService.JoinMatch(ctx, matchRoom, player)
@@ -116,7 +116,7 @@ func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*d
 	matchDTO := a.matchAssembler.ToMatchDTO(matchRoom)
 	msg := dto.JoinMatchEventMessage{
 		EventMsgBase: dto.EventMsgBase{
-			UserID:  req.UserID,
+			UserID:  ptrx.UintValue(req.UserID),
 			MatchID: matchDTO.ID,
 		},
 		Player: &playerDTO,

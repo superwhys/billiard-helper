@@ -208,7 +208,6 @@ func MatchJoinHandler(matchApp *services.MatchApp) gin.HandlerFunc {
 		if handleRouterError(c, err, "get token claims failed", errcode.ErrUnauthorized) {
 			return
 		}
-		req.UserID = claims.UserID
 
 		ctx := logging.With(c.Request.Context(), "UserID", claims.UserID)
 		Match, err := matchApp.JoinMatch(ctx, req)

@@ -74,9 +74,9 @@ type UpdateMatchRequest struct {
 }
 
 type JoinMatchRequest struct {
-	Operator
 	MatchID    uint             `json:"match_id"`
 	NickName   string           `json:"nick_name"`
+	UserID     *uint            `json:"user_id,omitempty"` // 如果这个玩家是一个真实用户，这个就是真实用户的用户 id
 	PlayerType match.PlayerType `json:"player_type"`
 }
 
