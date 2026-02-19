@@ -144,9 +144,15 @@ func (s *MatchService) EndMatch(ctx context.Context, match *Match) error {
 	}
 
 	match.Status = MatchStatusFinished
+
 	err := s.matchRepository.Update(ctx, match)
 	if err != nil {
 		return fmt.Errorf("end match failed: %w", err)
+	}
+
+	err = s.matchGameRepository.EndGameRound(ctx, match.ID, match.MatchRound)
+	if err != nil {
+		return fmt.Errorf("end game round failed: %w", err)
 	}
 
 	return nil
