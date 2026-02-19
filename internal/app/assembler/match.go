@@ -55,6 +55,11 @@ func (a *MatchAssembler) ToMatchDTO(r *match.Match) *dto.Match {
 		players = append(players, a.ToPlayerDTO(p))
 	}
 
+	matchGames := make([]dto.MatchGame, 0, len(r.MatchGames))
+	for _, mg := range r.MatchGames {
+		matchGames = append(matchGames, a.ToMatchGameDTO(mg))
+	}
+
 	config := dto.MatchConfig{
 		MaxPlayers:  r.Config.MaxPlayers,
 		TargetScore: r.Config.TargetScore,
@@ -73,6 +78,7 @@ func (a *MatchAssembler) ToMatchDTO(r *match.Match) *dto.Match {
 		Config:        config,
 		Players:       players,
 		CurrentScores: r.CurrentScores,
+		MatchGames:    matchGames,
 		CreatedAt:     r.CreatedAt,
 	}
 }
@@ -117,5 +123,21 @@ func (a *MatchAssembler) ToDtoMatchConfig(config *match.MatchConfig) dto.MatchCo
 	return dto.MatchConfig{
 		MaxPlayers:  config.MaxPlayers,
 		TargetScore: config.TargetScore,
+	}
+}
+
+func (a *MatchAssembler) ToMatchGameDTO(mg *match.MatchGame) dto.MatchGame {
+	if mg == nil {
+		return dto.MatchGame{}
+	}
+	return dto.MatchGame{
+		ID:          mg.ID,
+		MatchID:     mg.MatchID,
+		GameNum:     mg.GameNum,
+		StartAt:     mg.StartAt,
+		EndAt:       mg.EndAt,
+		WinnerID:    mg.WinnerID,
+		LastEventID: mg.LastEventID,
+		Scores:      mg.Scores,
 	}
 }

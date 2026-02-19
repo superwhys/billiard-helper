@@ -34,6 +34,7 @@ type Match struct {
 	WinnerID      *uint           `json:"winner_id,omitempty"`
 	WinnerScore   int             `json:"winner_score,omitempty"`
 	CurrentScores any             `json:"current_scores,omitempty"`
+	MatchGames    []MatchGame     `json:"match_games,omitempty"`
 	Config        MatchConfig     `json:"config"`
 	Players       []Player        `json:"players"`
 	CreatedAt     time.Time       `json:"created_at"`

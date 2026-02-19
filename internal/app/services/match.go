@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	"github.com/miebyte/goutils/logging"
 	"github.com/miebyte/goutils/utils/ptrx"
@@ -310,24 +311,28 @@ func (a *MatchApp) ListMatches(ctx context.Context, userId uint, req *dto.MatchL
 
 func (a *MatchApp) GetMatchDetail(ctx context.Context, userId uint, matchID uint) (*dto.Match, error) {
 	matchRepo := a.repoFactory.MatchRepo()
-	matchGameRepo := a.repoFactory.MatchGameRepo()
 
-	match, err := matchRepo.FindByID(ctx, matchID, true)
+	matchEntity, err := matchRepo.GetMatchDetail(ctx, matchID)
 	if err != nil {
 		return nil, err
 	}
 
-	if match.OwnerID != userId {
+	if matchEntity.OwnerID != userId {
 		return nil, errcode.ErrCodeMatchNotFound
 	}
 
-	matchGame, err := matchGameRepo.FindByMatchID(ctx, matchID, match.MatchRound)
-	if err != nil {
-		return nil, err
+	// 按游戏局数排序倒序，
+	slices.SortFunc(matchEntity.MatchGames, func(am, bm *match.MatchGame) int {
+		return int(bm.GameNum - am.GameNum)
+	})
+
+	var currentScores any
+	if len(matchEntity.MatchGames) != 0 {
+		currentScores = matchEntity.MatchGames[0].Scores
 	}
 
-	matchDTO := a.matchAssembler.ToMatchDTO(match)
-	matchDTO.CurrentScores = matchGame.Scores
+	matchDTO := a.matchAssembler.ToMatchDTO(matchEntity)
+	matchDTO.CurrentScores = currentScores
 	return matchDTO, nil
 }
 

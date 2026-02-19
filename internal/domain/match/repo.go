@@ -8,6 +8,7 @@ import (
 type IMatchRepository interface {
 	Create(ctx context.Context, match *Match) error
 	FindByID(ctx context.Context, id uint, withPlayers bool) (*Match, error)
+	GetMatchDetail(ctx context.Context, id uint) (*Match, error)
 	IsExists(ctx context.Context, id uint) (bool, error)
 	Update(ctx context.Context, match *Match) error
 	ListMatches(ctx context.Context, userID uint, matchType string, limit uint, cursor uint) ([]*Match, error)

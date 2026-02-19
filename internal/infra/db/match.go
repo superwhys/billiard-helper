@@ -56,12 +56,26 @@ func (r *MatchRepo) FindByID(ctx context.Context, id uint, withPlayers bool) (*m
 		query = query.Preload(m.Players)
 	}
 
-	// 需要预加载 Players
 	po, err := query.First()
 	if err != nil {
 		return nil, err
 	}
 
+	return r.matchPoAssembler.ToEntity(po), nil
+}
+
+func (r *MatchRepo) GetMatchDetail(ctx context.Context, id uint) (*match.Match, error) {
+	m := r.query.Match
+
+	po, err := m.WithContext(ctx).
+		Where(m.ID.Eq(id)).
+		Preload(m.Players).
+		Preload(m.MatchGames).
+		First()
+
+	if err != nil {
+		return nil, err
+	}
 	return r.matchPoAssembler.ToEntity(po), nil
 }
 
