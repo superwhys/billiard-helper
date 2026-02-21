@@ -18,7 +18,6 @@ func TokenVerifyMiddleware(userApp *services.UserApp) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
-
 			ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrNoToken))
 			ctx.Abort()
 			return

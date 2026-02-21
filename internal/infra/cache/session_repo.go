@@ -2,12 +2,15 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/miebyte/goutils/redisutils"
+	"github.com/redis/go-redis/v9"
 	"github.com/superwhys/billiard-helper/internal/domain/user"
+	"github.com/superwhys/billiard-helper/internal/errcode"
 )
 
 var _ user.ISessionRepository = (*SessionRepository)(nil)
@@ -38,6 +41,9 @@ func (r *SessionRepository) GetSession(ctx context.Context, sessionID string) (u
 	cacheKey := AuthSessionCache(sessionID)
 	value, err := cacheKey.Get(ctx, r.client)
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return 0, errcode.ErrTokenExpired
+		}
 		return 0, err
 	}
 	userID, err := strconv.ParseUint(value, 10, 64)

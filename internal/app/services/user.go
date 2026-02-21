@@ -220,7 +220,7 @@ func (a *UserApp) GetUserTokenClaims(ctx context.Context, tokenStr string) (*jwt
 	// 2. 验证 Session (检查是否被踢出或失效)
 	cachedUserID, err := a.sessionRepo.GetSession(ctx, claims.Subject)
 	if err != nil {
-		return nil, fmt.Errorf("session expired or invalid")
+		return nil, err
 	}
 
 	if cachedUserID != claims.UserID {
@@ -253,7 +253,7 @@ func (a *UserApp) RefreshAccessToken(ctx context.Context, refreshToken string) (
 
 	cachedUserID, err := a.sessionRepo.GetSession(ctx, claims.Subject)
 	if err != nil {
-		return nil, errcode.ErrUnauthorized
+		return nil, err
 	}
 	if cachedUserID != claims.UserID {
 		return nil, errcode.ErrUnauthorized
