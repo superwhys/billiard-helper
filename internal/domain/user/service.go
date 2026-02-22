@@ -2,8 +2,11 @@ package user
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
+	"math/big"
 
+	"github.com/miebyte/goutils/utils"
 	"github.com/superwhys/billiard-helper/internal/errcode"
 	"github.com/superwhys/billiard-helper/internal/pkg/account"
 	"gorm.io/gorm"
@@ -41,6 +44,24 @@ func NewUserService(userRepository IUserRepository, verifyCodeRepo IVerifyCodeRe
 		userRepository: userRepository,
 		verifyCodeRepo: verifyCodeRepo,
 	}
+}
+
+func generateRandomAlnum(length int) (string, error) {
+	const charset = utils.Numeral + utils.UpperLetters
+	if length <= 0 {
+		return "", errcode.ErrBadRequest
+	}
+
+	buf := make([]byte, length)
+	for i := range length {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			return "", err
+		}
+		buf[i] = charset[n.Int64()]
+	}
+
+	return string(buf), nil
 }
 
 func (s *UserService) RegisterUser(ctx context.Context, acc, password, name string) (err error) {
@@ -89,9 +110,13 @@ func (s *UserService) WechatLogin(ctx context.Context, openID string) (*User, er
 		return u, nil
 	}
 
+	suffix, err := generateRandomAlnum(6)
+	if err != nil {
+		return nil, err
+	}
 	user := &User{
 		OpenID: openID,
-		Name:   "微信用户",
+		Name:   "台球大师 " + suffix,
 	}
 	err = s.userRepository.Save(ctx, user)
 	if err != nil {
