@@ -47,6 +47,8 @@ func TokenVerifyMiddleware(userApp *services.UserApp) gin.HandlerFunc {
 
 		ctx.Set(string(jwt.TokenContextKey), claims)
 		reqCtx := context.WithValue(ctx.Request.Context(), jwt.TokenContextKey, claims)
+
+		reqCtx = logging.With(reqCtx, "UserID", claims.UserID)
 		ctx.Request = ctx.Request.WithContext(reqCtx)
 	}
 }
