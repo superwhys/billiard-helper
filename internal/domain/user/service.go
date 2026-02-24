@@ -116,7 +116,7 @@ func (s *UserService) WechatLogin(ctx context.Context, openID string) (*User, er
 	}
 	user := &User{
 		OpenID: openID,
-		Name:   "台球大师 " + suffix,
+		Name:   "台球大师" + suffix,
 	}
 	err = s.userRepository.Save(ctx, user)
 	if err != nil {
