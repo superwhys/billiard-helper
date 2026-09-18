@@ -1,6 +1,5 @@
-ARG GO_VERSION=1.25.4
-# FROM golang:${GO_VERSION} AS builder
-FROM hoven-registry-cn-beijing.cr.volces.com/base/golang:1.26.0-alpine AS builder
+ARG GO_VERSION=1.26.0
+FROM golang:${GO_VERSION} AS builder
 
 ARG MAIN_PACKAGE=.
 ARG BINARY_NAME=app
@@ -27,7 +26,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 	-o /out/${BINARY_NAME} ${MAIN_PACKAGE}
 
 # ========== Runtime ==========
-FROM hoven-registry-cn-beijing.cr.volces.com/base/alpine:3.20
+FROM alpine:3.20
 
 # 安装 CA 证书与时区数据
 RUN apk add --no-cache ca-certificates tzdata \
