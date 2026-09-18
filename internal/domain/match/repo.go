@@ -6,6 +6,7 @@ import (
 )
 
 type IMatchRepository interface {
+	FindByIDForUpdate(ctx context.Context, id uint) (*Match, error)
 	Create(ctx context.Context, match *Match) error
 	FindByID(ctx context.Context, id uint, withPlayers bool) (*Match, error)
 	GetMatchDetail(ctx context.Context, id uint) (*Match, error)

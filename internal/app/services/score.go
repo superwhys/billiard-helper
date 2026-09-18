@@ -63,12 +63,12 @@ func (a *ScoreApp) findMatchGame(ctx context.Context, matchID uint, round uint) 
 // 每条操作事件都会记录到数据库中，方便后续查询和统计
 // 同时，还会修改当前比赛轮次中的分数快照并且发布一个事件
 func (a *ScoreApp) SyncScore(ctx context.Context, req *dto.MatchScoreSyncEvent) (map[string]any, error) {
-	match, err := a.findMatch(ctx, req.UserID, req.MatchID, req.Round)
+	m, err := a.findMatch(ctx, req.UserID, req.MatchID, req.Round)
 	if err != nil {
 		return nil, fmt.Errorf("find match failed: %w", err)
 	}
 
-	matchGame, err := a.findMatchGame(ctx, match.ID, req.Round)
+	matchGame, err := a.findMatchGame(ctx, m.ID, req.Round)
 	if err != nil {
 		return nil, fmt.Errorf("find match game failed: %w", err)
 	}
@@ -84,7 +84,7 @@ func (a *ScoreApp) SyncScore(ctx context.Context, req *dto.MatchScoreSyncEvent) 
 	}
 
 	event := &event.Event{
-		MatchID:    match.ID,
+		MatchID:    m.ID,
 		OperatorID: req.UserID,
 		Round:      req.Round,
 		EventType:  constant.EventPlayerScoreSync,
@@ -93,6 +93,23 @@ func (a *ScoreApp) SyncScore(ctx context.Context, req *dto.MatchScoreSyncEvent) 
 
 	var newScores map[string]any
 	err = a.repoFactory.WithTransaction(ctx, func(factory factory.IRepoFactory) error {
+		if m.MatchType == match.MatchTypeSnooker {
+			m, err = factory.MatchRepo().FindByIDForUpdate(ctx, req.MatchID)
+			if err != nil {
+				return err
+			}
+			if err := m.AssertScoreRequest(req.UserID, req.Round); err != nil {
+				return err
+			}
+			matchGame, err = factory.MatchGameRepo().FindByMatchID(ctx, req.MatchID, req.Round)
+			if err != nil {
+				return err
+			}
+			if matchGame.EndAt != 0 {
+				return errcode.ErrBadRequest.WithMessage("本局已经结算")
+			}
+		}
+
 		eventRepo := factory.EventRepo()
 		matchGameRepo := factory.MatchGameRepo()
 
@@ -104,7 +121,7 @@ func (a *ScoreApp) SyncScore(ctx context.Context, req *dto.MatchScoreSyncEvent) 
 
 		// 计算并修改当前比赛轮次中的分数快照
 		matchService := a.serviceFactory.MatchService(factory)
-		newScoresJSON, err := matchService.CalculateMatchGameScore(ctx, match, matchGame, event)
+		newScoresJSON, err := matchService.CalculateMatchGameScore(ctx, m, matchGame, event)
 		if err != nil {
 			return fmt.Errorf("calculate match game score failed: %w", err)
 		}
@@ -144,9 +161,29 @@ func (a *ScoreApp) UndoScore(ctx context.Context, req *dto.MatchScoreUndoReq) (m
 	}
 
 	err = a.repoFactory.WithTransaction(ctx, func(factory factory.IRepoFactory) error {
+		if m.MatchType == match.MatchTypeSnooker {
+			m, err = factory.MatchRepo().FindByIDForUpdate(ctx, req.MatchID)
+			if err != nil {
+				return err
+			}
+			if err := m.AssertScoreRequest(req.UserID, req.Round); err != nil {
+				return err
+			}
+			matchGame, err = factory.MatchGameRepo().FindByMatchID(ctx, req.MatchID, req.Round)
+			if err != nil {
+				return err
+			}
+			if matchGame.EndAt != 0 {
+				return errcode.ErrBadRequest.WithMessage("本局已经结算")
+			}
+		}
+
 		matchGameRepo := factory.MatchGameRepo()
 		eventRepo := factory.EventRepo()
 
+		if matchGame.LastEventID == nil {
+			return errcode.ErrCodeUndoScoreFailed.WithMessage("没有可撤回的事件")
+		}
 		lastEventID := matchGame.LastEventID
 		deletedEvent, err := eventRepo.DeleteEvent(ctx, ptrx.UintValue(lastEventID))
 		if err != nil {

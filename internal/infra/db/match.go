@@ -7,6 +7,7 @@ import (
 	"github.com/superwhys/billiard-helper/internal/infra/db/assembler"
 	"github.com/superwhys/billiard-helper/internal/infra/db/query"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var _ match.IMatchRepository = (*MatchRepo)(nil)
@@ -134,4 +135,15 @@ func (r *MatchRepo) ListMatches(ctx context.Context, userID uint, matchType stri
 	}
 
 	return r.matchPoAssembler.ToEntityList(matches), nil
+}
+
+// FindByIDForUpdate must be called inside a transaction. It serializes frame
+// settlement with score writes across processes and browser sessions.
+func (r *MatchRepo) FindByIDForUpdate(ctx context.Context, id uint) (*match.Match, error) {
+	m := r.query.Match
+	po, err := m.WithContext(ctx).Where(m.ID.Eq(id)).Clauses(clause.Locking{Strength: "UPDATE"}).Preload(m.Players).First()
+	if err != nil {
+		return nil, err
+	}
+	return r.matchPoAssembler.ToEntity(po), nil
 }

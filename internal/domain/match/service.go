@@ -13,6 +13,7 @@ import (
 )
 
 type IMatchService interface {
+	FinishSnookerFrame(ctx context.Context, m *Match, round, concedingPlayerID uint) error
 	// CreateMatch 负责创建比赛的业务流程
 	CreateMatch(ctx context.Context, userID uint, match *Match) error
 	// JoinMatch 处理加入比赛，包括各种校验
@@ -56,6 +57,12 @@ func NewMatchService(
 }
 
 func (s *MatchService) CreateMatch(ctx context.Context, userID uint, match *Match) error {
+	if MatchTypeStrategyFactory(match.MatchType) == nil {
+		return errcode.ErrBadRequest.WithMessage("不支持的比赛类型")
+	}
+	if err := match.ValidateSnookerConfig(); err != nil {
+		return err
+	}
 	if match.IsPlayerOutOfLimit() {
 		return errcode.ErrCodeMatchPlayerOutOfLimit
 	}
@@ -65,6 +72,7 @@ func (s *MatchService) CreateMatch(ctx context.Context, userID uint, match *Matc
 	}
 
 	// 创建比赛
+	match.MatchRound = 1
 	err := s.matchRepository.Create(ctx, match)
 	if err != nil {
 		return fmt.Errorf("create match failed: %w", err)
@@ -125,6 +133,9 @@ func (s *MatchService) JoinMatch(ctx context.Context, match *Match, player *Play
 }
 
 func (s *MatchService) StartMatch(ctx context.Context, match *Match) error {
+	if err := match.ValidateSnookerConfig(); err != nil {
+		return err
+	}
 	if err := match.AssertStartable(); err != nil {
 		return err
 	}
@@ -139,6 +150,9 @@ func (s *MatchService) StartMatch(ctx context.Context, match *Match) error {
 }
 
 func (s *MatchService) EndMatch(ctx context.Context, match *Match) error {
+	if match.MatchType == MatchTypeSnooker {
+		return errcode.ErrBadRequest.WithMessage("请通过结算本局完成斯诺克比赛")
+	}
 	if match.Status != MatchStatusInProgress {
 		return errcode.ErrCodeMatchNotInProgress
 	}

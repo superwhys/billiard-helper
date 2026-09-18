@@ -75,6 +75,9 @@ func (a *MatchApp) UpdateMatch(ctx context.Context, req *dto.UpdateMatchRequest)
 	m.Name = req.Name
 	m.Config.TargetScore = req.TargetScore
 	m.Config.Data = req.ConfigData
+	if err := m.ValidateSnookerConfig(); err != nil {
+		return nil, err
+	}
 
 	err = matchRepo.Update(ctx, m)
 	if err != nil {
@@ -142,6 +145,10 @@ func (a *MatchApp) StartMatch(ctx context.Context, req *dto.MatchActionRequest) 
 	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID, true)
 	if err != nil {
 		return err
+	}
+
+	if matchRoom.OwnerID != req.UserID {
+		return errcode.ErrCodeMatchNotFound
 	}
 
 	// 3. 开始比赛
@@ -333,6 +340,18 @@ func (a *MatchApp) GetMatchDetail(ctx context.Context, userId uint, matchID uint
 
 	matchDTO := a.matchAssembler.ToMatchDTO(matchEntity)
 	matchDTO.CurrentScores = currentScores
+	if matchEntity.MatchType == match.MatchTypeSnooker {
+		scores, err := match.BuildMatchPlayerScores(matchEntity.MatchType, matchEntity.MatchGames)
+		if err != nil {
+			return nil, err
+		}
+		for i := range matchDTO.Players {
+			matchDTO.Players[i].Scores = scores[matchDTO.Players[i].ID]
+		}
+		if matchEntity.Status == match.MatchStatusFinished {
+			matchDTO.WinnerID, matchDTO.WinnerScore = match.FindMatchWinner(scores)
+		}
+	}
 	return matchDTO, nil
 }
 
@@ -387,17 +406,24 @@ func (a *MatchApp) NextRound(ctx context.Context, req *dto.MatchRoundNextRequest
 	err := a.repoFactory.WithTransaction(ctx, func(factory factory.IRepoFactory) error {
 		matchService := a.serviceFactory.MatchService(factory)
 
-		match, err := factory.MatchRepo().FindByID(ctx, req.MatchID, true)
+		matchEntity, err := factory.MatchRepo().FindByIDForUpdate(ctx, req.MatchID)
 		if err != nil {
 			return fmt.Errorf("find match failed: %w", err)
 		}
 
-		err = matchService.NextRound(ctx, match)
+		if matchEntity.OwnerID != req.UserID {
+			return errcode.ErrCodeMatchNotFound
+		}
+		if matchEntity.MatchType == match.MatchTypeSnooker {
+			err = matchService.FinishSnookerFrame(ctx, matchEntity, req.Round, req.ConcedingPlayerID)
+		} else {
+			err = matchService.NextRound(ctx, matchEntity)
+		}
 		if err != nil {
 			return err
 		}
 
-		matchDTO = a.matchAssembler.ToMatchDTO(match)
+		matchDTO = a.matchAssembler.ToMatchDTO(matchEntity)
 		return nil
 	})
 

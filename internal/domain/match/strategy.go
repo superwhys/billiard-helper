@@ -14,6 +14,8 @@ type MatchTypeStrategy interface {
 
 func MatchTypeStrategyFactory(matchType MatchType) MatchTypeStrategy {
 	switch matchType {
+	case MatchTypeSnooker:
+		return &SnookerStrategy{}
 	case MatchType8Ball:
 		return NewEightBallStrategy()
 	case MatchType9Ball:

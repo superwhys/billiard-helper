@@ -104,5 +104,7 @@ type MatchDetailRequest struct {
 
 type MatchRoundNextRequest struct {
 	Operator
-	MatchID uint `json:"match_id"`
+	Round             uint `json:"round"`
+	ConcedingPlayerID uint `json:"conceding_player_id"`
+	MatchID           uint `json:"match_id"`
 }

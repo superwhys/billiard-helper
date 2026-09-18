@@ -94,6 +94,15 @@ func BuildMatchPlayerScores(matchType MatchType, games []*MatchGame) (map[uint]i
 		}
 
 		switch matchType {
+		case MatchTypeSnooker:
+			for playerID := range scoreMap {
+				if _, ok := playerScores[playerID]; !ok {
+					playerScores[playerID] = 0
+				}
+			}
+			if game.EndAt != 0 && game.WinnerID != nil {
+				playerScores[*game.WinnerID]++
+			}
 		case MatchType9Ball, MatchType8Ball:
 			for playerID, score := range scoreMap {
 				playerScores[playerID] = score.Score
