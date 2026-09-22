@@ -57,7 +57,7 @@ func NewMatchService(
 }
 
 func (s *MatchService) CreateMatch(ctx context.Context, userID uint, match *Match) error {
-	if MatchTypeStrategyFactory(match.MatchType) == nil {
+	if MatchTypeStrategyFactory(match.MatchType, match.Config) == nil {
 		return errcode.ErrBadRequest.WithMessage("不支持的比赛类型")
 	}
 	if err := match.ValidateSnookerConfig(); err != nil {
@@ -100,7 +100,7 @@ func (s *MatchService) CreateMatch(ctx context.Context, userID uint, match *Matc
 	}
 
 	// 根据不同玩法初始化默认分数快照
-	strategy := MatchTypeStrategyFactory(match.MatchType)
+	strategy := MatchTypeStrategyFactory(match.MatchType, match.Config)
 	defaultScores, err := strategy.DefaultScores(ctx, match.Players)
 	if err != nil {
 		return fmt.Errorf("default scores failed: %w", err)
@@ -140,6 +140,19 @@ func (s *MatchService) StartMatch(ctx context.Context, match *Match) error {
 		return err
 	}
 
+	if match.MatchType == MatchTypeSnooker {
+		game, err := s.matchGameRepository.FindByMatchID(ctx, match.ID, match.MatchRound)
+		if err != nil {
+			return err
+		}
+		game.Scores, err = MatchTypeStrategyFactory(match.MatchType, match.Config).DefaultScores(ctx, match.Players)
+		if err != nil {
+			return err
+		}
+		if err := s.matchGameRepository.Update(ctx, game); err != nil {
+			return err
+		}
+	}
 	match.Status = MatchStatusInProgress
 	err := s.matchRepository.Update(ctx, match)
 	if err != nil {
@@ -205,7 +218,7 @@ func (s *MatchService) NextRound(ctx context.Context, match *Match) error {
 	}
 
 	// 开始新的一轮
-	strategy := MatchTypeStrategyFactory(match.MatchType)
+	strategy := MatchTypeStrategyFactory(match.MatchType, match.Config)
 	defaultScores, err := strategy.DefaultScores(ctx, match.Players)
 	if err != nil {
 		return fmt.Errorf("default scores failed: %w", err)
@@ -228,7 +241,7 @@ func (s *MatchService) NextRound(ctx context.Context, match *Match) error {
 }
 
 func (s *MatchService) CalculateMatchGameScore(ctx context.Context, match *Match, matchGame *MatchGame, event *event.Event) (json.RawMessage, error) {
-	strategy := MatchTypeStrategyFactory(match.MatchType)
+	strategy := MatchTypeStrategyFactory(match.MatchType, match.Config)
 
 	newScores, err := strategy.CalculateScore(ctx, match.Players, matchGame.Scores, event.Data)
 	if err != nil {
@@ -239,7 +252,7 @@ func (s *MatchService) CalculateMatchGameScore(ctx context.Context, match *Match
 }
 
 func (s *MatchService) UndoMatchGameScore(ctx context.Context, match *Match, matchGame *MatchGame, event *event.Event) (json.RawMessage, error) {
-	strategy := MatchTypeStrategyFactory(match.MatchType)
+	strategy := MatchTypeStrategyFactory(match.MatchType, match.Config)
 
 	newScores, err := strategy.UndoScore(ctx, match.Players, matchGame.Scores, event.Data)
 	if err != nil {

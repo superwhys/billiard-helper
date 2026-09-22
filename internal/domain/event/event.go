@@ -12,8 +12,9 @@ type ScoreAction struct {
 }
 
 type EventData[C any] struct {
-	ScoreActions []ScoreAction `json:"score_actions"`
-	Context      C             `json:"context"`
+	BeforeScores json.RawMessage `json:"before_scores,omitempty"`
+	ScoreActions []ScoreAction   `json:"score_actions"`
+	Context      C               `json:"context"`
 }
 
 type Event struct {

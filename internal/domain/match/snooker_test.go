@@ -16,14 +16,15 @@ func snookerEvent(key string, scorer uint, recipient uint, points int) json.RawM
 	return data
 }
 
-func TestSnookerScoringAndUndo(t *testing.T) {
+func TestLegacySnookerScoringAndUndo(t *testing.T) {
 	strategy := MatchTypeStrategyFactory(MatchTypeSnooker)
 	if strategy == nil {
 		t.Fatal("snooker strategy is not registered")
 	}
 	ctx := context.Background()
 	players := []*Player{{ID: 1}, {ID: 2}}
-	initial, err := strategy.DefaultScores(ctx, players)
+	initial := json.RawMessage(`{"1":{"score":0,"extra":{}},"2":{"score":0,"extra":{}}}`)
+	var err error
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +58,7 @@ func TestSnookerScoringAndUndo(t *testing.T) {
 		}
 	}
 	// A player added after room creation must still receive an initialized score.
-	partial, _ := strategy.DefaultScores(ctx, players[:1])
+	partial := json.RawMessage(`{"1":{"score":0,"extra":{}}}`)
 	scored, err := strategy.CalculateScore(ctx, players, partial, snookerEvent("red", 2, 2, 1))
 	if err != nil {
 		t.Fatal(err)

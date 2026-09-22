@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,7 @@ import (
 	"github.com/superwhys/billiard-helper/internal/app/dto"
 	appfactory "github.com/superwhys/billiard-helper/internal/app/factory"
 	"github.com/superwhys/billiard-helper/internal/app/services"
+	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/infra/cache"
 	"github.com/superwhys/billiard-helper/internal/infra/db/models"
 	"github.com/superwhys/billiard-helper/internal/infra/eventbus"
@@ -138,7 +140,14 @@ func TestSnookerHTTPPersistence(t *testing.T) {
 	}
 	action := map[string]any{"match_id": m.ID}
 	requireFail(call(http.MethodPost, "/match/start", action, true), "比赛不存在")
+	requireOK(call(http.MethodPost, "/match/update", map[string]any{"match_id": m.ID, "name": m.Name, "target_score": 3, "config_data": map[string]any{"red_count": 6}}, false))
 	requireOK(call(http.MethodPost, "/match/start", action, false))
+	initial := detail()
+	initialRaw, _ := json.Marshal(initial.CurrentScores)
+	table, err := match.ReadSnookerState(initialRaw)
+	if err != nil || table == nil || table.RedCount != 6 || table.RemainingPoints != 75 {
+		t.Fatalf("configuration did not initialize frame: %s", initialRaw)
+	}
 	event := func(key string, scorer, recipient uint, points int) map[string]any {
 		return map[string]any{"match_id": m.ID, "round": 1, "score_actions": []map[string]any{{"player_ids": []uint{recipient}, "score": points}}, "context": map[string]any{"stat_key": key, "scorer_player_id": scorer}}
 	}
@@ -149,8 +158,19 @@ func TestSnookerHTTPPersistence(t *testing.T) {
 	if eventCount != 0 {
 		t.Fatal("invalid score event was not rolled back")
 	}
+	requireFail(call(http.MethodPost, "/score/sync", event("black", first, first, 7), false), "进球顺序")
+	requireOK(call(http.MethodPost, "/score/sync", event("red", first, first, 1), false))
+	requireFail(call(http.MethodPost, "/score/sync", event("red", first, first, 1), false), "进球顺序")
 	requireOK(call(http.MethodPost, "/score/sync", event("black", first, first, 7), false))
-	requireOK(call(http.MethodPost, "/score/sync", event("foul", second, first, 4), false))
+	requireOK(call(http.MethodPost, "/score/sync", map[string]any{"match_id": m.ID, "round": 1, "score_actions": []any{}, "context": map[string]any{"stat_key": "turn_end", "scorer_player_id": first, "next_player_id": second}}, false))
+	changed := detail()
+	changedRaw, _ := json.Marshal(changed.CurrentScores)
+	changedTable, _ := match.ReadSnookerState(changedRaw)
+	if changedTable.ActivePlayerID != second || changedTable.BreakScore != 0 {
+		t.Fatal("turn switch not persisted")
+	}
+	requireOK(call(http.MethodPost, "/score/undo", map[string]any{"match_id": m.ID, "round": 1}, false))
+	requireOK(call(http.MethodPost, "/score/sync", event("foul", first, second, 4), false))
 	requireOK(call(http.MethodPost, "/score/undo", map[string]any{"match_id": m.ID, "round": 1}, false))
 	d := detail()
 	var snapshot map[string]struct {
@@ -158,17 +178,24 @@ func TestSnookerHTTPPersistence(t *testing.T) {
 	}
 	raw, _ := json.Marshal(d.CurrentScores)
 	json.Unmarshal(raw, &snapshot)
-	if snapshot[fmt.Sprint(first)].Score != 7 || snapshot[fmt.Sprint(second)].Score != 0 {
+	if snapshot[fmt.Sprint(first)].Score != 8 || snapshot[fmt.Sprint(second)].Score != 0 {
 		t.Fatalf("undo not persisted %s", raw)
 	}
-	// Concurrent writes must reload the snapshot after acquiring the row lock.
+	table, _ = match.ReadSnookerState(raw)
+	if table.ActivePlayerID != first || table.BreakScore != 8 || table.RedsRemaining != 5 || table.NextBall != "red" {
+		t.Fatalf("undo state not restored: %+v", table)
+	}
+	// Concurrent red submissions: exactly one can pass the red-to-colour transition.
+	var accepted atomic.Int32
 	var wg sync.WaitGroup
 	for i := 0; i < 12; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			res := call(http.MethodPost, "/score/sync", event("red", first, first, 1), false)
-			if res.Code != 0 {
+			if res.Code == 0 {
+				accepted.Add(1)
+			} else if !strings.Contains(res.Message, "进球顺序") {
 				t.Errorf("concurrent score: %s", res.Message)
 			}
 		}()
@@ -177,7 +204,7 @@ func TestSnookerHTTPPersistence(t *testing.T) {
 	d = detail()
 	raw, _ = json.Marshal(d.CurrentScores)
 	json.Unmarshal(raw, &snapshot)
-	if snapshot[fmt.Sprint(first)].Score != 19 {
+	if snapshot[fmt.Sprint(first)].Score != 9 || accepted.Load() != 1 {
 		t.Fatalf("concurrent points lost: %s", raw)
 	}
 	settle := map[string]any{"match_id": m.ID, "round": 1}
@@ -192,6 +219,14 @@ func TestSnookerHTTPPersistence(t *testing.T) {
 	}
 	requireFail(call(http.MethodPost, "/match/round/next", map[string]any{"match_id": m.ID, "round": 2}, false), "本局比分相同")
 	requireFail(call(http.MethodPost, "/match/round/next", map[string]any{"match_id": m.ID, "round": 2, "conceding_player_id": 999999}, false), "认输球员不属于")
+	newFrameRaw, _ := json.Marshal(d.CurrentScores)
+	newTable, _ := match.ReadSnookerState(newFrameRaw)
+	if newTable.RedCount != 6 || newTable.RedsRemaining != 6 || newTable.BreakScore != 0 || newTable.CanUndo {
+		t.Fatal("new frame state not reset")
+	}
+	firstRed := event("red", second, second, 1)
+	firstRed["round"] = 2
+	requireOK(call(http.MethodPost, "/score/sync", firstRed, false))
 	e := event("blue", second, second, 5)
 	e["round"] = 2
 	requireOK(call(http.MethodPost, "/score/sync", e, false))
@@ -207,7 +242,7 @@ func TestSnookerHTTPPersistence(t *testing.T) {
 		Score int `json:"score"`
 	}
 	json.Unmarshal(d.MatchGames[0].Scores, &frame)
-	if frame[fmt.Sprint(second)].Score != 5 {
+	if frame[fmt.Sprint(second)].Score != 6 {
 		t.Fatal("concession modified actual score")
 	}
 	requireFail(call(http.MethodPost, "/score/sync", e, false), "比赛未开始")

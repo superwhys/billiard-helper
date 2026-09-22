@@ -76,7 +76,7 @@ func (s *MatchService) FinishSnookerFrame(ctx context.Context, m *Match, round, 
 		if m.IsMaxRoundReached() {
 			return errcode.ErrCodeMatchMaxRoundReached
 		}
-		nextScores, err := (&SnookerStrategy{}).DefaultScores(ctx, m.Players)
+		nextScores, err := (&SnookerStrategy{Config: m.Config}).DefaultScores(ctx, m.Players)
 		if err != nil {
 			return err
 		}

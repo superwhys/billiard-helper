@@ -110,6 +110,14 @@ func (a *ScoreApp) SyncScore(ctx context.Context, req *dto.MatchScoreSyncEvent) 
 			}
 		}
 
+		if m.MatchType == match.MatchTypeSnooker {
+			scoreEventData.BeforeScores = matchGame.Scores
+			event.Data, err = json.Marshal(scoreEventData)
+			if err != nil {
+				return err
+			}
+		}
+
 		eventRepo := factory.EventRepo()
 		matchGameRepo := factory.MatchGameRepo()
 

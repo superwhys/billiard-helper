@@ -131,28 +131,21 @@ func (a *MatchApp) JoinMatch(ctx context.Context, req *dto.JoinMatchRequest) (*d
 
 // StartRoom 开始比赛
 func (a *MatchApp) StartMatch(ctx context.Context, req *dto.MatchActionRequest) error {
-	matchRepo := a.repoFactory.MatchRepo()
-	matchService := a.serviceFactory.MatchService(a.repoFactory)
-
-	// 1. 获取比赛锁
 	lock := a.lockManager.MatchLock(req.MatchID)
 	if err := lock.Lock(ctx); err != nil {
 		return err
 	}
 	defer lock.Unlock(ctx)
-
-	// 2. 检查比赛是否存在
-	matchRoom, err := matchRepo.FindByID(ctx, req.MatchID, true)
-	if err != nil {
-		return err
-	}
-
-	if matchRoom.OwnerID != req.UserID {
-		return errcode.ErrCodeMatchNotFound
-	}
-
-	// 3. 开始比赛
-	err = matchService.StartMatch(ctx, matchRoom)
+	err := a.repoFactory.WithTransaction(ctx, func(factory factory.IRepoFactory) error {
+		m, err := factory.MatchRepo().FindByIDForUpdate(ctx, req.MatchID)
+		if err != nil {
+			return err
+		}
+		if m.OwnerID != req.UserID {
+			return errcode.ErrCodeMatchNotFound
+		}
+		return a.serviceFactory.MatchService(factory).StartMatch(ctx, m)
+	})
 	if err != nil {
 		return err
 	}

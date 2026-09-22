@@ -4,18 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/superwhys/billiard-helper/internal/domain/event"
 	"github.com/superwhys/billiard-helper/internal/errcode"
 )
 
-// SnookerStrategy records points awarded by the scorer; table state and refereeing
-// (including free balls and misses) remain decisions made at the table.
-type SnookerStrategy struct{}
+// SnookerStrategy validates pot order and tracks the table and current break.
+type SnookerStrategy struct{ Config MatchConfig }
 
 type SnookerScoreContext struct {
 	StatKey        string `json:"stat_key"`
+	NextPlayerID   uint   `json:"next_player_id,omitempty"`
+	RedsRemoved    int    `json:"reds_removed,omitempty"`
 	ScorerPlayerID uint   `json:"scorer_player_id"` // Player potting or committing the foul.
 }
 
@@ -25,18 +25,38 @@ var snookerBallPoints = map[string]int{
 }
 
 func (s *SnookerStrategy) DefaultScores(ctx context.Context, players []*Player) (json.RawMessage, error) {
-	scores := make(map[string]GameScore[map[string]uint], len(players))
+	scores := make(map[uint]GameScore[map[string]uint], len(players))
 	for _, player := range players {
-		scores[strconv.FormatUint(uint64(player.ID), 10)] = GameScore[map[string]uint]{Extra: map[string]uint{}}
+		scores[player.ID] = GameScore[map[string]uint]{Extra: map[string]uint{}}
 	}
-	return json.Marshal(scores)
+	redCount, err := s.Config.SnookerRedCount()
+	if err != nil {
+		return nil, err
+	}
+	state := &SnookerState{RedCount: redCount, RedsRemaining: redCount, NextBall: "red"}
+	state.updateRemaining()
+	return marshalSnooker(scores, state)
 }
 
 func (s *SnookerStrategy) CalculateScore(ctx context.Context, players []*Player, currentScore, eventData json.RawMessage) (json.RawMessage, error) {
-	return s.apply(players, currentScore, eventData, false)
+	return s.calculate(players, currentScore, eventData)
 }
 
 func (s *SnookerStrategy) UndoScore(ctx context.Context, players []*Player, currentScore, eventData json.RawMessage) (json.RawMessage, error) {
+	var data event.EventData[SnookerScoreContext]
+	if err := json.Unmarshal(eventData, &data); err != nil {
+		return nil, err
+	}
+	if len(data.BeforeScores) > 0 {
+		return data.BeforeScores, nil
+	}
+	state, err := ReadSnookerState(currentScore)
+	if err != nil {
+		return nil, err
+	}
+	if state != nil {
+		return nil, errcode.ErrBadRequest.WithMessage("缺少撤销快照，请刷新后重试")
+	}
 	return s.apply(players, currentScore, eventData, true)
 }
 
@@ -116,5 +136,6 @@ func (m *Match) ValidateSnookerConfig() error {
 	if m.Config.TargetScore == 0 || m.Config.TargetScore > 35 || m.Config.TargetScore%2 == 0 {
 		return errcode.ErrBadRequest.WithMessage("斯诺克赛制必须为 1 到 35 的奇数局")
 	}
-	return nil
+	_, err := m.Config.SnookerRedCount()
+	return err
 }

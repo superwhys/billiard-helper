@@ -12,10 +12,14 @@ type MatchTypeStrategy interface {
 	UndoScore(ctx context.Context, players []*Player, currentScore, eventData json.RawMessage) (json.RawMessage, error)
 }
 
-func MatchTypeStrategyFactory(matchType MatchType) MatchTypeStrategy {
+func MatchTypeStrategyFactory(matchType MatchType, configs ...MatchConfig) MatchTypeStrategy {
 	switch matchType {
 	case MatchTypeSnooker:
-		return &SnookerStrategy{}
+		strategy := &SnookerStrategy{}
+		if len(configs) > 0 {
+			strategy.Config = configs[0]
+		}
+		return strategy
 	case MatchType8Ball:
 		return NewEightBallStrategy()
 	case MatchType9Ball:
