@@ -24,8 +24,8 @@ type SocketManager struct {
 	hook              SessionHook
 	socket            websocketutils.ServerAPI
 	billiardNamespace websocketutils.NamespaceAPI
-	userConns         map[uint]ISession // userID -> ISession
-	connIDMap         map[string]uint   // connID -> userID
+	userConns         map[uint]map[string]ISession // userID -> connID -> ISession
+	connIDMap         map[string]uint              // connID -> userID
 }
 
 func NewSocketManager(hook SessionHook) *SocketManager {
@@ -39,7 +39,7 @@ func NewSocketManager(hook SessionHook) *SocketManager {
 		hook:              hook,
 		socket:            socket,
 		billiardNamespace: socket.Of(BilliardSocketNamespace),
-		userConns:         make(map[uint]ISession),
+		userConns:         make(map[uint]map[string]ISession),
 		connIDMap:         make(map[string]uint),
 	}
 	sm.setupSocket()
@@ -64,6 +64,7 @@ func (sm *SocketManager) setupSocket() {
 		userID, err := sm.hook.OnConnect(ctx.Context())
 		if err != nil {
 			logging.Errorc(ctx.Context(), "on connect failed: %v", err)
+			_ = ctx.Conn().Close()
 			return
 		}
 
@@ -85,27 +86,92 @@ func (sm *SocketManager) RegisterSession(userID uint, conn websocketutils.Conn) 
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 
-	if _, ok := sm.userConns[userID]; !ok {
-		sm.userConns[userID] = session
-		sm.connIDMap[conn.ID()] = userID
+	if sm.userConns[userID] == nil {
+		sm.userConns[userID] = make(map[string]ISession)
 	}
+	sm.userConns[userID][conn.ID()] = session
+	sm.connIDMap[conn.ID()] = userID
 }
 
 func (sm *SocketManager) UnregisterSession(conn websocketutils.Conn) {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 
-	delete(sm.userConns, sm.connIDMap[conn.ID()])
+	userID, ok := sm.connIDMap[conn.ID()]
+	if !ok {
+		return
+	}
+	delete(sm.userConns[userID], conn.ID())
+	if len(sm.userConns[userID]) == 0 {
+		delete(sm.userConns, userID)
+	}
 	delete(sm.connIDMap, conn.ID())
 }
 
-func (sm *SocketManager) GetUserSession(userID uint) ISession {
+func (sm *SocketManager) userSessions(userID uint) []ISession {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
 
-	return sm.userConns[userID]
+	sessions := make([]ISession, 0, len(sm.userConns[userID]))
+	for _, session := range sm.userConns[userID] {
+		sessions = append(sessions, session)
+	}
+	return sessions
+}
+
+func (sm *SocketManager) GetUserSessions(ctx context.Context, userID uint) []ISession {
+	sessions := sm.userSessions(userID)
+	if len(sessions) == 0 {
+		return nil
+	}
+
+	blocked, err := sm.hook.IsUserBlocked(ctx, userID)
+	if err != nil || blocked {
+		if err != nil {
+			logging.Errorc(ctx, "check user(%d) blocked status failed: %v", userID, err)
+		}
+		sm.CloseUserConnections(userID)
+		return nil
+	}
+	return sessions
+}
+
+func (sm *SocketManager) CloseUserConnections(userID uint) {
+	for _, session := range sm.userSessions(userID) {
+		if err := session.Close(); err != nil {
+			logging.Errorf("close user(%d) websocket connection failed: %v", userID, err)
+		}
+	}
 }
 
 func (sm *SocketManager) BroadcastToRoom(ctx context.Context, roomID string, event string, data any) error {
-	return sm.billiardNamespace.To(roomID).Emit(event, data)
+	var firstErr error
+	for _, conn := range sm.billiardNamespace.Room(roomID).Members() {
+		sm.mu.RLock()
+		userID, ok := sm.connIDMap[conn.ID()]
+		sm.mu.RUnlock()
+		if !ok {
+			_ = conn.Close()
+			continue
+		}
+
+		blocked, err := sm.hook.IsUserBlocked(ctx, userID)
+		if err != nil || blocked {
+			if err != nil {
+				logging.Errorc(ctx, "check user(%d) blocked status failed: %v", userID, err)
+				if firstErr == nil {
+					firstErr = err
+				}
+			}
+			_ = conn.Close()
+			continue
+		}
+		if err := conn.Emit(event, data); err != nil {
+			logging.Errorc(ctx, "room broadcast failed room=%s conn=%s event=%s err=%v", roomID, conn.ID(), event, err)
+			if firstErr == nil {
+				firstErr = err
+			}
+		}
+	}
+	return firstErr
 }

@@ -32,12 +32,13 @@ func (h *Handlers) handlePlayerLeaveRoom(ctx context.Context, data []byte) {
 
 	if player.UserID != nil {
 		// 获取该玩家的 session 并逐一离开房间
-
-		session := h.socketManager.GetUserSession(ptrx.UintValue(player.UserID))
-		if session == nil {
+		sessions := h.socketManager.GetUserSessions(ctx, ptrx.UintValue(player.UserID))
+		if len(sessions) == 0 {
 			logging.Errorc(ctx, "session not found")
 			return
 		}
-		_ = session.Leave(roomID)
+		for _, session := range sessions {
+			_ = session.Leave(roomID)
+		}
 	}
 }

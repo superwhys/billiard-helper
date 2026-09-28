@@ -11,6 +11,7 @@ import (
 
 type IRepoFactory interface {
 	UserRepo() user.IUserRepository
+	BlockedIdentityRepo() user.IBlockedIdentityRepository
 	MatchRepo() match.IMatchRepository
 	PlayerRepo() match.IPlayerRepository
 	MatchGameRepo() match.IMatchGameRepository

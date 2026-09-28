@@ -15,12 +15,13 @@ import (
 type repositoryFactory struct {
 	db *gorm.DB
 
-	matchRepo     match.IMatchRepository
-	userRepo      user.IUserRepository
-	playerRepo    match.IPlayerRepository
-	matchGameRepo match.IMatchGameRepository
-	eventRepo     event.IEventRepository
-	feedbackRepo  feedback.IFeedbackRepository
+	matchRepo           match.IMatchRepository
+	userRepo            user.IUserRepository
+	blockedIdentityRepo user.IBlockedIdentityRepository
+	playerRepo          match.IPlayerRepository
+	matchGameRepo       match.IMatchGameRepository
+	eventRepo           event.IEventRepository
+	feedbackRepo        feedback.IFeedbackRepository
 }
 
 // NewRepositoryFactory 创建仓储工厂
@@ -28,12 +29,13 @@ func NewRepositoryFactory(gormDB *gorm.DB) appfactory.IRepoFactory {
 	return &repositoryFactory{
 		db: gormDB,
 
-		matchRepo:     db.NewMatchRepo(gormDB),
-		userRepo:      db.NewUserRepo(gormDB),
-		playerRepo:    db.NewPlayerRepo(gormDB),
-		matchGameRepo: db.NewMatchGameRepo(gormDB),
-		eventRepo:     db.NewMatchEventRepo(gormDB),
-		feedbackRepo:  db.NewFeedbackRepo(gormDB),
+		matchRepo:           db.NewMatchRepo(gormDB),
+		userRepo:            db.NewUserRepo(gormDB),
+		blockedIdentityRepo: db.NewBlockedIdentityRepo(gormDB),
+		playerRepo:          db.NewPlayerRepo(gormDB),
+		matchGameRepo:       db.NewMatchGameRepo(gormDB),
+		eventRepo:           db.NewMatchEventRepo(gormDB),
+		feedbackRepo:        db.NewFeedbackRepo(gormDB),
 	}
 }
 
@@ -45,6 +47,10 @@ func (f *repositoryFactory) WithTransaction(ctx context.Context, fn func(factory
 
 func (f *repositoryFactory) UserRepo() user.IUserRepository {
 	return f.userRepo
+}
+
+func (f *repositoryFactory) BlockedIdentityRepo() user.IBlockedIdentityRepository {
+	return f.blockedIdentityRepo
 }
 
 func (f *repositoryFactory) MatchRepo() match.IMatchRepository {

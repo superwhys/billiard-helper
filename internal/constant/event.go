@@ -20,6 +20,7 @@ const (
 	EventPlayerScoreSync      EventType = "player_score_sync"
 	EventPlayerScoreUndo      EventType = "player_score_undo"
 	EventMatchRoundNext       EventType = "match_round_next"
+	EventUserBlocked          EventType = "user_blocked"
 )
 
 const (

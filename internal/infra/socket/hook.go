@@ -13,4 +13,5 @@ type SessionHook interface {
 	OnConnect(ctx context.Context) (uint, error)
 	OnDisconnect(ctx context.Context, conn websocketutils.Conn)
 	OnAllowRequest(request *http.Request) (*http.Request, error)
+	IsUserBlocked(ctx context.Context, userID uint) (bool, error)
 }

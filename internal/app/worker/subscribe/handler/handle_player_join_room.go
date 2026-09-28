@@ -25,11 +25,13 @@ func (h *Handlers) handlePlayerJoinRoom(ctx context.Context, data []byte) {
 	}
 
 	// 获取该玩家的 socket 连接并加入房间
-	session := h.socketManager.GetUserSession(msg.UserID)
-	if session == nil {
+	sessions := h.socketManager.GetUserSessions(ctx, msg.UserID)
+	if len(sessions) == 0 {
 		logging.Errorc(ctx, "session not found")
 		return
 	}
 
-	_ = session.Join(roomID)
+	for _, session := range sessions {
+		_ = session.Join(roomID)
+	}
 }

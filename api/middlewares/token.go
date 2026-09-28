@@ -35,7 +35,11 @@ func TokenVerifyMiddleware(userApp *services.UserApp) gin.HandlerFunc {
 			if errors.Is(err, jwt.ErrTokenExpired) {
 				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrTokenExpired))
 			} else if ec, ok := errcode.AsErrcode(err); ok {
-				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(ec))
+				status := http.StatusUnauthorized
+				if errors.Is(err, errcode.ErrForbidden) {
+					status = http.StatusForbidden
+				}
+				ctx.JSON(status, response.ErrorResponseWithCode(ec))
 			} else {
 				ctx.JSON(http.StatusUnauthorized, response.ErrorResponseWithCode(errcode.ErrInvalidToken))
 			}

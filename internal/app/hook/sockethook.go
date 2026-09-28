@@ -8,7 +8,6 @@ import (
 
 	"github.com/miebyte/goutils/logging"
 	"github.com/miebyte/goutils/websocketutils"
-	"github.com/superwhys/billiard-helper/config"
 	"github.com/superwhys/billiard-helper/internal/app/dto"
 	"github.com/superwhys/billiard-helper/internal/app/services"
 	"github.com/superwhys/billiard-helper/internal/constant"
@@ -22,14 +21,14 @@ import (
 var _ socket.SessionHook = (*SocketHook)(nil)
 
 type SocketHook struct {
-	matchApp  *services.MatchApp
-	jwtConfig *config.JwtConfig
+	matchApp *services.MatchApp
+	userApp  *services.UserApp
 }
 
-func NewSocketHook(matchApp *services.MatchApp, jwtConfig *config.JwtConfig) *SocketHook {
+func NewSocketHook(matchApp *services.MatchApp, userApp *services.UserApp) *SocketHook {
 	return &SocketHook{
-		matchApp:  matchApp,
-		jwtConfig: jwtConfig,
+		matchApp: matchApp,
+		userApp:  userApp,
 	}
 }
 
@@ -38,6 +37,13 @@ func (h *SocketHook) OnConnect(ctx context.Context) (uint, error) {
 	if err != nil {
 		logging.Errorc(ctx, "get token claims from context failed: %v", err)
 		return 0, err
+	}
+	blocked, err := h.userApp.IsUserBlocked(ctx, claims.UserID)
+	if err != nil {
+		return 0, err
+	}
+	if blocked {
+		return 0, errcode.ErrForbidden
 	}
 
 	return claims.UserID, nil
@@ -89,18 +95,19 @@ func (h *SocketHook) OnAllowRequest(r *http.Request) (*http.Request, error) {
 	tokenStr = strings.TrimPrefix(tokenStr, "Bearer ")
 	tokenStr = strings.TrimSpace(tokenStr)
 
-	claims, err := jwt.ParseToken(tokenStr, []byte(h.jwtConfig.JwtSecret))
+	claims, err := h.userApp.GetUserTokenClaims(ctx, tokenStr)
 	if err != nil {
-		logging.Errorc(ctx, "get secret from jwt token failed: %v", err)
+		logging.Errorc(ctx, "verify websocket token failed: %v", err)
 		if ec, ok := errcode.AsErrcode(err); ok {
 			return nil, ec
 		}
 		return nil, errcode.ErrUnauthorized
 	}
-	if claims.TokenType != jwt.TokenTypeAccess {
-		return nil, errcode.ErrUnauthorized
-	}
 
 	reqCtx := jwt.SetTokenClaimsToContext(r.Context(), claims)
 	return r.WithContext(reqCtx), nil
+}
+
+func (h *SocketHook) IsUserBlocked(ctx context.Context, userID uint) (bool, error) {
+	return h.userApp.IsUserBlocked(ctx, userID)
 }

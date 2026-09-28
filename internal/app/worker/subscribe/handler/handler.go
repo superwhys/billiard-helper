@@ -34,6 +34,7 @@ func (h *Handlers) register() {
 	h.handlers[constant.EventPlayerLeaveRoom] = h.handlePlayerLeaveRoom
 	h.handlers[constant.EventPlayerScoreSync] = h.handleScoreSync
 	h.handlers[constant.EventPlayerScoreUndo] = h.handlePlayerScoreUndo
+	h.handlers[constant.EventUserBlocked] = h.handleUserBlocked
 }
 
 func (h *Handlers) Call(ctx context.Context, event string, data []byte) {
@@ -62,4 +63,19 @@ func (h *Handlers) broadcastScoreEvent(ctx context.Context, data []byte, event s
 	if err != nil {
 		logging.Errorc(ctx, "broadcast room failed: %v", err)
 	}
+}
+
+func (h *Handlers) handleUserBlocked(ctx context.Context, data []byte) {
+	var msg struct {
+		UserID uint `json:"user_id"`
+	}
+	if err := json.Unmarshal(data, &msg); err != nil {
+		logging.Errorc(ctx, "invalid user blocked event: %v", err)
+		return
+	}
+	if msg.UserID == 0 {
+		logging.Errorc(ctx, "invalid user blocked event: user_id is required")
+		return
+	}
+	h.socketManager.CloseUserConnections(msg.UserID)
 }

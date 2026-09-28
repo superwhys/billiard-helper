@@ -17,7 +17,11 @@ func handleRouterError(ctx *gin.Context, err error, logMsg string, fallback errc
 		return false
 	}
 	logging.Errorc(ctx, "%s: %v", logMsg, err)
-	ctx.JSON(http.StatusOK, errorResponseWithCode(err, fallback))
+	status := http.StatusOK
+	if errors.Is(err, errcode.ErrForbidden) {
+		status = http.StatusForbidden
+	}
+	ctx.JSON(status, errorResponseWithCode(err, fallback))
 	return true
 }
 

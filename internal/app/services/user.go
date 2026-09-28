@@ -19,7 +19,9 @@ import (
 	"github.com/superwhys/billiard-helper/internal/domain/user"
 	"github.com/superwhys/billiard-helper/internal/errcode"
 	"github.com/superwhys/billiard-helper/internal/infra/verifycode"
+	"github.com/superwhys/billiard-helper/internal/pkg/account"
 	"github.com/superwhys/billiard-helper/internal/pkg/jwt"
+	"gorm.io/gorm"
 )
 
 type UserApp struct {
@@ -59,6 +61,10 @@ func NewUserApp(
 
 // SendRegisterCode 发送注册验证码
 func (a *UserApp) SendRegisterCode(ctx context.Context, req *dto.SendRegisterCodeReq) (string, error) {
+	if err := a.checkBlockedAccount(ctx, req.Account); err != nil {
+		return "", err
+	}
+
 	limitCtx, err := a.verifyCodeLimiter.Get(ctx, req.Account)
 	if err != nil {
 		return "", err
@@ -88,6 +94,10 @@ func (a *UserApp) SendRegisterCode(ctx context.Context, req *dto.SendRegisterCod
 
 // Register 注册用户
 func (a *UserApp) Register(ctx context.Context, req *dto.RegisterReq) error {
+	if err := a.checkBlockedAccount(ctx, req.Account); err != nil {
+		return err
+	}
+
 	// 1. 校验验证码
 	storedCode, err := a.verifyCodeRepo.GetCode(ctx, req.CodeID, req.Account)
 	if err != nil {
@@ -141,10 +151,19 @@ func (a *UserApp) WechatLogin(ctx context.Context, req *dto.WechatLoginReq) (*dt
 	if sessionResp.ErrCode != 0 {
 		return nil, fmt.Errorf("code=%s, errcode=%d, errmsg=%s", req.Code, sessionResp.ErrCode, sessionResp.ErrMsg)
 	}
+	if sessionResp.OpenID == "" {
+		return nil, errcode.ErrBadRequest
+	}
+	if err := a.checkBlockedIdentity(ctx, user.KindOpenID, sessionResp.OpenID); err != nil {
+		return nil, err
+	}
 
 	userService := a.serviceFactory.UserService(a.repoFactory)
 	userEntity, err := userService.WechatLogin(ctx, sessionResp.OpenID)
 	if err != nil {
+		return nil, err
+	}
+	if err := a.checkBlockedUserIdentity(ctx, userEntity); err != nil {
 		return nil, err
 	}
 
@@ -173,11 +192,17 @@ func (a *UserApp) Login(ctx context.Context, req *dto.LoginReq) (*dto.TokenRespo
 	if req.Password == "" && req.VerifyCode == "" {
 		return nil, errcode.ErrBadRequest
 	}
+	if err := a.checkBlockedAccount(ctx, req.Account); err != nil {
+		return nil, err
+	}
 
 	// 1. 验证账号密码或者验证码
 	userService := a.serviceFactory.UserService(a.repoFactory)
 	u, err := userService.Login(ctx, req.Account, req.Password, req.VerifyCode, req.CodeID)
 	if err != nil {
+		return nil, err
+	}
+	if err := a.checkBlockedUserIdentity(ctx, u); err != nil {
 		return nil, err
 	}
 
@@ -226,6 +251,9 @@ func (a *UserApp) GetUserTokenClaims(ctx context.Context, tokenStr string) (*jwt
 	if cachedUserID != claims.UserID {
 		return nil, fmt.Errorf("session user not match")
 	}
+	if err := a.checkBlockedUser(ctx, claims.UserID); err != nil {
+		return nil, err
+	}
 
 	return claims, nil
 }
@@ -258,6 +286,9 @@ func (a *UserApp) RefreshAccessToken(ctx context.Context, refreshToken string) (
 	if cachedUserID != claims.UserID {
 		return nil, errcode.ErrUnauthorized
 	}
+	if err := a.checkBlockedUser(ctx, claims.UserID); err != nil {
+		return nil, err
+	}
 
 	accessToken, err := jwt.GenerateAccessToken(
 		[]byte(a.jwtConfig.JwtSecret),
@@ -287,4 +318,68 @@ func (a *UserApp) GetUserInfo(ctx context.Context, userID uint) (*dto.User, erro
 func (a *UserApp) UpdateSelfInfo(ctx context.Context, userID uint, req *dto.UpdateSelfInfoReq) error {
 	userService := a.serviceFactory.UserService(a.repoFactory)
 	return userService.UpdateProfile(ctx, userID, req.Name)
+}
+
+func (a *UserApp) checkBlockedAccount(ctx context.Context, accountName string) error {
+	var (
+		u   *user.User
+		err error
+	)
+	switch {
+	case account.IsEmailAccount(accountName):
+		if err := a.checkBlockedIdentity(ctx, user.KindEmail, accountName); err != nil {
+			return err
+		}
+		u, err = a.repoFactory.UserRepo().FindByEmail(ctx, accountName)
+	case account.IsPhoneAccount(accountName):
+		u, err = a.repoFactory.UserRepo().FindByPhone(ctx, accountName)
+	default:
+		return nil
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return a.checkBlockedUserIdentity(ctx, u)
+}
+
+func (a *UserApp) checkBlockedUser(ctx context.Context, userID uint) error {
+	u, err := a.repoFactory.UserRepo().FindByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	return a.checkBlockedUserIdentity(ctx, u)
+}
+
+func (a *UserApp) IsUserBlocked(ctx context.Context, userID uint) (bool, error) {
+	err := a.checkBlockedUser(ctx, userID)
+	if errors.Is(err, errcode.ErrForbidden) {
+		return true, nil
+	}
+	return false, err
+}
+
+func (a *UserApp) checkBlockedUserIdentity(ctx context.Context, u *user.User) error {
+	if email := u.Email.String(); email != "" {
+		if err := a.checkBlockedIdentity(ctx, user.KindEmail, email); err != nil {
+			return err
+		}
+	}
+	if u.OpenID != "" {
+		return a.checkBlockedIdentity(ctx, user.KindOpenID, u.OpenID)
+	}
+	return nil
+}
+
+func (a *UserApp) checkBlockedIdentity(ctx context.Context, kind user.BlockedIdentityKind, value string) error {
+	blocked, err := a.repoFactory.BlockedIdentityRepo().IsBlocked(ctx, kind, value)
+	if err != nil {
+		return err
+	}
+	if blocked {
+		return errcode.ErrForbidden.WithMessage("账号已被禁止访问")
+	}
+	return nil
 }

@@ -89,7 +89,7 @@ func main() {
 	scoreApp := services.NewScoreApp(serviceFactory, repoFactory, eventBus)
 	feedbackApp := services.NewFeedbackApp(repoFactory)
 
-	socketManager := socket.NewSocketManager(hook.NewSocketHook(matchApp, config.JwtConfig))
+	socketManager := socket.NewSocketManager(hook.NewSocketHook(matchApp, userApp))
 
 	apiApp := api.SetupApi(isDev(), socketManager, httpLimiter, userApp, scoreApp, matchApp, feedbackApp)
 	subscriber := subscribe.NewSubscriber(eventBus, socketManager, repoFactory)

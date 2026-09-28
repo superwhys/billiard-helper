@@ -21,6 +21,12 @@ type IUserRepository interface {
 	Update(ctx context.Context, user *User) error
 }
 
+type IBlockedIdentityRepository interface {
+	IsBlocked(ctx context.Context, kind BlockedIdentityKind, value string) (bool, error)
+	Block(ctx context.Context, kind BlockedIdentityKind, value string) error
+	Unblock(ctx context.Context, kind BlockedIdentityKind, value string) error
+}
+
 type ISessionRepository interface {
 	SetSession(ctx context.Context, sessionID string, userID uint, ttl time.Duration) error
 	GetSession(ctx context.Context, sessionID string) (uint, error)

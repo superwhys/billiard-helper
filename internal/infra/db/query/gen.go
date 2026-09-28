@@ -17,38 +17,41 @@ import (
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:         db,
-		Feedback:   newFeedback(db, opts...),
-		Match:      newMatch(db, opts...),
-		MatchEvent: newMatchEvent(db, opts...),
-		MatchGame:  newMatchGame(db, opts...),
-		Player:     newPlayer(db, opts...),
-		User:       newUser(db, opts...),
+		db:              db,
+		BlockedIdentity: newBlockedIdentity(db, opts...),
+		Feedback:        newFeedback(db, opts...),
+		Match:           newMatch(db, opts...),
+		MatchEvent:      newMatchEvent(db, opts...),
+		MatchGame:       newMatchGame(db, opts...),
+		Player:          newPlayer(db, opts...),
+		User:            newUser(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	Feedback   feedback
-	Match      match
-	MatchEvent matchEvent
-	MatchGame  matchGame
-	Player     player
-	User       user
+	BlockedIdentity blockedIdentity
+	Feedback        feedback
+	Match           match
+	MatchEvent      matchEvent
+	MatchGame       matchGame
+	Player          player
+	User            user
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:         db,
-		Feedback:   q.Feedback.clone(db),
-		Match:      q.Match.clone(db),
-		MatchEvent: q.MatchEvent.clone(db),
-		MatchGame:  q.MatchGame.clone(db),
-		Player:     q.Player.clone(db),
-		User:       q.User.clone(db),
+		db:              db,
+		BlockedIdentity: q.BlockedIdentity.clone(db),
+		Feedback:        q.Feedback.clone(db),
+		Match:           q.Match.clone(db),
+		MatchEvent:      q.MatchEvent.clone(db),
+		MatchGame:       q.MatchGame.clone(db),
+		Player:          q.Player.clone(db),
+		User:            q.User.clone(db),
 	}
 }
 
@@ -62,33 +65,36 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:         db,
-		Feedback:   q.Feedback.replaceDB(db),
-		Match:      q.Match.replaceDB(db),
-		MatchEvent: q.MatchEvent.replaceDB(db),
-		MatchGame:  q.MatchGame.replaceDB(db),
-		Player:     q.Player.replaceDB(db),
-		User:       q.User.replaceDB(db),
+		db:              db,
+		BlockedIdentity: q.BlockedIdentity.replaceDB(db),
+		Feedback:        q.Feedback.replaceDB(db),
+		Match:           q.Match.replaceDB(db),
+		MatchEvent:      q.MatchEvent.replaceDB(db),
+		MatchGame:       q.MatchGame.replaceDB(db),
+		Player:          q.Player.replaceDB(db),
+		User:            q.User.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	Feedback   IFeedbackDo
-	Match      IMatchDo
-	MatchEvent IMatchEventDo
-	MatchGame  IMatchGameDo
-	Player     IPlayerDo
-	User       IUserDo
+	BlockedIdentity IBlockedIdentityDo
+	Feedback        IFeedbackDo
+	Match           IMatchDo
+	MatchEvent      IMatchEventDo
+	MatchGame       IMatchGameDo
+	Player          IPlayerDo
+	User            IUserDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		Feedback:   q.Feedback.WithContext(ctx),
-		Match:      q.Match.WithContext(ctx),
-		MatchEvent: q.MatchEvent.WithContext(ctx),
-		MatchGame:  q.MatchGame.WithContext(ctx),
-		Player:     q.Player.WithContext(ctx),
-		User:       q.User.WithContext(ctx),
+		BlockedIdentity: q.BlockedIdentity.WithContext(ctx),
+		Feedback:        q.Feedback.WithContext(ctx),
+		Match:           q.Match.WithContext(ctx),
+		MatchEvent:      q.MatchEvent.WithContext(ctx),
+		MatchGame:       q.MatchGame.WithContext(ctx),
+		Player:          q.Player.WithContext(ctx),
+		User:            q.User.WithContext(ctx),
 	}
 }
 

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"strings"
 
 	"github.com/superwhys/billiard-helper/internal/domain/user"
 	"github.com/superwhys/billiard-helper/internal/infra/db/assembler"
@@ -53,6 +54,17 @@ func (r *UserRepo) FindByEmail(ctx context.Context, email string) (*user.User, e
 	u := r.query.User
 
 	po, err := u.WithContext(ctx).Where(u.Email.Eq(email)).First()
+	if err != nil {
+		return nil, err
+	}
+
+	return r.userPoAssembler.ToEntity(po), nil
+}
+
+func (r *UserRepo) FindByEmailFold(ctx context.Context, email string) (*user.User, error) {
+	u := r.query.User
+
+	po, err := u.WithContext(ctx).Where(u.Email.Lower().Eq(strings.ToLower(email))).First()
 	if err != nil {
 		return nil, err
 	}

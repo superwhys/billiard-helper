@@ -52,4 +52,16 @@ go test ./internal/integration -run TestSnookerHTTPPersistence -v
 
 升级前的旧局缺少台面状态时保留原手动记分；下一局使用新规则。新局的状态直接存入现有 JSON 分数快照，无需新增数据库字段。
 
+## 用户黑名单
+
+服务启动时会创建 `blocked_identities` 表。部署新版服务后，在服务器上使用与服务相同的配置文件执行管理命令：
+
+```sh
+go run ./cmd/blacklist -f /path/to/config.json --action block --kind email --value 'someone@example.com'
+go run ./cmd/blacklist -f /path/to/config.json --action block --kind open_id --value 'wechat-open-id'
+go run ./cmd/blacklist -f /path/to/config.json --action unblock --kind email --value 'someone@example.com'
+```
+
+`block` 和 `unblock` 可重复执行。拉黑后，登录、注册、验证码、已有访问令牌和刷新令牌均被拒绝；命令还会通知服务断开该用户现有的 WebSocket 连接。若命令提示黑名单已保存但断线通知失败，可重复执行相同的 `block` 命令。
+
 未设置上述变量时只跳过外部服务集成测试。该测试经过真实 HTTP Handler、应用服务、计分策略及数据库事务，覆盖并发记分、撤销、非法请求回滚、多局结算和成绩重载。
