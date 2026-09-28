@@ -18,6 +18,7 @@ type IUserRepository interface {
 	FindByPhone(ctx context.Context, phone string) (*User, error)
 	FindByOpenID(ctx context.Context, openID string) (*User, error)
 	FindByID(ctx context.Context, id uint) (*User, error)
+	List(ctx context.Context, offset, limit int) ([]*User, int64, error)
 	Update(ctx context.Context, user *User) error
 }
 

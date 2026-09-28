@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/miebyte/goutils/flags"
 	"github.com/miebyte/goutils/mysqlutils"
@@ -20,8 +21,8 @@ import (
 
 var (
 	actionFlag      = flags.String("action", "", "block or unblock")
-	kindFlag        = flags.String("kind", "", "email or open_id")
-	valueFlag       = flags.String("value", "", "email address or WeChat open_id")
+	kindFlag        = flags.String("kind", "", "email, open_id or user_id")
+	valueFlag       = flags.String("value", "", "email address, WeChat open_id or user ID")
 	mysqlConfigFlag = flags.Struct("mysql", (*mysqlutils.MysqlConfig)(nil), "mysql config")
 	redisConfigFlag = flags.Struct("redis", (*redisutils.RedisConfig)(nil), "redis config")
 )
@@ -79,6 +80,12 @@ func run(ctx context.Context) error {
 		existingUser, err = userRepo.FindByEmailFold(ctx, value)
 	case user.KindOpenID:
 		existingUser, err = userRepo.FindByOpenID(ctx, value)
+	case user.KindUserID:
+		id, parseErr := strconv.ParseUint(value, 10, strconv.IntSize)
+		if parseErr != nil {
+			return parseErr
+		}
+		existingUser, err = userRepo.FindByID(ctx, uint(id))
 	}
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err

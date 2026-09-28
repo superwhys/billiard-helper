@@ -56,3 +56,12 @@ func TokenVerifyMiddleware(userApp *services.UserApp) gin.HandlerFunc {
 		ctx.Request = ctx.Request.WithContext(reqCtx)
 	}
 }
+
+func OptionalTokenVerifyMiddleware(userApp *services.UserApp) gin.HandlerFunc {
+	verify := TokenVerifyMiddleware(userApp)
+	return func(c *gin.Context) {
+		if c.GetHeader("Authorization") != "" {
+			verify(c)
+		}
+	}
+}

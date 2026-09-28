@@ -59,9 +59,32 @@ go test ./internal/integration -run TestSnookerHTTPPersistence -v
 ```sh
 go run ./cmd/blacklist -f /path/to/config.json --action block --kind email --value 'someone@example.com'
 go run ./cmd/blacklist -f /path/to/config.json --action block --kind open_id --value 'wechat-open-id'
+go run ./cmd/blacklist -f /path/to/config.json --action block --kind user_id --value '123'
 go run ./cmd/blacklist -f /path/to/config.json --action unblock --kind email --value 'someone@example.com'
 ```
 
 `block` 和 `unblock` 可重复执行。拉黑后，登录、注册、验证码、已有访问令牌和刷新令牌均被拒绝；命令还会通知服务断开该用户现有的 WebSocket 连接。若命令提示黑名单已保存但断线通知失败，可重复执行相同的 `block` 命令。
+
+## Web 超管管理
+
+在服务配置文件现有的 `config` 段中加入超管用户 ID，保留其他配置，重启服务后生效：
+
+```json
+{
+  "config": {
+    "super_admin_user_id": 123
+  }
+}
+```
+
+不配置或设为 `0` 时关闭超管权限。超管身份只由此配置决定，不能通过前端或数据库用户字段设置。
+
+Web 启动时请求 `GET /api/app/state` 获取状态配置，其中 `is_super_admin` 表示当前用户是否为超管；匿名访问返回 `false`，携带令牌时验证会话及黑名单。超管在“我的 → 常用设置”中看到“超管管理”入口。
+
+- `GET /api/admin/users?page=1&page_size=20`：分页展示用户及黑名单状态，不返回密码。每页最多 100 条。
+- `POST /api/admin/users/block`：提交 `{"user_id":123}` 拉黑目标账号，立即拦截其旧令牌并通知所有服务实例断开 WebSocket。禁止在页面中拉黑超管自身；已有邮箱和 OpenID 黑名单继续生效。页面暂不提供解封，运维可使用上面的命令。
+- `GET /api/admin/matches/stats`：按北京时间当天 `[00:00, 次日00:00)` 统计创建的比赛总数及玩法分布，包含已软删除的比赛。
+
+所有 `/api/admin` 接口都校验有效登录态和配置中的超管身份；隐藏前端入口不替代服务端权限检查。
 
 未设置上述变量时只跳过外部服务集成测试。该测试经过真实 HTTP Handler、应用服务、计分策略及数据库事务，覆盖并发记分、撤销、非法请求回滚、多局结算和成绩重载。

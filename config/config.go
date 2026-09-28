@@ -46,9 +46,10 @@ func (c *WechatConfig) Validate() error {
 }
 
 type Config struct {
-	JwtConfig    *JwtConfig
-	EmailConfig  *emailutils.EmailConfig
-	WechatConfig *WechatConfig
+	SuperAdminUserID uint `json:"super_admin_user_id"`
+	JwtConfig        *JwtConfig
+	EmailConfig      *emailutils.EmailConfig
+	WechatConfig     *WechatConfig
 }
 
 func (c *Config) Validate() error {

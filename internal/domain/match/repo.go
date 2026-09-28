@@ -3,6 +3,7 @@ package match
 import (
 	"context"
 	"encoding/json"
+	"time"
 )
 
 type IMatchRepository interface {
@@ -13,6 +14,7 @@ type IMatchRepository interface {
 	IsExists(ctx context.Context, id uint) (bool, error)
 	Update(ctx context.Context, match *Match) error
 	ListMatches(ctx context.Context, userID uint, matchType string, limit uint, cursor uint) ([]*Match, error)
+	CountCreatedBetween(ctx context.Context, start, end time.Time) (*CreationStats, error)
 	Delete(ctx context.Context, id uint) error
 }
 

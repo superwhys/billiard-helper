@@ -273,6 +273,127 @@
                 }
             }
         },
+        "/admin/matches/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按北京时间统计今日创建的全部比赛，包含已软删除的比赛",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "超管今日比赛统计",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-dto_AdminMatchStats"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "超管用户列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码，默认 1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数，默认 20，最大 100",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-dto_AdminUsersResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/block": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "超管拉黑用户",
+                "parameters": [
+                    {
+                        "description": "目标用户",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.BlockUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-dto_BlockUserResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/app/state": {
+            "get": {
+                "description": "未登录时返回默认状态，携带 Token 时返回当前用户的权限状态",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "App"
+                ],
+                "summary": "获取应用状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ginutils.Ret-dto_AppState"
+                        }
+                    }
+                }
+            }
+        },
         "/feedback/report": {
             "post": {
                 "security": [
@@ -810,6 +931,106 @@
         }
     },
     "definitions": {
+        "dto.AdminMatchStats": {
+            "type": "object",
+            "properties": {
+                "by_type": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "date": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.AdminUser": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_blocked": {
+                    "type": "boolean"
+                },
+                "is_super_admin": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "open_id": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.AdminUsersResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AdminUser"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.AppState": {
+            "type": "object",
+            "properties": {
+                "is_super_admin": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.BlockUserRequest": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.BlockUserResponse": {
+            "type": "object",
+            "properties": {
+                "disconnect_notified": {
+                    "type": "boolean"
+                },
+                "is_blocked": {
+                    "type": "boolean"
+                }
+            }
+        },
         "dto.CreateMatchRequest": {
             "type": "object",
             "properties": {
@@ -860,6 +1081,10 @@
                 },
                 "player_type": {
                     "$ref": "#/definitions/match.PlayerType"
+                },
+                "user_id": {
+                    "description": "如果这个玩家是一个真实用户，这个就是真实用户的用户 id",
+                    "type": "integer"
                 }
             }
         },
@@ -893,6 +1118,12 @@
                 "id": {
                     "type": "integer"
                 },
+                "match_games": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.MatchGame"
+                    }
+                },
                 "match_round": {
                     "type": "integer"
                 },
@@ -912,6 +1143,12 @@
                     }
                 },
                 "status": {
+                    "type": "integer"
+                },
+                "winner_id": {
+                    "type": "integer"
+                },
+                "winner_score": {
                     "type": "integer"
                 }
             }
@@ -946,6 +1183,38 @@
             "type": "object",
             "properties": {
                 "match_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.MatchGame": {
+            "type": "object",
+            "properties": {
+                "end_at": {
+                    "type": "integer"
+                },
+                "game_num": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_event_id": {
+                    "type": "integer"
+                },
+                "match_id": {
+                    "type": "integer"
+                },
+                "scores": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "start_at": {
+                    "type": "integer"
+                },
+                "winner_id": {
                     "type": "integer"
                 }
             }
@@ -1019,6 +1288,9 @@
                 },
                 "nick_name": {
                     "type": "string"
+                },
+                "scores": {
+                    "type": "integer"
                 },
                 "type": {
                     "$ref": "#/definitions/match.PlayerType"
@@ -1187,6 +1459,54 @@
                 "message": {}
             }
         },
+        "ginutils.Ret-dto_AdminMatchStats": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/dto.AdminMatchStats"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-dto_AdminUsersResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/dto.AdminUsersResponse"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-dto_AppState": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/dto.AppState"
+                },
+                "message": {}
+            }
+        },
+        "ginutils.Ret-dto_BlockUserResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "$ref": "#/definitions/dto.BlockUserResponse"
+                },
+                "message": {}
+            }
+        },
         "ginutils.Ret-dto_Match": {
             "type": "object",
             "properties": {
@@ -1238,6 +1558,7 @@
         },
         "match.PlayerType": {
             "type": "integer",
+            "format": "int32",
             "enum": [
                 1,
                 2

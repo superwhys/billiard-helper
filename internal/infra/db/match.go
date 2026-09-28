@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/superwhys/billiard-helper/internal/domain/match"
 	"github.com/superwhys/billiard-helper/internal/infra/db/assembler"
@@ -135,6 +136,30 @@ func (r *MatchRepo) ListMatches(ctx context.Context, userID uint, matchType stri
 	}
 
 	return r.matchPoAssembler.ToEntityList(matches), nil
+}
+
+func (r *MatchRepo) CountCreatedBetween(ctx context.Context, start, end time.Time) (*match.CreationStats, error) {
+	m := r.query.Match
+	var rows []struct {
+		MatchType string
+		Count     int64
+	}
+	err := m.WithContext(ctx).
+		Unscoped().
+		Select(m.MatchType, m.ID.Count().As("count")).
+		Where(m.CreatedAt.Gte(start), m.CreatedAt.Lt(end)).
+		Group(m.MatchType).
+		Scan(&rows)
+	if err != nil {
+		return nil, err
+	}
+
+	stats := &match.CreationStats{ByType: make(map[match.MatchType]int64, len(rows))}
+	for _, row := range rows {
+		stats.Total += row.Count
+		stats.ByType[match.MatchType(row.MatchType)] = row.Count
+	}
+	return stats, nil
 }
 
 // FindByIDForUpdate must be called inside a transaction. It serializes frame

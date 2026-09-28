@@ -34,6 +34,7 @@ func (r *UserRepo) Save(ctx context.Context, user *user.User) error {
 	}
 
 	user.ID = po.ID
+	user.CreatedAt = po.CreatedAt
 	return nil
 }
 
@@ -103,6 +104,30 @@ func (r *UserRepo) FindByID(ctx context.Context, id uint) (*user.User, error) {
 	}
 
 	return r.userPoAssembler.ToEntity(po), nil
+}
+
+func (r *UserRepo) List(ctx context.Context, offset, limit int) ([]*user.User, int64, error) {
+	u := r.query.User
+	count, err := u.WithContext(ctx).Count()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	rows, err := u.WithContext(ctx).
+		Select(u.ID, u.Phone, u.Email, u.OpenID, u.Name, u.Avatar, u.CreatedAt).
+		Order(u.ID.Desc()).
+		Offset(offset).
+		Limit(limit).
+		Find()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	users := make([]*user.User, 0, len(rows))
+	for _, row := range rows {
+		users = append(users, r.userPoAssembler.ToEntity(row))
+	}
+	return users, count, nil
 }
 
 func (r *UserRepo) Update(ctx context.Context, user *user.User) error {

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/miebyte/goutils/logging"
@@ -362,6 +363,9 @@ func (a *UserApp) IsUserBlocked(ctx context.Context, userID uint) (bool, error) 
 }
 
 func (a *UserApp) checkBlockedUserIdentity(ctx context.Context, u *user.User) error {
+	if err := a.checkBlockedIdentity(ctx, user.KindUserID, strconv.FormatUint(uint64(u.ID), 10)); err != nil {
+		return err
+	}
 	if email := u.Email.String(); email != "" {
 		if err := a.checkBlockedIdentity(ctx, user.KindEmail, email); err != nil {
 			return err

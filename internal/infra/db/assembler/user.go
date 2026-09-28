@@ -33,13 +33,14 @@ func (a *UserPoAssembler) ToEntity(po *models.User) *user.User {
 	email, _ := user.NewEmail(emailStr)
 	password := user.NewPasswordFromHash(po.Password)
 	return &user.User{
-		ID:       po.ID,
-		Phone:    phone,
-		Email:    email,
-		OpenID:   openID,
-		Name:     po.Name,
-		Password: password,
-		Avatar:   po.Avatar,
+		ID:        po.ID,
+		Phone:     phone,
+		Email:     email,
+		OpenID:    openID,
+		Name:      po.Name,
+		Password:  password,
+		Avatar:    po.Avatar,
+		CreatedAt: po.CreatedAt,
 	}
 }
 
@@ -68,7 +69,8 @@ func (a *UserPoAssembler) ToPO(entity *user.User) *models.User {
 
 	return &models.User{
 		Model: gorm.Model{
-			ID: entity.ID,
+			ID:        entity.ID,
+			CreatedAt: entity.CreatedAt,
 		},
 		Phone:    phone,
 		Email:    email,

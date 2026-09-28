@@ -88,10 +88,11 @@ func main() {
 	matchApp := services.NewMatchApp(serviceFactory, repoFactory, eventBus, lockManager)
 	scoreApp := services.NewScoreApp(serviceFactory, repoFactory, eventBus)
 	feedbackApp := services.NewFeedbackApp(repoFactory)
+	adminApp := services.NewAdminApp(repoFactory, userApp, eventBus, config.SuperAdminUserID)
 
 	socketManager := socket.NewSocketManager(hook.NewSocketHook(matchApp, userApp))
 
-	apiApp := api.SetupApi(isDev(), socketManager, httpLimiter, userApp, scoreApp, matchApp, feedbackApp)
+	apiApp := api.SetupApi(isDev(), socketManager, httpLimiter, userApp, scoreApp, matchApp, feedbackApp, adminApp)
 	subscriber := subscribe.NewSubscriber(eventBus, socketManager, repoFactory)
 
 	srv := cores.NewCores(

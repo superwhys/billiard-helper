@@ -1,13 +1,16 @@
 package user
 
+import "time"
+
 type User struct {
-	ID       uint     `json:"id"`
-	Phone    string   `json:"phone"`
-	Email    Email    `json:"email"`
-	OpenID   string   `json:"open_id"`
-	Name     string   `json:"name"`
-	Password Password `json:"password"`
-	Avatar   string   `json:"avatar"`
+	ID        uint      `json:"id"`
+	Phone     string    `json:"phone"`
+	Email     Email     `json:"email"`
+	OpenID    string    `json:"open_id"`
+	Name      string    `json:"name"`
+	Password  Password  `json:"password"`
+	Avatar    string    `json:"avatar"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func NewUser(phone string, email Email, openID string, name string, password Password) *User {

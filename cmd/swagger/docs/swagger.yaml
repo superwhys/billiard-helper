@@ -1,5 +1,70 @@
 basePath: /api
 definitions:
+  dto.AdminMatchStats:
+    properties:
+      by_type:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      date:
+        type: string
+      timezone:
+        type: string
+      total:
+        type: integer
+    type: object
+  dto.AdminUser:
+    properties:
+      avatar:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_blocked:
+        type: boolean
+      is_super_admin:
+        type: boolean
+      name:
+        type: string
+      open_id:
+        type: string
+      phone:
+        type: string
+    type: object
+  dto.AdminUsersResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.AdminUser'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.AppState:
+    properties:
+      is_super_admin:
+        type: boolean
+    type: object
+  dto.BlockUserRequest:
+    properties:
+      user_id:
+        type: integer
+    type: object
+  dto.BlockUserResponse:
+    properties:
+      disconnect_notified:
+        type: boolean
+      is_blocked:
+        type: boolean
+    type: object
   dto.CreateMatchRequest:
     properties:
       match_type:
@@ -33,6 +98,9 @@ definitions:
         type: string
       player_type:
         $ref: '#/definitions/match.PlayerType'
+      user_id:
+        description: 如果这个玩家是一个真实用户，这个就是真实用户的用户 id
+        type: integer
     type: object
   dto.LoginReq:
     properties:
@@ -54,6 +122,10 @@ definitions:
       current_scores: {}
       id:
         type: integer
+      match_games:
+        items:
+          $ref: '#/definitions/dto.MatchGame'
+        type: array
       match_round:
         type: integer
       match_type:
@@ -67,6 +139,10 @@ definitions:
           $ref: '#/definitions/dto.Player'
         type: array
       status:
+        type: integer
+      winner_id:
+        type: integer
+      winner_score:
         type: integer
     type: object
   dto.MatchActionRequest:
@@ -89,6 +165,27 @@ definitions:
   dto.MatchDetailRequest:
     properties:
       match_id:
+        type: integer
+    type: object
+  dto.MatchGame:
+    properties:
+      end_at:
+        type: integer
+      game_num:
+        type: integer
+      id:
+        type: integer
+      last_event_id:
+        type: integer
+      match_id:
+        type: integer
+      scores:
+        items:
+          type: integer
+        type: array
+      start_at:
+        type: integer
+      winner_id:
         type: integer
     type: object
   dto.MatchListRequest:
@@ -140,6 +237,8 @@ definitions:
         type: string
       nick_name:
         type: string
+      scores:
+        type: integer
       type:
         $ref: '#/definitions/match.PlayerType'
       user_id:
@@ -249,6 +348,38 @@ definitions:
         type: array
       message: {}
     type: object
+  ginutils.Ret-dto_AdminMatchStats:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/dto.AdminMatchStats'
+      message: {}
+    type: object
+  ginutils.Ret-dto_AdminUsersResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/dto.AdminUsersResponse'
+      message: {}
+    type: object
+  ginutils.Ret-dto_AppState:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/dto.AppState'
+      message: {}
+    type: object
+  ginutils.Ret-dto_BlockUserResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        $ref: '#/definitions/dto.BlockUserResponse'
+      message: {}
+    type: object
   ginutils.Ret-dto_Match:
     properties:
       code:
@@ -287,6 +418,7 @@ definitions:
     enum:
     - 1
     - 2
+    format: int32
     type: integer
     x-enum-varnames:
     - PlayerTypeVirtual
@@ -465,6 +597,80 @@ paths:
       summary: 微信登录
       tags:
       - Account
+  /admin/matches/stats:
+    get:
+      description: 按北京时间统计今日创建的全部比赛，包含已软删除的比赛
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-dto_AdminMatchStats'
+      security:
+      - BearerAuth: []
+      summary: 超管今日比赛统计
+      tags:
+      - Admin
+  /admin/users:
+    get:
+      parameters:
+      - description: 页码，默认 1
+        in: query
+        name: page
+        type: integer
+      - description: 每页条数，默认 20，最大 100
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-dto_AdminUsersResponse'
+      security:
+      - BearerAuth: []
+      summary: 超管用户列表
+      tags:
+      - Admin
+  /admin/users/block:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 目标用户
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BlockUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-dto_BlockUserResponse'
+      security:
+      - BearerAuth: []
+      summary: 超管拉黑用户
+      tags:
+      - Admin
+  /app/state:
+    get:
+      description: 未登录时返回默认状态，携带 Token 时返回当前用户的权限状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ginutils.Ret-dto_AppState'
+      summary: 获取应用状态
+      tags:
+      - App
   /feedback/report:
     post:
       consumes:
